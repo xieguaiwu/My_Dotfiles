@@ -1,0 +1,11 @@
+{
+    "theme": "forest",
+    "pdfScale": 5,
+    "config": {
+        "logLevel": 1,
+        "securityLevel": "loose"
+    },
+    "flowchart": {
+        "htmlLabels": "false"
+    }
+}

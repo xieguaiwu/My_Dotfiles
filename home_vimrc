@@ -1,0 +1,151 @@
+" for kitty terminal
+set mouse=a
+set ttymouse=sgr
+set balloonevalterm
+" Styled and colored underline support
+let &t_AU = "\e[58:5:%dm"
+let &t_8u = "\e[58:2:%lu:%lu:%lum"
+let &t_Us = "\e[4:2m"
+let &t_Cs = "\e[4:3m"
+let &t_ds = "\e[4:4m"
+let &t_Ds = "\e[4:5m"
+let &t_Ce = "\e[4:0m"
+" Strikethrough
+let &t_Ts = "\e[9m"
+let &t_Te = "\e[29m"
+" Truecolor support
+let &t_8f = "\e[38:2:%lu:%lu:%lum"
+let &t_8b = "\e[48:2:%lu:%lu:%lum"
+let &t_RF = "\e]10;?\e\\"
+let &t_RB = "\e]11;?\e\\"
+" Bracketed paste
+let &t_BE = "\e[?2004h"
+let &t_BD = "\e[?2004l"
+let &t_PS = "\e[200~"
+let &t_PE = "\e[201~"
+" Cursor control
+let &t_RC = "\e[?12$p"
+let &t_SH = "\e[%d q"
+let &t_RS = "\eP$q q\e\\"
+let &t_SI = "\e[5 q"
+let &t_SR = "\e[3 q"
+let &t_EI = "\e[1 q"
+let &t_VS = "\e[?12l"
+" Focus tracking
+let &t_fe = "\e[?1004h"
+let &t_fd = "\e[?1004l"
+execute "set <FocusGained>=\<Esc>[I"
+execute "set <FocusLost>=\<Esc>[O"
+" Window title
+let &t_ST = "\e[22;2t"
+let &t_RT = "\e[23;2t"
+
+" vim hardcodes background color erase even if the terminfo file does
+" not contain bce. This causes incorrect background rendering when
+" using a color theme with a background color in terminals such as
+" kitty that do not support background color erase.
+let &t_ut=''
+
+"compile func stuff"
+func! CompileRunGcc()
+        exec "w"
+        let file = expand('%')
+        let base = expand('%<')
+        let dir = expand('%:p:h')
+
+        if empty(file) || !filereadable(file)
+            echo "Error: File not readable -" . file
+            return
+        endif
+
+        if &filetype == 'cpp'|| &filetype == 'cc'
+            exec "!g++ -g % -o -no-pie %< && ./%<"
+        endif
+        if &filetype == 'c'
+            exec "!gcc -g % -o %< && ./%<"
+        endif
+        if &filetype == 'java'
+            exec "!javac % && java ./%"
+        endif
+        if &filetype == 'python'
+		    exec "!python %"
+        endif
+        if &filetype == 'sh'
+		    exec "!sh %"
+        endif
+endfunc
+
+nnoremap <C-b> :call CompileRunGcc() <CR>
+
+"plug"
+call plug#begin('~/.vim/plugged')
+
+Plug 'junegunn/seoul256.vim'
+"Plug 'tomasr/molokai'
+Plug 'phanviet/vim-monokai-pro'
+Plug 'preservim/nerdtree'
+Plug 'majutsushi/tagbar'
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'scrooloose/syntastic'
+Plug 'scrooloose/nerdcommenter'
+Plug 'tpope/vim-unimpaired'
+Plug 'yggdroot/leaderf'
+Plug 'jiangmiao/auto-pairs'
+Plug 'vim-airline/vim-airline'
+Plug 'godlygeek/tabular'
+Plug 'xuhdev/singlecompile'
+Plug 'chiel92/vim-autoformat'
+Plug 'mileszs/ack.vim'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'ppwwyyxx/vim-pinyinsearch'
+Plug 'thaerkh/vim-workspace'
+"Plug 'puremourning/vimspector'
+Plug 'skim-rs/skim', {'dir': '~/.skim', 'do': './install'}
+Plug 'plasticboy/vim-markdown'
+
+call plug#end()
+"for molokai theme"
+"set background=dark
+"colorscheme molokai
+"let g:molokai_original=1
+colorscheme monokai_pro
+
+"for Nerdtree"
+nnoremap <silent> <C-e> :NERDTreeToggle<CR>
+"for autoformat"
+nnoremap <C-f> :Autoformat<CR>
+"for singlecompile"
+nnoremap <F8> :SCCompile<CR>
+nnoremap <F9> :SCCompileRun<CR>
+"for coc.nvim"
+"inoremap <silent><expr> <TAB>
+            \ coc#pum#visible() ? coc#pum#next(1) :
+            \ CheckBackspace() ?\<Tab>" :
+            \ coc#refresh()
+inoremap <expr><S-TAB> <CR> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
+
+function! CheckBackspace() abort 
+    let col = col('.') - 1
+    return !col || getline('.')[col - 1] =~# '\s'
+endfunc
+
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+inoremap <silent><expr> <A-z> coc#refresh()
+
+"for pinyinsearch"
+let g:PinyinSearch_Dict = '/home/xieguaiwu/.vim/plugged/vim-pinyinsearch/PinyinSearch.dict'
+nnoremap ? :call PinyinSearch()<CR>
+nnoremap <Leader>pn :call PinyinNext()<CR>
+
+"for vim-workspace"
+let g:workspace_autocreate = 1
+let g:workspace_persist_undo_history = 1
+let g:workspace_undodir = '/home/xieguaiwu/.vim/undodir'
+let g:workspace_autosave = 0
+"let g:workspace_session_name = 'Session.vim'
+let g:workspace_session_directory = '/home/xieguaiwu/.vim/sessions'
