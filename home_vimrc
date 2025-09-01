@@ -142,6 +142,12 @@ func! CompileRunGcc()
         if &filetype == 'sh'
 		    exec "!sh %"
         endif
+        if &filetype == 'markdown'
+            exec "MarkdownPreview"
+        endif
+        if &filetype == 'vimwiki'
+            exec "MarkdownPreview"
+        endif
 endfunc
 
 nnoremap <C-b> :call CompileRunGcc() <CR>
@@ -150,10 +156,11 @@ nnoremap <C-b> :call CompileRunGcc() <CR>
 call plug#begin('~/.vim/plugged')
 
 "lsp
-Plug 'prabirshrestha/vim-lsp'
-Plug 'mattn/vim-lsp-settings'
-Plug 'prabirshrestha/asyncomplete.vim'
-Plug 'prabirshrestha/asyncomplete-lsp.vim'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+"Plug 'prabirshrestha/vim-lsp'
+"Plug 'mattn/vim-lsp-settings'
+"Plug 'prabirshrestha/asyncomplete.vim'
+"Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
 "theme
 Plug 'junegunn/seoul256.vim'
@@ -166,7 +173,6 @@ Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'majutsushi/tagbar'
 Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim'
-"Plug 'scrooloose/nerdcommenter'
 Plug 'tpope/vim-unimpaired'
 Plug 'jiangmiao/auto-pairs'
 Plug 'vim-airline/vim-airline'
@@ -174,15 +180,15 @@ Plug 'godlygeek/tabular'
 Plug 'xuhdev/singlecompile'
 Plug 'chiel92/vim-autoformat'
 Plug 'mileszs/ack.vim'
-"Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'ppwwyyxx/vim-pinyinsearch'
-"Plug 'thaerkh/vim-workspace'
+Plug 'thaerkh/vim-workspace'
 "Plug 'puremourning/vimspector'
 
 "syntax
 Plug 'plasticboy/vim-markdown'
 Plug 'fatih/vim-go'
 Plug 'scrooloose/syntastic'
+Plug 'swaroopch/vim-markdown-preview'
 
 call plug#end()
 "for molokai theme"
@@ -203,18 +209,18 @@ nnoremap <F9> :SCCompileRun<CR>
             \ coc#pum#visible() ? coc#pum#next(1) :
             \ CheckBackspace() ?\<Tab>" :
             \ coc#refresh()
-"inoremap <expr><S-TAB> <CR> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
-"inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
+inoremap <expr><S-TAB> <CR> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
 
 function! CheckBackspace() abort 
     let col = col('.') - 1
     return !col || getline('.')[col - 1] =~# '\s'
 endfunc
 
-"nmap <silent> gd <Plug>(coc-definition)
-"nmap <silent> gy <Plug>(coc-type-definition)
-"nmap <silent> gi <Plug>(coc-implementation)
-"nmap <silent> gr <Plug>(coc-references)
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
 
 inoremap <silent><expr> <A-z> coc#refresh()
 
@@ -224,13 +230,23 @@ nnoremap ? :call PinyinSearch()<CR>
 nnoremap <Leader>pn :call PinyinNext()<CR>
 
 "for vim-workspace"
-"let g:workspace_autocreate = 1
-"let g:workspace_persist_undo_history = 1
-"let g:workspace_undodir = '/home/xieguaiwu/.vim/undodir'
-"let g:workspace_autosave = 0
-"let g:workspace_session_name = 'Session.vim'
-"let g:workspace_session_directory = '/home/xieguaiwu/.vim/sessions'
+let g:workspace_autocreate = 1
+let g:workspace_persist_undo_history = 1
+let g:workspace_undodir = '/home/xieguaiwu/.vim/undodir'
+let g:workspace_autosave = 0
+let g:workspace_session_name = 'Session.vim'
+let g:workspace_session_directory = '/home/xieguaiwu/.vim/sessions'
 
-"for lsp
-nmap <C-p> :Files<CR>
-nmap <C-m> :Buffers<CR>
+"for markdown syntax
+let g:vim_markdown_math = 1
+let g:vim_markdown_folding_disabled = 1
+
+"for MarkdownPreview
+let g:mkdp_auto_start = 0
+let g:mkdp_auto_close = 1
+let g:mkdp_refresh_slow = 0
+let g:mkdp_command_for_global = 0
+let g:mkdp_open_to_the_world = 0
+let g:mkdp_browser = 'firefox'
+let g:mkdp_echo_preview_url = 0
+
