@@ -1,0 +1,37 @@
+{
+	"ignored_packages":
+	[		
+		"ActualVim",
+		"Competitive Programming",
+		"ConvertChineseCharacters",
+		"CppBuilder",
+		"Debugger",
+		"Git Formats",
+		"LaTeX",
+		"LaTeX-cwl",
+		"LaTeXTools",
+		"LaTeXYZ",
+		"SublimeGDB",
+	],
+	"font_size": 17,
+	"font_face": "JetBrains Mono",
+	"default_encoding": "UTF-8",
+	"index_files": true,
+	"theme": "SodaSeti Dark 3.sublime-theme",
+	"color_scheme": "Monokai.sublime-color-scheme",
+	"auto_complete_triggers":
+	[
+		{
+			"characters": "<",
+			"selector": "text.html, text.xml",
+		},
+		{
+			"rhs_empty": true,
+			"selector": "punctuation.accessor",
+		},
+		{
+			"characters": "\\",
+			"selector": "text.tex.latex",
+		}
+	],
+}
