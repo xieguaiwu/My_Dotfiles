@@ -127,7 +127,7 @@ func! CompileRunGcc()
             return
         endif
 
-        if &filetype == 'cpp'|| &filetype == 'cc'
+        if &filetype == 'cpp' || &filetype == 'cc'
             exec "!g++ -g % -o -no-pie %< && ./%<"
         endif
         if &filetype == 'c'
@@ -178,7 +178,7 @@ Plug 'jiangmiao/auto-pairs'
 Plug 'vim-airline/vim-airline'
 Plug 'godlygeek/tabular'
 Plug 'xuhdev/singlecompile'
-Plug 'chiel92/vim-autoformat'
+Plug 'sbdchd/neoformat'
 Plug 'mileszs/ack.vim'
 Plug 'ppwwyyxx/vim-pinyinsearch'
 Plug 'thaerkh/vim-workspace'
@@ -199,15 +199,37 @@ colorscheme monokai_pro
 
 "for Nerdtree"
 nnoremap <silent> <C-e> :NERDTreeToggle<CR>
-"for autoformat"
-let g:autoformat_vervosemode = 1
-let g:formatdef_astyle_cpp = '"astyle --mode=c --style=null --indent=tab --pad-oper --pad-header --unpad-paren -e --suffix=none"'
-let g:formatdef_astyle_c = '"astyle --mode=c --style=null --indent=tab --pad-oper --pad-header --unpad-paren -e --suffix=none"'
+"for neoformat"
+let g:neoformat_only_msg_on_error = 1
+let g:neoformat_astyle = {
+            \ 'exe': 'astyle',
+            \ 'args': ['--style=null', '--indent=tab', '--pad-oper', '--pad-header', '--unpad-paren', '-e', '--suffix=none'],
+            \ 'replace': 1 ,
+            \ 'stdin': 1, 
+            \ 'env': ["DEBUG=1"], 
+            \ 'valid_exit_codes': [0, 23],
+            \ 'no_append': 1,
+            \ }
 
-let g:formatters_cpp = ['astyle_cpp']
-let g:formatters_c = ['astyle_c']
+let g:neoformat_enabled_cpp = ['astyle']
+let g:neoformat_enabled_c = ['astyle']
 
-nnoremap <C-f> :Autoformat<CR>
+let g:neoformat_basic_format_align = 1
+let g:neoformat_basic_format_retab = 1
+let g:neoformat_basic_format_trim = 1
+
+func! Astyle_Format()
+    if &filetype == 'cpp' || &filetype == 'cc' || &filetype == 'c' 
+        exec '!astyle --mode=c --style=java --indent=tab --pad-oper --pad-header --unpad-paren --break-elseifs --suffix=none ./%'
+    endif
+endfunc
+
+if &filetype != 'cpp' && &filetype != 'cc' && &filetype != 'c'
+    nnoremap <C-f> :Neoformat<CR>
+else
+    nnoremap <C-f> :call Astyle_Format()<CR>
+endif
+
 "for singlecompile"
 nnoremap <F8> :SCCompile<CR>
 nnoremap <F9> :SCCompileRun<CR>
@@ -219,7 +241,7 @@ nnoremap <F9> :SCCompileRun<CR>
 inoremap <expr><S-TAB> <CR> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
 
-function! CheckBackspace() abort 
+function CheckBackspace() abort 
     let col = col('.') - 1
     return !col || getline('.')[col - 1] =~# '\s'
 endfunc
