@@ -200,6 +200,13 @@ colorscheme monokai_pro
 "for Nerdtree"
 nnoremap <silent> <C-e> :NERDTreeToggle<CR>
 "for autoformat"
+let g:autoformat_vervosemode = 1
+let g:formatdef_astyle_cpp = '"astyle --mode=c --style=null --indent=tab --pad-oper --pad-header --unpad-paren -e --suffix=none"'
+let g:formatdef_astyle_c = '"astyle --mode=c --style=null --indent=tab --pad-oper --pad-header --unpad-paren -e --suffix=none"'
+
+let g:formatters_cpp = ['astyle_cpp']
+let g:formatters_c = ['astyle_c']
+
 nnoremap <C-f> :Autoformat<CR>
 "for singlecompile"
 nnoremap <F8> :SCCompile<CR>
