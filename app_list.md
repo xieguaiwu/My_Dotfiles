@@ -21,3 +21,4 @@
 21. Jetbrains MONO fonts
 22. zlib
 23. steam
+24. cargo
