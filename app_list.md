@@ -22,3 +22,4 @@
 22. zlib
 23. steam
 24. cargo
+25. lazygit
