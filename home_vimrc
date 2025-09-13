@@ -142,12 +142,12 @@ func! CompileRunGcc()
         if &filetype == 'sh'
 		    exec "!sh %"
         endif
-        if &filetype == 'markdown'
-            exec "MarkdownPreview"
-        endif
-        if &filetype == 'vimwiki'
-            exec "MarkdownPreview"
-        endif
+        "if &filetype == 'markdown'
+            "exec "MarkdownPreview"
+        "endif
+        "if &filetype == 'vimwiki'
+            "exec "MarkdownPreview"
+        "endif
 endfunc
 
 nnoremap <C-A-b> :call CompileRunGcc() <CR>
@@ -168,8 +168,8 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 "theme
 Plug 'junegunn/seoul256.vim'
-"Plug 'tomasr/molokai'
-Plug 'phanviet/vim-monokai-pro'
+"Plug 'phanviet/vim-monokai-pro'
+Plug 'erichdongubler/vim-sublime-monokai'
 
 "tree
 Plug 'preservim/nerdtree'
@@ -186,22 +186,19 @@ Plug 'sbdchd/neoformat'
 Plug 'mileszs/ack.vim'
 Plug 'ppwwyyxx/vim-pinyinsearch'
 Plug 'thaerkh/vim-workspace'
-"Plug 'puremourning/vimspector'
 
 "syntax
 Plug 'plasticboy/vim-markdown'
 Plug 'fatih/vim-go'
 Plug 'scrooloose/syntastic'
-Plug 'swaroopch/vim-markdown-preview'
+"Plug 'swaroopch/vim-markdown-preview'
 Plug 'Yggdroot/indentLine'
 Plug 'vim-scripts/indentpython.vim'
 
 call plug#end()
-"for molokai theme"
-"set background=dark
-"colorscheme molokai
-"let g:molokai_original=1
-colorscheme monokai_pro
+"for monokai theme"
+"colorscheme monokai_pro
+colorscheme sublimemonokai
 
 "for Nerdtree"
 nnoremap <silent> <C-e> :NERDTreeToggle<CR>
@@ -275,13 +272,7 @@ let g:workspace_session_directory = '/home/xieguaiwu/.vim/sessions'
 "for markdown syntax
 let g:vim_markdown_math = 1
 let g:vim_markdown_folding_disabled = 1
-
-"for MarkdownPreview
-let g:mkdp_auto_start = 0
-let g:mkdp_auto_close = 1
-let g:mkdp_refresh_slow = 0
-let g:mkdp_command_for_global = 0
-let g:mkdp_open_to_the_world = 0
-let g:mkdp_browser = 'firefox'
-let g:mkdp_echo_preview_url = 0
-
+"let g:vim_markdown_follow_anchor = 1
+let g:vim_markdown_strikethrough = 1
+let g:vim_markdown_new_list_items = 1
+let g:vim_markdown_borderless_table = 1
