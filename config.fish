@@ -49,10 +49,8 @@ end
 
 fish_vi_key_bindings
 
-# 开启自动建议（如果安装了插件）
 # fisher install jethrokuan/z
 # fisher install jethrokuan/fzf
-# ~/.config/fish/config.fish
 
 # ==== 基础环境 ====
 # 确保 PATH 干净且包含常用路径
