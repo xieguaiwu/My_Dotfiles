@@ -222,12 +222,12 @@ let g:neoformat_basic_format_retab = 1
 let g:neoformat_basic_format_trim = 1
 
 func! Astyle_Format()
-    if &filetype == 'cpp' || &filetype == 'cc' || &filetype == 'c' 
+    if &filetype == 'cpp' || &filetype == 'cc' || &filetype == 'c' || &filetype == 'java'
         exec '!astyle --mode=c --style=java --indent=tab --pad-oper --pad-header --unpad-paren  --suffix=none ./%'
     endif
 endfunc
 
-if &filetype != 'cpp' && &filetype != 'cc' && &filetype != 'c'
+if &filetype != 'cpp' && &filetype != 'cc' && &filetype != 'c' && &filetype != 'java'
     nnoremap <C-A-f> :Neoformat<CR>
 else
     nnoremap <C-A-f> :call Astyle_Format()<CR>
@@ -262,7 +262,7 @@ nnoremap ? :call PinyinSearch()<CR>
 nnoremap <Leader>pn :call PinyinNext()<CR>
 
 "for vim-workspace"
-let g:workspace_autocreate = 1
+"let g:workspace_autocreate = 1
 let g:workspace_persist_undo_history = 1
 let g:workspace_undodir = '/home/xieguaiwu/.vim/undodir'
 let g:workspace_autosave = 0
