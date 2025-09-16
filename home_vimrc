@@ -33,6 +33,9 @@ set guicursor=a:beam-blinkon50-blinkoff50
 
 "n-v-c:block-blinkon50,i-ci-ve:ver25-blinkon50,r-cr:hor20-blinkon50,o:hor50-blinkon50
 
+"quick replacing
+nnoremap <C-h> :%s///g<Left><Left>
+
 set cursorcolumn
 
 "technical"
@@ -148,6 +151,11 @@ func! CompileRunGcc()
         "if &filetype == 'vimwiki'
             "exec "MarkdownPreview"
         "endif
+        if &filetype == 'rust'
+            "exec ":RustTest"
+            exec ":RustBuild"
+            exec ":RustRun"
+        endif
 endfunc
 
 nnoremap <C-A-b> :call CompileRunGcc() <CR>
@@ -194,6 +202,7 @@ Plug 'scrooloose/syntastic'
 "Plug 'swaroopch/vim-markdown-preview'
 Plug 'Yggdroot/indentLine'
 Plug 'vim-scripts/indentpython.vim'
+Plug 'rust-lang/rust.vim'
 
 call plug#end()
 "for monokai theme"
@@ -221,16 +230,19 @@ let g:neoformat_basic_format_align = 1
 let g:neoformat_basic_format_retab = 1
 let g:neoformat_basic_format_trim = 1
 
-func! Astyle_Format()
+func! Self_Format()
     if &filetype == 'cpp' || &filetype == 'cc' || &filetype == 'c' || &filetype == 'java'
         exec '!astyle --mode=c --style=java --indent=tab --pad-oper --pad-header --unpad-paren  --suffix=none ./%'
     endif
+    if &filetype == 'rust'
+        exec '!rustfmt %'
+    endif
 endfunc
 
-if &filetype != 'cpp' && &filetype != 'cc' && &filetype != 'c' && &filetype != 'java'
+if &filetype != 'cpp' && &filetype != 'cc' && &filetype != 'c' && &filetype != 'java' && &filetype != 'rust'
     nnoremap <C-A-f> :Neoformat<CR>
 else
-    nnoremap <C-A-f> :call Astyle_Format()<CR>
+    nnoremap <C-A-f> :call Self_Format()<CR>
 endif
 
 "for singlecompile"
