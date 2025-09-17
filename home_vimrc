@@ -156,6 +156,9 @@ func! CompileRunGcc()
             exec ":RustBuild"
             exec ":RustRun"
         endif
+        if &filetype == 'tex'
+            exec '!pdflatex %'
+        endif
 endfunc
 
 nnoremap <C-A-b> :call CompileRunGcc() <CR>
@@ -199,10 +202,10 @@ Plug 'thaerkh/vim-workspace'
 Plug 'plasticboy/vim-markdown'
 Plug 'fatih/vim-go'
 Plug 'scrooloose/syntastic'
-"Plug 'swaroopch/vim-markdown-preview'
 Plug 'Yggdroot/indentLine'
 Plug 'vim-scripts/indentpython.vim'
 Plug 'rust-lang/rust.vim'
+Plug 'lervag/vimtex'
 
 call plug#end()
 "for monokai theme"
@@ -288,3 +291,17 @@ let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_strikethrough = 1
 let g:vim_markdown_new_list_items = 1
 let g:vim_markdown_borderless_table = 1
+
+"for vimtex
+let g:vimtex_view_method = 'zathura'     
+let g:vimtex_compiler_method = 'latexmk'
+let g:vimtex_compiler_latexmk = {
+    \ 'build_dir' : '',
+    \ 'options' : [
+    \   '-xelatex',
+    \   '-file-line-error',
+    \   '-interaction=nonstopmode',
+    \   '-synctex=1',
+    \ ],
+\}
+
