@@ -169,7 +169,7 @@ nnoremap <C-l> : tabnext <CR>
 
 "plug"
 call plug#begin('~/.vim/plugged')
-
+"run command ':CocInstall coc-snippets'
 "lsp
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 "Plug 'prabirshrestha/vim-lsp'
@@ -235,9 +235,11 @@ let g:neoformat_basic_format_trim = 1
 
 func! Self_Format()
     if &filetype == 'cpp' || &filetype == 'cc' || &filetype == 'c' || &filetype == 'java'
+        exec ':w'
         exec '!astyle --mode=c --style=java --indent=tab --pad-oper --pad-header --unpad-paren  --suffix=none ./%'
     endif
     if &filetype == 'rust'
+        exec ':w'
         exec '!rustfmt %'
     endif
 endfunc
@@ -305,3 +307,13 @@ let g:vimtex_compiler_latexmk = {
     \ ],
 \}
 
+"for lean prover
+" Lean logic symbols
+inoremap \forall ∀
+inoremap \exists ∃
+inoremap \and ∧
+inoremap \or ∨
+inoremap \to →
+inoremap \iff ↔
+inoremap \neg ¬
+inoremap \ent ⊢
