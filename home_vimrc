@@ -278,6 +278,15 @@ let g:PinyinSearch_Dict = '/home/xieguaiwu/.vim/plugged/vim-pinyinsearch/PinyinS
 nnoremap ? :call PinyinSearch()<CR>
 nnoremap <Leader>pn :call PinyinNext()<CR>
 
+"for fzf
+" 全局搜索（在当前目录下搜索字符串）
+nnoremap <leader>f :Rg<CR>
+" 文件内搜索（类似 Ctrl+F）
+nnoremap <leader>g :BLines<CR>
+
+" 打开 quickfix 搜索结果（全局搜索）
+nnoremap <leader>f :vimgrep /<C-r><C-w>/gj **/*.rs<CR>:copen<CR>
+
 "for vim-workspace"
 "let g:workspace_autocreate = 1
 let g:workspace_persist_undo_history = 1
