@@ -37,7 +37,7 @@ echo ">>> Installing funny stuff..."
 sudo dnf copr enable dejan/lazygit
 sudo dnf install -y lazygit
 sudo dnf install -y lsd nethack ncdu btop pandoc 
-sudo npm init slidev
+git clone https://github.com/maaslalani/slides
 sudo npm install -g @mermaid-js/mermaid-cli
 git clone https://github.com/andmarti1424/sc-im/
 sudo dnf install -y tldr
@@ -47,9 +47,15 @@ echo ">>> Installing translation tools"
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Karmenzind/kd/master/scripts/install.sh)"
 gawk -f (curl -Ls --compressed https://git.io/translate | psub) -- -shell
 
-echo ">>> 验证安装版本..."
-vim --version
-nvim --version
+echo ">>> Downloading graphic dependencies"
+dnf install gcc-c++ make cmake SDL2-devel SDL2_mixer-devel SDL2_net-devel git \
+zlib-devel bzip2-devel libjpeg-turbo-devel gtk2-devel SDL-devel SDL_mixer-devel \
+SDL_net-devel
+mkdir -pv ~/ecwolf_build
+cd ~/ecwolf_build
+git clone https://bitbucket.org/ecwolf/ecwolf.git
+mkdir -pv ecwolf/build
+cd ~
 
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
 
