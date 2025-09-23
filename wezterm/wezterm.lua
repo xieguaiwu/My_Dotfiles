@@ -11,15 +11,19 @@ wezterm.on("gui-startup", function(cmd) -- set startup Window position
 end)
 
 local config = {
+    default_cursor_style = "BlinkingBar",
+    -- 也可以选 "SteadyBar" （竖条但不闪烁）
+    -- 其它可选项有：Block, BlinkingBlock, SteadyBlock, Underline, SteadyUnderline, BlinkingUnderline
+    force_reverse_video_cursor = true,
     check_for_updates = true,
-    font_size = 16,
-    -- font = wezterm.font("JetBrainsMonoNL Nerd Font Mono", { weight = "Regular" }),
+    font_size = 15,
+    -- font = wezterm.font("JetBrains MonoNL Font Mono", { weight = "Regular" }),
     -- font = wezterm.font("Hack Nerd Font", { weight = "Regular" }),
     font = wezterm.font_with_fallback({
         -- { family = "FiraCode Nerd Font Mono", weight = "Regular" },
         -- { family = "Hack Nerd Font", weight = "Regular" },
         -- { family = "MesloLGL Nerd Font Mono", weight = "Regular" },
-        { family = "JetBrainsMono Nerd Font", weight = "Medium" },
+        { family = "JetBrains Mono", weight = "Medium" },
         -- { family = "Sarasa Term SC Nerd", weight = "Regular" },
         -- { family = "SF Pro", weight = "Regular" },
     }),
