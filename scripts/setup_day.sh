@@ -6,7 +6,7 @@ set -e
 echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
 sudo dnf install -y curl git npm wget gawk node
-sudo dnf install -y clash-verge
+sudo dnf install -y clash-verge flatpak
 sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk
 
 echo ">>> Installing fish shell and wezterm..."
@@ -44,6 +44,8 @@ sudo npm install -g @mermaid-js/mermaid-cli
 git clone https://github.com/andmarti1424/sc-im/
 sudo dnf install -y tldr
 tldr --update
+flatpak install flathub org.telegram.desktop
+curl "https://github.com/erkyrath/lectrote/releases/tag/lectrote-1.5.5/Lectrote-1.5.5-linux-x64.zip"
 
 echo ">>> Installing translation tools"
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Karmenzind/kd/master/scripts/install.sh)"
@@ -59,6 +61,7 @@ cd ecwolf/build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DGPL=ON
 make
 cd ~
+sudo dnf install -y obs-studio
 
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
 

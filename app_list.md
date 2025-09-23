@@ -14,8 +14,8 @@
 14. fcitx
 15. mermaid-cli
 16. splayer
-17. youdao
-18. go_musicfox
+17. lectrote
+18. obs-studio
 19. clash verge
 20. pandoc
 21. Jetbrains MONO fonts
@@ -34,4 +34,4 @@ pip3 install --upgrade pip
 sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-build
 sudo dnf install -y SDL2-devel mesa-libGL-devel mesa-libEGL-devel \
 gsl-devel fftw-devel openmpi-devel
-
+33. telegram
