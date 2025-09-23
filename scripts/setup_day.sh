@@ -7,6 +7,7 @@ echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
 sudo dnf install -y curl git npm wget gawk node
 sudo dnf install -y clash-verge
+sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk
 
 echo ">>> Installing fish shell and wezterm..."
 sudo dnf install -y fish
@@ -52,10 +53,11 @@ echo ">>> Downloading graphic dependencies"
 sudo dnf install -y gcc-c++ make cmake SDL2-devel SDL2_mixer-devel SDL2_net-devel git \
 zlib-devel bzip2-devel libjpeg-turbo-devel gtk2-devel SDL-devel SDL_mixer-devel \
 SDL_net-devel
-mkdir -pv ~/ecwolf_build
-cd ~/ecwolf_build
 git clone https://bitbucket.org/ecwolf/ecwolf.git
-mkdir -pv ecwolf/build
+mkdir ecwolf/build
+cd ecwolf/build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DGPL=ON
+make
 cd ~
 
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
