@@ -25,3 +25,13 @@
 25. lazygit
 26. trans-shell
 27. kd
+28. obsidian
+29. gnome-extension
+30. sudo dnf install -y python3 python3-pip python3-virtualenv python3-devel
+pip3 install --upgrade pip
+31. sudo dnf install -y java-latest-openjdk java-latest-openjdk-devel
+32. sudo dnf groupinstall -y "Development Tools"
+sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-build
+sudo dnf install -y SDL2-devel mesa-libGL-devel mesa-libEGL-devel \
+gsl-devel fftw-devel openmpi-devel
+
