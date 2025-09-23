@@ -11,6 +11,7 @@ sudo dnf install -y clash-verge
 echo ">>> Installing fish shell and wezterm..."
 sudo dnf install -y fish
 sudo dnf install -y https://github.com/wezterm/wezterm/releases/download/20240203-110809-5046fc22/wezterm-20240203_110809_5046fc22-1.fedora39.x86_64.rpm
+curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
 
 echo ">>> Copying config files..."
 git clone https://github.com/xieguaiwu/My_Dotfiles
@@ -48,7 +49,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Karmenzind/kd/master/scr
 gawk -f (curl -Ls --compressed https://git.io/translate | psub) -- -shell
 
 echo ">>> Downloading graphic dependencies"
-dnf install gcc-c++ make cmake SDL2-devel SDL2_mixer-devel SDL2_net-devel git \
+sudo dnf install -y gcc-c++ make cmake SDL2-devel SDL2_mixer-devel SDL2_net-devel git \
 zlib-devel bzip2-devel libjpeg-turbo-devel gtk2-devel SDL-devel SDL_mixer-devel \
 SDL_net-devel
 mkdir -pv ~/ecwolf_build
