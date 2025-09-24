@@ -19,6 +19,8 @@ sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-b
 
 echo ">>> 可选: 安装常用科学/图形库..."
 sudo dnf install -y SDL2-devel mesa-libGL-devel mesa-libEGL-devel gsl-devel fftw-devel openmpi-devel || true
+sudo dnf install -y ctags
+
 echo ">>> Verifying..."
 python3 --version
 pip3 --version
