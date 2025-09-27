@@ -60,14 +60,19 @@ end
 if not contains $HOME/.local/bin $PATH
     set -gx PATH $HOME/.local/bin $PATH
 end
+if not contains $HOME/.cargo/bin $PATH
+    set -gx PATH $HOME/.cargo/bin:$PATH
+end
 
 # 默认编辑器
-set -gx EDITOR nvim
-set -gx VISUAL nvim
+set -gx EDITOR vim
+set -gx VISUAL vim
 
 # ==== 常用别名 ====
 alias ll='ls -lh'
 alias la='ls -lha'
+alias lsl='lsd --long --human-readable --all'
+alias lsa='lsd -a'
 alias ..='cd ..'
 alias ...='cd ../..'
 
@@ -78,7 +83,6 @@ alias gc='git commit -m'
 alias gp='git push'
 alias gl='git log --oneline --graph --decorate'
 
-# 系统常用
 alias update='sudo dnf update -y'
 alias install='sudo dnf install -y'
 alias remove='sudo dnf remove -y'
@@ -88,7 +92,7 @@ function mkcd
     cd $argv
 end
 
-# 快速搜索命令历史（模糊匹配）
+#fuzzy search
 function fh
     history | fzf | read -l cmd
     if test -n "$cmd"
@@ -117,4 +121,4 @@ function extract
     end
 end
 
-fish_vi_key_bindings   # vi 模式（实用，命令行编辑更方便）
+fish_vi_key_bindings   # vi 模式
