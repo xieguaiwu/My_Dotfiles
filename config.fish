@@ -2,58 +2,6 @@ if status is-interactive
     # Commands to run in interactive sessions can go here
 end
 
-# ~/.config/fish/config.fish
-
-# 设置 PATH（确保不重复）
-if not contains /usr/local/bin $PATH
-    set -gx PATH /usr/local/bin $PATH
-end
-
-# 设置默认编辑器
-set -gx EDITOR vim
-set -gx VISUAL vim
-
-# 常用别名
-alias ll='ls -lh'
-alias la='ls -lha'
-alias gs='git status'
-alias gc='git commit'
-alias gp='git push'
-alias gl='git log --oneline --graph --decorate'
-
-alias update='sudo dnf update -y'
-alias install='sudo dnf install -y'
-alias remove='sudo dnf remove -y'
-
-function mkcd
-    mkdir -p $argv
-    cd $argv
-end
-
-# Git 快速分支切换
-function gco
-    git checkout $argv
-end
-
-function fish_prompt
-    set_color cyan
-    echo -n (whoami)"@"(hostname) " "
-    set_color yellow
-    echo -n (prompt_pwd) " "
-    set_color green
-    echo -n (date "+%H:%M")" "
-    set_color magenta
-    echo -n "❯ "
-    set_color normal
-end
-
-fish_vi_key_bindings
-
-# fisher install jethrokuan/z
-# fisher install jethrokuan/fzf
-
-# ==== 基础环境 ====
-# 确保 PATH 干净且包含常用路径
 if not contains /usr/local/bin $PATH
     set -gx PATH /usr/local/bin $PATH
 end
@@ -87,10 +35,32 @@ alias update='sudo dnf update -y'
 alias install='sudo dnf install -y'
 alias remove='sudo dnf remove -y'
 
+
+# ~/.config/fish/config.fish
 function mkcd
     mkdir -p $argv
     cd $argv
 end
+
+# Git 快速分支切换
+function gco
+    git checkout $argv
+end
+
+function fish_prompt
+    set_color cyan
+    echo -n (whoami)"@"(hostname) " "
+    set_color yellow
+    echo -n (prompt_pwd) " "
+    set_color green
+    echo -n (date "+%H:%M")" "
+    set_color magenta
+    echo -n "❯ "
+    set_color normal
+end
+
+# fisher install jethrokuan/z
+# fisher install jethrokuan/fzf
 
 #fuzzy search
 function fh
