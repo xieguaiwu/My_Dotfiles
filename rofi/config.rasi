@@ -1,0 +1,29 @@
+configuration {
+    modi: "drun,run,window";
+    font: "JetBrains Mono 12";
+    show-icons: true;
+    icon-theme: "Papirus";
+    terminal: "wezterm";
+    drun-display-format: "{name}";
+    location: 0;
+    disable-history: false;
+    display-drun: "  Apps ";
+    display-run: "  Run ";
+    display-window: "  Windows ";
+}
+
+* {
+    background: #1e1e2e;
+    foreground: #cdd6f4;
+    selected-background: #89b4fa;
+    selected-foreground: #1e1e2e;
+    font: "JetBrains Mono 12";
+}
+
+window {
+    transparency: "real";
+    border: 2px;
+    border-radius: 8px;
+    padding: 10px;
+}
+
