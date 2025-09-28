@@ -1,8 +1,16 @@
+font pango:JetBrains Mono 12
+
 # 使用 Super 键作为修饰键
 set $mod Mod4
 
 # 启动终端（wezterm）
 bindsym $mod+Return exec wezterm
+
+# 锁屏
+bindsym $mod+x exec /home/xieguaiwu/.config/i3scripts/lock
+exec --no-startup-id xautolock -time 10 -locker "i3lock -c 000000"
+# 启动 xss-lock，并在系统挂起前/恢复后运行 i3lock
+exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork -c 000000
 
 # 关闭窗口
 bindsym Ctrl+q kill
@@ -56,8 +64,34 @@ bindsym $mod+Shift+7 move container to workspace $ws7
 bindsym $mod+Shift+8 move container to workspace $ws8
 bindsym $mod+Shift+9 move container to workspace $ws9
 
+# 窗口的色彩方案
+set $bgcolor    #523d64
+set $in-bgcolor #363636
+set $text       #ffffff
+set $u-bgcolor  #ff0000
+set $indicator  #a8a3c1
+set $in-text    #969696
+#                       边框            背景            文本            指示器（显示下一个窗口位置的线条）     
+client.focused          $bgcolor        $bgcolor        $text           $indicator
+client.unfocused        $in-bgcolor     $in-bgcolor     $in-text        $in-bgcolor
+client.focused_inactive $in-bgcolor     $in-bgcolor     $in-text        $in-bgcolor
+client.urgent           $u-bgcolor      $u-bgcolor      $text           $u-bgcolor
+
 # 状态栏
-exec_always --no-startup-id waybar
+#exec_always --no-startup-id waybar
+#exec_always --no-startup-id i3status
+bar {
+        status_command i3status -c /home/xieguaiwu/.config/i3status/i3status.conf
+        colors {
+                background $bgcolor
+                separator #191919
+                #                       border          background      text
+                focused_workspace       $bgcolor        $bgcolor        $text
+                inactive_workspace      $in-bgcolor     $in-bgcolor     $text
+                urgent_workspace        $u-bgcolor      $u-bgcolor      $text   
+
+        }
+}
 
 # input method
 exec_always --no-startup-id fcitx5
