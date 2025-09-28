@@ -42,3 +42,5 @@ gsl-devel fftw-devel openmpi-devel
 38. i3
 39. pulse
 40. picom
+41. brightnessctl
+42. pactl
