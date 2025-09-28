@@ -81,3 +81,22 @@ exec_always --no-startup-id clash-verge
 exec --no-startup-id xinput set-prop "Elan Touchpad" "libinput Natural Scrolling Enabled" 1
 exec --no-startup-id xinput set-prop "Elan Touchpad" "libinput Tapping Enabled" 1
 
+# -------------------- 音频控制 --------------------
+# 音量增大
+bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +1%
+
+# 音量减小
+bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -1%
+
+# 扬声器/主音量静音/取消静音
+bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
+
+# 麦克风静音/取消静音
+bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
+
+# -------------------- 亮度控制 (使用 brightnessctl) --------------------
+# 亮度增加
+bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl set +1%
+
+# 亮度减小
+bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 1%-
