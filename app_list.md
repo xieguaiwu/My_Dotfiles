@@ -41,3 +41,4 @@ gsl-devel fftw-devel openmpi-devel
 37. rofi
 38. i3
 39. pulse
+40. picom
