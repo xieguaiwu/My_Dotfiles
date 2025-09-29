@@ -108,6 +108,19 @@ bindsym $mod+d exec rofi -show drun
 # 窗口切换器 (Super+Tab)
 bindsym $mod+Tab exec rofi -show window
 
+# network stuff
+exec_always --no-startup-id nm-applet
+
+# bluetooth stuff
+exec_always --no-startup-id blueman
+
+# start screen settings and apearance settings
+bindsym $mod+r exec --no-startup-id arandr
+bindsym $mod+a exec --no-startup-id lxappearance
+
+# mount media
+exec_always --no-startup-id udiskie -t
+
 # start vpn
 exec_always --no-startup-id clash-verge
 
