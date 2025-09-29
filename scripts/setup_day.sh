@@ -30,6 +30,7 @@ wget "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.9.12/
 
 sudo rpm -v --import https://download.sublimetext.com/sublimehq-rpm-pub.gpg
 sudo dnf config-manager addrepo --from-repofile=https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo
+sudo dnf install sublime-text
 
 echo ">>> Installing yazi..."
 sudo dnf copr enable lihaohong/yazi
@@ -50,6 +51,8 @@ wget "https://github.com/erkyrath/lectrote/releases/tag/lectrote-1.5.5/Lectrote-
 echo ">>> Installing translation tools"
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Karmenzind/kd/master/scripts/install.sh)"
 gawk -f (curl -Ls --compressed https://git.io/translate | psub) -- -shell
+wget git.io/trans
+chmod +x ./trans
 
 echo ">>> Downloading graphic dependencies"
 sudo dnf install -y gcc-c++ make cmake SDL2-devel SDL2_mixer-devel SDL2_net-devel git \
