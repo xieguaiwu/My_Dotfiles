@@ -47,6 +47,7 @@ sudo dnf install -y tldr
 tldr --update
 flatpak install flathub org.telegram.desktop
 wget "https://github.com/erkyrath/lectrote/releases/tag/lectrote-1.5.5/Lectrote-1.5.5-linux-x64.zip"
+wget "https://github.com/imsyy/SPlayer/releases/download/v3.0.0-beta.2/splayer-3.0.0-beta.2.x86_64.rpm"
 
 echo ">>> Installing translation tools"
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Karmenzind/kd/master/scripts/install.sh)"
