@@ -40,7 +40,6 @@ echo ">>> Installing funny stuff..."
 sudo dnf copr enable dejan/lazygit
 sudo dnf install -y lazygit
 sudo dnf install -y lsd nethack ncdu btop pandoc 
-git clone https://github.com/maaslalani/slides
 sudo npm install -g @mermaid-js/mermaid-cli
 git clone https://github.com/andmarti1424/sc-im/
 sudo dnf install -y tldr
@@ -68,5 +67,7 @@ make
 cd ~
 sudo dnf install -y obs-studio
 
+echo ">>> Installing i3 stuff"
+sudo dnf install -y xinput xset dunst waybar rofi i3 pulse picom brightnessctl pactl xautolock xss-lock
+sudo dnf install -y arandr nm-applet blueman-applet lxappearance
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
-
