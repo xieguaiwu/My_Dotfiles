@@ -5,7 +5,7 @@ set -e
 
 echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
-sudo dnf install -y curl git npm wget gawk node
+sudo dnf install -y curl git npm wget gawk node yacc
 sudo dnf install -y clash-verge flatpak
 sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk
 
