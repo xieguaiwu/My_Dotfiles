@@ -1,0 +1,72 @@
+/* Wofi 外观样式文件 */
+
+/* --- 全局样式 --- */
+* {
+    /* 对应 font [cite: 3] */
+    font-family: "JetBrains Mono";
+    font-size: 12px;
+}
+
+/* --- 主窗口 --- */
+window {
+    /* 对应 background [cite: 3] 和 transparency: "real" */
+    /* #1e1e2e 的 RGBA 写法，0.95 是透明度，可以自行调整 */
+    background-color: rgba(30, 30, 46, 0.95);
+    
+    /* 对应 border 和 border-radius [cite: 4] */
+    border: 2px solid #89b4fa;
+    border-radius: 8px;
+}
+
+/* --- 输入框 --- */
+#input {
+    margin: 10px; /* 对应 padding [cite: 4] */
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    background-color: #313244;
+    color: #cdd6f4; /* 对应 foreground [cite: 3] */
+}
+
+/* --- 结果列表 --- */
+#inner-box {
+    margin: 0 10px; /* 对应 padding [cite: 4] */
+}
+
+/* --- 列表中的条目 --- */
+#entry {
+    padding: 8px;
+    border-radius: 4px;
+}
+
+/* --- 选中的条目 --- */
+#entry:selected {
+    /* 对应 selected-background 和 selected-foreground [cite: 3] */
+    background-color: #89b4fa;
+    color: #1e1e2e;
+}
+
+/* --- 选中条目的图标 --- */
+#entry:selected image {
+    /* 使选中条目的图标也变为深色，以保证可见性 */
+    color: #1e1e2e;
+}
+
+/* --- 模式切换按钮 (drun, run, window) --- */
+#buttons {
+    margin: 0 10px 10px 10px; /* 对应 padding [cite: 4] */
+}
+
+#buttons button {
+    padding: 8px;
+    border-radius: 4px;
+    border: none;
+    background-color: #313244;
+    color: #cdd6f4; /* 对应 foreground [cite: 3] */
+}
+
+/* --- 鼠标悬停或选中的模式按钮 --- */
+#buttons button:hover,
+#buttons button:focus {
+    background-color: #45475a;
+}
