@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# Color variables from your i3lock script
+BLANK='#00000000'
+CLEAR='#ffffff22'
+DEFAULT='#00897bE6'
+TEXT='#00897bE6'
+WRONG='#880000bb'
+VERIFYING='#00564dE6'
+
+swaylock \
+--inside-ver-color=$CLEAR \
+--ring-ver-color=$VERIFYING \
+\
+--inside-wrong-color=$CLEAR \
+--ring-wrong-color=$WRONG \
+\
+--inside-clear-color=$BLANK \
+--ring-color=$DEFAULT \
+--line-color=$BLANK \
+--separator-color=$DEFAULT \
+\
+--text-ver-color=$TEXT \
+--text-wrong-color=$TEXT \
+--clock-color=$TEXT \
+--date-color=$TEXT \
+--layout-text-color=$TEXT \
+--key-hl-color=$WRONG \
+--bs-hl-color=$WRONG \
+\
+--indicator \
+--clock \
+--effect-blur 7x5 \
+--effect-vignette 0.5:0.5 \
+--fade-in 0.2 \
+--font "JetBrains Mono" \
+--time-format "%H:%M:%S" \
+--date-format "%A, %Y-%m-%d"
+

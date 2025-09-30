@@ -1,0 +1,11 @@
+show=drun,run,window
+
+# 启用图标
+# allow_images=true
+
+term=wezterm
+
+hide_scroll=false
+
+# Wofi 的位置，对应 location: 0 (居中) 
+location=center

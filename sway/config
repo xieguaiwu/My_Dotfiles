@@ -1,0 +1,140 @@
+# 字体
+font pango:JetBrains Mono 16
+
+# 使用 Super 键作为修饰键
+set $mod Mod4
+
+# 启动终端 (wezterm)
+bindsym $mod+Return exec wezterm
+
+# --- 锁屏 ---
+bindsym $mod+x exec /home/xieguaiwu/.config/sway/scripts/lock
+exec swayidle -w \
+         timeout 600 'swaylock -f' \
+         before-sleep 'swaylock -f'
+
+# 关闭窗口
+bindsym Ctrl+q kill
+
+# 窗口平铺/浮动切换
+bindsym $mod+Shift+space floating toggle
+
+# 窗口全屏
+bindsym $mod+f fullscreen toggle
+
+# --- 窗口焦点移动 (vim 风格) ---
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# --- 窗口移动 ---
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
+
+# --- 工作区 ---
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9"
+
+# 切换工作区
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+bindsym $mod+6 workspace $ws6
+bindsym $mod+7 workspace $ws7
+bindsym $mod+8 workspace $ws8
+bindsym $mod+9 workspace $ws9
+
+# 移动窗口到工作区
+bindsym $mod+Shift+1 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws4
+bindsym $mod+Shift+5 move container to workspace $ws5
+bindsym $mod+Shift+6 move container to workspace $ws6
+bindsym $mod+Shift+7 move container to workspace $ws7
+bindsym $mod+Shift+8 move container to workspace $ws8
+bindsym $mod+Shift+9 move container to workspace $ws9
+
+# --- 窗口颜色方案 ---
+set $bgcolor    #523d64
+set $in-bgcolor #363636
+set $text       #ffffff
+set $u-bgcolor  #ff0000
+set $indicator  #a8a3c1
+set $in-text    #969696
+#                       边框            背景            文本            指示器
+client.focused          $bgcolor        $bgcolor        $text           $indicator
+client.unfocused        $in-bgcolor     $in-bgcolor     $in-text        $in-bgcolor
+client.focused_inactive $in-bgcolor     $in-bgcolor     $in-text        $in-bgcolor
+client.urgent           $u-bgcolor      $u-bgcolor      $text           $u-bgcolor
+
+# --- 状态栏 (swaybar) ---
+exec_always --no-startup-id waybar
+
+# --- 开机自启应用 ---
+# 输入法 (fcitx5)
+exec_always --no-startup-id fcitx5
+
+output * bg /usr/share/backgrounds/fedora-workstation/petals_dark.webp center
+
+# 启动 VPN
+exec_always --no-startup-id clash-verge
+
+# 启动系统托盘图标：网络和蓝牙
+exec_always --no-startup-id nm-applet
+exec_always --no-startup-id blueman-applet
+
+# 自动挂载可移动媒体
+exec_always --no-startup-id udiskie -t
+
+# --- 应用启动器 ---
+bindsym $mod+d exec wofi --show drun
+
+# 使用 wofi 作为窗口切换器 (Super+Tab)
+bindsym $mod+Tab exec wofi --show window
+
+bindsym $mod+r exec --no-startup-id wdisplays
+bindsym $mod+a exec --no-startup-id lxappearance
+
+# file manager
+exec_always xgd-mime default org.gnome.Nautilus.desktop inode/directory
+bindsym $mod+e exec --no-startup-id nautilus
+
+# --- 输入设备配置 ---
+#"Synaptics TM3289-002" 
+input type:touchpad {
+    natural_scroll enabled
+    tap enabled
+    tap_button_map lrm
+}
+
+# --- 音频和亮度控制 (无需改动) ---
+# 音量控制
+bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +1%
+bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -1%
+bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
+
+# 麦克风静音
+bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
+
+# 亮度控制
+bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl set +1%
+bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 1%-
+
+# screenshot
+bindsym Print exec grim -g "$(slurp)" - | wl-copy
+bindsym $mod+Print exec grim - | wl-copy
+
+bindsym $mod+Shift+c reload
