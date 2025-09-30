@@ -147,3 +147,6 @@ bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl set +1%
 
 # 亮度减小
 bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 1%-
+
+# reload
+bindsym $mod+Shift+c reload
