@@ -1,72 +1,60 @@
-/* Wofi 外观样式文件 */
+/* # By knightfall01 on Github as a part of https://github.com/Knightfall01/Hyprland-config */
 
-/* --- 全局样式 --- */
+
 * {
-    /* 对应 font [cite: 3] */
-    font-family: "JetBrains Mono";
-    font-size: 12px;
+  font-family: "JetBrainsMono Nerd Font";
+  color: #c4d3da;
 }
 
-/* --- 主窗口 --- */
 window {
-    /* 对应 background [cite: 3] 和 transparency: "real" */
-    /* #1e1e2e 的 RGBA 写法，0.95 是透明度，可以自行调整 */
-    background-color: rgba(30, 30, 46, 0.95);
-    
-    /* 对应 border 和 border-radius [cite: 4] */
-    border: 2px solid #89b4fa;
-    border-radius: 8px;
+  border: 3px solid #90cdfa;
+  background: #1e2030;
+  border-radius: 15px;
 }
 
-/* --- 输入框 --- */
 #input {
-    margin: 10px; /* 对应 padding [cite: 4] */
-    padding: 8px;
-    border: none;
-    border-radius: 4px;
-    background-color: #313244;
-    color: #cdd6f4; /* 对应 foreground [cite: 3] */
+  margin: 1.5em;
+  margin-bottom: 0em;
+  padding: 1em;
+  border: none;
+  font-weight: bold;
+  background: #1e2030;
+  color: #c4d3da;
+  border-radius: 15px;
 }
 
-/* --- 结果列表 --- */
+#input:focus {
+  border: 1px solid #90cdfa;
+}
+
 #inner-box {
-    margin: 0 10px; /* 对应 padding [cite: 4] */
+  margin: 1.5em;
+  margin-top: 0.5em;
 }
 
-/* --- 列表中的条目 --- */
+#outer-box {
+  margin-bottom: 0.5em;
+}
+
+#scroll {
+  margin-top: 5px 0;
+  display: none;
+}
+
+#text {
+  margin-left: 0.5em;
+  color: #c4d3da;
+}
+
+#text:selected {
+  color: #16161e;
+}
+
 #entry {
-    padding: 8px;
-    border-radius: 4px;
+  margin-top: 0.5em;
+  border-radius: 15px;
 }
 
-/* --- 选中的条目 --- */
 #entry:selected {
-    /* 对应 selected-background 和 selected-foreground [cite: 3] */
-    background-color: #89b4fa;
-    color: #1e1e2e;
-}
-
-/* --- 选中条目的图标 --- */
-#entry:selected image {
-    /* 使选中条目的图标也变为深色，以保证可见性 */
-    color: #1e1e2e;
-}
-
-/* --- 模式切换按钮 (drun, run, window) --- */
-#buttons {
-    margin: 0 10px 10px 10px; /* 对应 padding [cite: 4] */
-}
-
-#buttons button {
-    padding: 8px;
-    border-radius: 4px;
-    border: none;
-    background-color: #313244;
-    color: #cdd6f4; /* 对应 foreground [cite: 3] */
-}
-
-/* --- 鼠标悬停或选中的模式按钮 --- */
-#buttons button:hover,
-#buttons button:focus {
-    background-color: #45475a;
+  background: linear-gradient(90deg, #90cdfa 0%, #b69bf1 80%);
 }
