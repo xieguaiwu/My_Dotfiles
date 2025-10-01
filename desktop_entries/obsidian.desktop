@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=obsidian
+Exec=/home/xieguiawu/obsidian/obsidian.AppImage
+Type=Application
+Categories=Utility
+StartupNotify=true
+MimeType=x-scheme-handler/obsidian;
