@@ -1,83 +1,73 @@
 * {
-    border: none;
-    border-radius: 0;
-    font-family: "JetBrains Mono Nerd Font";
-    font-size: 12px;
-    min-height: 0;
+  padding: 0;
+  margin: 0;
+  font-family: JetBrainsMono Nerd Font;
+  font-weight: bold;
+  font-size: 16px;
+  background-color: rgba(30,32,48,1); /* Reduced opacity background */ 
+}
+
+.modules-right {
+  border-radius: 5px 0px 0px 5px;
 }
 
 window#waybar {
-    background: #523d64;
-    color: #ffffff;
-    border-bottom: 1px solid #363636;
+  background: #523d64;
+  color: #ffffff;
+  border-bottom: 1px solid #363636;
+}
+
+#custom-launcher {
+  font-size: 20px;
+  color: #00bfff;
+  padding-right: 10px;
+  background-color: rgba(30,32,48,1);
 }
 
 #workspaces button {
-    padding: 0 8px;
-    background: transparent;
-    color: #ffffff;
-    border-bottom: 2px solid transparent;
+  background: #191a24;
+  color: #c0caf5;
 }
 
-#workspaces button.focused {
-    background: #523d64;
-    border-bottom: 2px solid #a8a3c1;
+#workspaces button.active {
+  color: #2ac3de;
 }
 
-#workspaces button.urgent {
-    background: #ff0000;
-    color: #ffffff;
-}
-
-#mode {
-    background: #ff0000;
-    color: #ffffff;
-    padding: 0 8px;
-    margin: 0 4px;
-    border-radius: 4px;
-}
-
-#window {
-    padding: 0 12px;
-}
-
-#cpu, #memory, #disk, #pulseaudio, #battery, #clock, #tray {
-    padding: 0 8px;
-    margin: 0 2px;
+#cpu,
+#memory,
+#temperature {
+  font-size: 15px;
+  background: #363a4f;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 #cpu {
-    color: #88b090;
+  color: #eed49f;
+  padding: 0px 10px 0px 12px;
+  border-radius: 5px 0px 0px 5px;
 }
 
 #memory {
-    color: #ccdc90;
+  color: #a6da95;
+  padding: 0px 10px 0px 0px;
 }
 
-#disk {
-    color: #e89393;
+#temperature {
+  color: #8aadf4;
+  padding: 0px 12px 0px 0px;
+  border-radius: 0px 5px 5px 0px;
 }
 
-#pulseaudio {
-    color: #a8a3c1;
-}
-
-#pulseaudio.muted {
-    color: #ff0000;
-}
-
-#battery {
-    color: #88b090;
-}
-
-#battery.warning {
-    color: #ccdc90;
-}
-
-#battery.critical {
-    color: #ff0000;
+#custom-window-name {
+  color: #68b0d6;
+  margin-right: 10px;
+  background-color: rgba(30,32,48,1);
 }
 
 #clock {
-    color: #a8a3c1;
+  padding-left: 10px;
 }
+
+/*# sourceMappingURL=style.css.map */
+
