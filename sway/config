@@ -134,7 +134,6 @@ bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl set +1%
 bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 1%-
 
 # screenshot
-bindsym Print exec grim -g "$(slurp)" - | wl-copy
+bindsym Print exec grim -g "$(slurp)" ~/Pictures/screenshots/$(date +"%Y%m%d-%H%M%S").png
 bindsym $mod+Print exec grim - | wl-copy
-
 bindsym $mod+Shift+c reload
