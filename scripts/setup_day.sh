@@ -70,7 +70,8 @@ make
 cd ~
 sudo dnf install -y obs-studio
 
-echo ">>> Installing i3 stuff"
-sudo dnf install -y xinput xset dunst waybar rofi i3 pulse picom brightnessctl pactl xautolock xss-lock
+echo ">>> Installing sway stuff"
+sudo dnf install -y sway waybar NetworkManager-tui network-manager-applet 
+sudo dnf install -y dunst wofi pulse brightnessctl pactl libinput
 sudo dnf install -y arandr nm-applet blueman-applet lxappearance
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
