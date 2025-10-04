@@ -29,7 +29,7 @@ window {
 
 #inner-box {
   margin: 1.5em;
-  margin-top: 0.5em;
+  /*margin-top: 0.5em;*/
 }
 
 #outer-box {
@@ -37,8 +37,8 @@ window {
 }
 
 #scroll {
-  margin-top: 5px 0;
-  display: none;
+  /*margin-top: 5px 0;
+  display: none;*/
 }
 
 #text {
@@ -51,7 +51,7 @@ window {
 }
 
 #entry {
-  margin-top: 0.5em;
+  /*margin-top: 0.5em;*/
   border-radius: 15px;
 }
 

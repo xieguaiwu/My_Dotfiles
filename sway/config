@@ -82,6 +82,7 @@ client.urgent           $u-bgcolor      $u-bgcolor      $text           $u-bgcol
 
 # --- 状态栏 (swaybar) ---
 exec_always --no-startup-id waybar
+exec nm-applet --indicator
 
 # --- 开机自启应用 ---
 # 输入法 (fcitx5)
