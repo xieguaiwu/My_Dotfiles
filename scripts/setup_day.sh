@@ -41,16 +41,25 @@ sudo dnf install -y yazi
 
 echo ">>> Installing funny stuff..."
 sudo dnf copr enable dejan/lazygit
-sudo dnf install -y lazygit
-sudo dnf install -y lsd nethack ncdu btop pandoc 
-sudo npm install -g @mermaid-js/mermaid-cli
-git clone https://github.com/andmarti1424/sc-im/
-sudo dnf install -y tldr
+sudo dnf install -y lsd nethack ncdu lazygit btop pandoc cowsay tldr  
 tldr --update
+sudo npm install -g @mermaid-js/mermaid-cli
+cd ~
+git clone https://github.com/andmarti1424/sc-im/
+cd sc-im/
+make -C src
+make -C src install
+cd ~
+git clone https://github.com/abishekvashok/cmatrix
+mkdir cmatrix/build
+cmake ..
+make
+make install
 flatpak install flathub org.telegram.desktop
 wget "https://github.com/erkyrath/lectrote/releases/tag/lectrote-1.5.5/Lectrote-1.5.5-linux-x64.zip"
 wget "https://github.com/imsyy/SPlayer/releases/download/v3.0.0-beta.2/splayer-3.0.0-beta.2.x86_64.rpm"
 sudo dnf install ./splayer-3.0.0-beta.2.x86_64.rpm
+
 
 echo ">>> Installing translation tools"
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Karmenzind/kd/master/scripts/install.sh)"
