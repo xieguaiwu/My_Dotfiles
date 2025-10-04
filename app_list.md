@@ -35,15 +35,13 @@ sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-b
 sudo dnf install -y SDL2-devel mesa-libGL-devel mesa-libEGL-devel \
 gsl-devel fftw-devel openmpi-devel
 33. telegram
-34. xinput, xset
+34. blueman-applet nm-applet
 35. dunst
 36. waybar
-37. rofi
-38. i3
+37. wofi
+38. sway
 39. pulse
-40. picom
+40. udiskie grim
 41. brightnessctl
 42. pactl
-43. xautolock
-44. xss-lock
 45. NetworkManager-tui network-manager-applet
