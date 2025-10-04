@@ -46,3 +46,4 @@ gsl-devel fftw-devel openmpi-devel
 42. pactl
 43. xautolock
 44. xss-lock
+45. NetworkManager-tui network-manager-applet
