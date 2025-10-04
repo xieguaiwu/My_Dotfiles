@@ -15,7 +15,7 @@ sudo dnf install -y java-latest-openjdk java-latest-openjdk-devel maven gradle
 
 echo ">>> 安装 C/C++ 工具链..."
 sudo dnf groupinstall -y "Development Tools"
-sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-build
+sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-build astyle
 
 echo ">>> 可选: 安装常用科学/图形库..."
 sudo dnf install -y SDL2-devel mesa-libGL-devel mesa-libEGL-devel gsl-devel fftw-devel openmpi-devel || true
