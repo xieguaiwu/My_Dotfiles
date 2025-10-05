@@ -19,17 +19,20 @@ curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fi
 
 echo ">>> Copying config files..."
 git clone https://github.com/xieguaiwu/My_Dotfiles
+mkdir ~/.config/fish
+mv ~/My_Dotfiles/config.fish ~/.config
 
 echo ">>> Installing text editors..."
 sudo dnf install -y vim nvim
-mv ~/My_Dotfiles/home_vimrc ~/.vimrc
+mv ~/My_Dotfiles/vimrc ~/.vimrc
 mv ~/My_Dotfiles/nethackrc ~/.nethackrc
 mkdir ~/.vim
 mkdir ~/.vim/autoload
 git clone https://github.com/junegunn/vim-plug
-mv ~/vim-plug ~/.vim/autoload
+mv ~/vim-plug/plug.vim ~/.vim/autoload
 
 wget "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.9.12/Obsidian-1.9.12.AppImage"
+chmod +x ./Obsidian-1.9.12.AppImage
 
 sudo rpm -v --import https://download.sublimetext.com/sublimehq-rpm-pub.gpg
 sudo dnf config-manager addrepo --from-repofile=https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo
@@ -38,24 +41,32 @@ sudo dnf install sublime-text
 echo ">>> Installing yazi..."
 sudo dnf copr enable lihaohong/yazi
 sudo dnf install -y yazi
+mv ~/My_Dotfiles/yazi ~/.config/
 
 echo ">>> Installing funny stuff..."
 sudo dnf copr enable dejan/lazygit
 sudo dnf install -y lsd nethack ncdu lazygit btop pandoc cowsay cbonsai tldr  
 tldr --update
+mv ~/My_Dotfiles/lazygit ~/.config/
 sudo npm install -g @mermaid-js/mermaid-cli
+mv ~/My_Dotfiles/mermaid ~/.config/
+
 cd ~
 git clone https://github.com/andmarti1424/sc-im/
-cd sc-im/
+cd sc-im/src
 make -C src
 sudo make -C src install
+mv ~/My_Dotfiles/sc-im ~/.config/
+
 cd ~
 git clone https://github.com/abishekvashok/cmatrix
 mkdir cmatrix/build
+cd cmatrix/build
 cmake ..
 make
 sudo make install
 flatpak install flathub org.telegram.desktop
+
 wget "https://github.com/erkyrath/lectrote/releases/tag/lectrote-1.5.5/Lectrote-1.5.5-linux-x64.zip"
 wget "https://github.com/imsyy/SPlayer/releases/download/v3.0.0-beta.2/splayer-3.0.0-beta.2.x86_64.rpm"
 sudo dnf install ./splayer-3.0.0-beta.2.x86_64.rpm
@@ -83,4 +94,9 @@ echo ">>> Installing sway stuff"
 sudo dnf install -y sway waybar NetworkManager-tui network-manager-applet 
 sudo dnf install -y dunst wofi pulse brightnessctl pactl libinput
 sudo dnf install -y arandr nm-applet blueman-applet lxappearance
+mv ~/My_Dotfiles/sway ~/.config
+mv ~/My_Dotfiles/swaylock ~/.config
+mv ~/My_Dotfiles/wofi ~/.config
+mv ~/My_Dotfiles/waybar ~/.config
+mv ~/My_Dotfiles/timer ~
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
