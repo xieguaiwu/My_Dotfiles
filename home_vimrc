@@ -18,15 +18,15 @@ set encoding=utf-8
 set termguicolors
 set nohidden
 "cursor"
-"if exists('$TMUX')
-"    let &t_SI="\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
-"    let &t_SR="\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
-"    let &t_EI="\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
-"else 
-"    let &t_SI="\<Esc>]50;CursorShape=1\x7"
-"    let &t_SR="\<Esc>]50;CursorShape=2\x7"
-"    let &t_EI="\<Esc>]50;CursorShape=0\x7"
-"endif
+if exists('$TMUX')
+    let &t_SI="\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
+    let &t_SR="\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
+    let &t_EI="\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
+else 
+    let &t_SI="\<Esc>]50;CursorShape=1\x7"
+    let &t_SR="\<Esc>]50;CursorShape=2\x7"
+    let &t_EI="\<Esc>]50;CursorShape=0\x7"
+endif
 
 
 set guicursor=a:beam-blinkon50-blinkoff50
@@ -145,12 +145,6 @@ func! CompileRunGcc()
         if &filetype == 'sh'
 		    exec "!sh %"
         endif
-        "if &filetype == 'markdown'
-            "exec "MarkdownPreview"
-        "endif
-        "if &filetype == 'vimwiki'
-            "exec "MarkdownPreview"
-        "endif
         if &filetype == 'rust'
             "exec ":RustTest"
             exec ":RustBuild"
@@ -164,7 +158,7 @@ endfunc
 nnoremap <C-A-b> :call CompileRunGcc() <CR>
 
 "for tab pages in vim
-nnoremap <C-k> : tabnew <CR>
+nnoremap <C-t> : tabnew <CR>
 nnoremap <C-l> : tabnext <CR>
 
 "plug"
@@ -172,10 +166,6 @@ call plug#begin('~/.vim/plugged')
 "run command ':CocInstall coc-snippets'
 "lsp
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-"Plug 'prabirshrestha/vim-lsp'
-"Plug 'mattn/vim-lsp-settings'
-"Plug 'prabirshrestha/asyncomplete.vim'
-"Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
 "theme
 Plug 'junegunn/seoul256.vim'
@@ -208,8 +198,6 @@ Plug 'rust-lang/rust.vim'
 Plug 'lervag/vimtex'
 
 call plug#end()
-"for monokai theme"
-"colorscheme monokai_pro
 colorscheme sublimemonokai
 
 "for Nerdtree"
@@ -276,13 +264,10 @@ inoremap <silent><expr> <A-z> coc#refresh()
 "for pinyinsearch"
 let g:PinyinSearch_Dict = '/home/xieguaiwu/.vim/plugged/vim-pinyinsearch/PinyinSearch.dict'
 nnoremap ? :call PinyinSearch()<CR>
-nnoremap <Leader>pn :call PinyinNext()<CR>
+nnoremap <leader>pn :call PinyinNext()<CR>
 
 "for fzf
-" 全局搜索（在当前目录下搜索字符串）
-nnoremap <leader>f :Rg<CR>
-" 文件内搜索（类似 Ctrl+F）
-nnoremap <leader>g :BLines<CR>
+nnoremap <C-p> :GFiles<CR>
 
 " 打开 quickfix 搜索结果（全局搜索）
 nnoremap <leader>f :vimgrep /<C-r><C-w>/gj **/*.rs<CR>:copen<CR>
@@ -292,8 +277,6 @@ nnoremap <leader>f :vimgrep /<C-r><C-w>/gj **/*.rs<CR>:copen<CR>
 let g:workspace_persist_undo_history = 1
 let g:workspace_undodir = '/home/xieguaiwu/.vim/undodir'
 let g:workspace_autosave = 0
-let g:workspace_session_name = 'Session.vim'
-let g:workspace_session_directory = '/home/xieguaiwu/.vim/sessions'
 
 "for markdown syntax
 let g:vim_markdown_math = 1
