@@ -35,5 +35,10 @@ gradle -v
 g++ --version
 cmake --version
 
+echo ">>> 执行vim命令..."
+vim -c "PlugInstall"
+vim -c "CocInstall coc-java"
+vim -c "CocInstall coc-rust-analyzer"
+
 echo ">>> Finished! 🚀"
 
