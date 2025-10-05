@@ -109,39 +109,39 @@ let &t_ut=''
 
 "compile func stuff"
 func! CompileRunGcc()
-        exec "w"
-        let file = expand('%')
-        let base = expand('%<')
-        let dir = expand('%:p:h')
+    exec "w"
+    let file = expand('%')
+    let base = expand('%<')
+    let dir = expand('%:p:h')
 
-        if empty(file) || !filereadable(file)
-            echo "Error: File not readable -" . file
-            return
-        endif
+    if empty(file) || !filereadable(file)
+        echo "Error: File not readable -" . file
+        return
+    endif
 
-        if &filetype == 'cpp' || &filetype == 'cc'
-            exec "!g++ -g -std=c++17 % -o  %< && ./%<"
-        endif
-        if &filetype == 'c'
-            exec "!gcc -g % -o %< && ./%<"
-        endif
-        if &filetype == 'java'
-            exec "!javac % && java ./%"
-        endif
-        if &filetype == 'python'
-		    exec "!python3 %"
-        endif
-        if &filetype == 'sh'
-		    exec "!sh %"
-        endif
-        if &filetype == 'rust'
-            "exec ":RustTest"
-            exec ":RustBuild"
-            exec ":RustRun"
-        endif
-        if &filetype == 'tex'
-            exec '!pdflatex %'
-        endif
+    if &filetype == 'cpp' || &filetype == 'cc'
+        exec "!g++ -g -std=c++17 % -o  %< && ./%<"
+    endif
+    if &filetype == 'c'
+        exec "!gcc -g % -o %< && ./%<"
+    endif
+    if &filetype == 'java'
+        exec "!javac % && java ./%"
+    endif
+    if &filetype == 'python'
+        exec "!python3 %"
+    endif
+    if &filetype == 'sh'
+        exec "!sh %"
+    endif
+    if &filetype == 'rust'
+        "exec ":RustTest"
+        exec ":RustBuild"
+        exec ":RustRun"
+    endif
+    if &filetype == 'tex'
+        exec '!pdflatex %'
+    endif
 endfunc
 
 nnoremap <C-A-b> :call CompileRunGcc() <CR>
@@ -174,7 +174,7 @@ Plug 'jiangmiao/auto-pairs'
 Plug 'vim-airline/vim-airline'
 Plug 'godlygeek/tabular'
 Plug 'xuhdev/singlecompile'
-Plug 'sbdchd/neoformat'
+Plug 'chiel92/vim-autoformat'
 Plug 'mileszs/ack.vim'
 Plug 'ppwwyyxx/vim-pinyinsearch'
 Plug 'thaerkh/vim-workspace'
@@ -194,23 +194,6 @@ colorscheme sublimemonokai
 "for Nerdtree"
 nnoremap <silent> <C-e> :NERDTreeToggle<CR>
 "for neoformat"
-let g:neoformat_only_msg_on_error = 1
-let g:neoformat_astyle = {
-            \ 'exe': 'astyle',
-            \ 'args': ['--style=null', '--indent=tab', '--pad-oper', '--pad-header', '--unpad-paren', '-e', '--suffix=none'],
-            \ 'replace': 1 ,
-            \ 'stdin': 1, 
-            \ 'env': ["DEBUG=1"], 
-            \ 'valid_exit_codes': [0, 23],
-            \ 'no_append': 1,
-            \ }
-
-let g:neoformat_enabled_cpp = ['astyle']
-let g:neoformat_enabled_c = ['astyle']
-
-let g:neoformat_basic_format_align = 1
-let g:neoformat_basic_format_retab = 1
-let g:neoformat_basic_format_trim = 1
 
 func! Self_Format()
     if &filetype == 'cpp' || &filetype == 'cc' || &filetype == 'c' || &filetype == 'java'
@@ -224,7 +207,7 @@ func! Self_Format()
 endfunc
 
 if &filetype != 'cpp' && &filetype != 'cc' && &filetype != 'c' && &filetype != 'java' && &filetype != 'rust'
-    nnoremap <C-A-f> :Neoformat<CR>
+    nnoremap <C-A-f> :Autoformat<CR>
 else
     nnoremap <C-A-f> :call Self_Format()<CR>
 endif
@@ -242,7 +225,7 @@ inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
 
 "coc for c/c++
 let g:coc_global_extensions = ['coc-snippets']
-function CheckBackspace() abort 
+function CheckBackspace() abort
     let col = col('.') - 1
     return !col || getline('.')[col - 1] =~# '\s'
 endfunc
@@ -280,17 +263,17 @@ let g:vim_markdown_new_list_items = 1
 let g:vim_markdown_borderless_table = 1
 
 "for vimtex
-let g:vimtex_view_method = 'zathura'     
+let g:vimtex_view_method = 'zathura'
 let g:vimtex_compiler_method = 'latexmk'
 let g:vimtex_compiler_latexmk = {
-    \ 'build_dir' : '',
-    \ 'options' : [
-    \   '-xelatex',
-    \   '-file-line-error',
-    \   '-interaction=nonstopmode',
-    \   '-synctex=1',
-    \ ],
-\}
+            \ 'build_dir' : '',
+            \ 'options' : [
+            \   '-xelatex',
+            \   '-file-line-error',
+            \   '-interaction=nonstopmode',
+            \   '-synctex=1',
+            \ ],
+            \}
 
 "for lean prover
 " Lean logic symbols
