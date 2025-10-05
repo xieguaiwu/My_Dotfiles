@@ -17,17 +17,6 @@ set encoding=utf-8
 
 set termguicolors
 set nohidden
-"cursor"
-if exists('$TMUX')
-    let &t_SI="\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
-    let &t_SR="\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
-    let &t_EI="\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
-else 
-    let &t_SI="\<Esc>]50;CursorShape=1\x7"
-    let &t_SR="\<Esc>]50;CursorShape=2\x7"
-    let &t_EI="\<Esc>]50;CursorShape=0\x7"
-endif
-
 
 set guicursor=a:beam-blinkon50-blinkoff50
 
@@ -43,6 +32,7 @@ set notimeout
 set ttimeout
 set timeoutlen=300
 set noreadonly
+set completeopt=menu,menuone,noselect
 
 "using"
 set autoindent
@@ -55,8 +45,7 @@ set splitbelow
 set wildmenu
 set hidden
 
-set clipboard=unnamedplus
-set clipboard=unnamed
+set clipboard=unnamedplus,unnamed
 
 "move lines up and down"
 nnoremap J :m '>+1<CR>gv=gv
@@ -140,7 +129,7 @@ func! CompileRunGcc()
             exec "!javac % && java ./%"
         endif
         if &filetype == 'python'
-		    exec "!python %"
+		    exec "!python3 %"
         endif
         if &filetype == 'sh'
 		    exec "!sh %"
@@ -175,7 +164,9 @@ Plug 'erichdongubler/vim-sublime-monokai'
 "tree
 Plug 'preservim/nerdtree'
 Plug 'Xuyuanp/nerdtree-git-plugin'
-Plug 'majutsushi/tagbar'
+Plug 'vim-scripts/OmniCppComplete'
+Plug 'ludovicchabant/vim-gutentags'
+Plug 'honza/vim-snippets'
 Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-unimpaired'
@@ -246,9 +237,11 @@ nnoremap <F9> :SCCompileRun<CR>
             \ coc#pum#visible() ? coc#pum#next(1) :
             \ CheckBackspace() ?\<Tab>" :
             \ coc#refresh()
-inoremap <expr><S-TAB> <CR> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
 
+"coc for c/c++
+let g:coc_global_extensions = ['coc-snippets']
 function CheckBackspace() abort 
     let col = col('.') - 1
     return !col || getline('.')[col - 1] =~# '\s'
