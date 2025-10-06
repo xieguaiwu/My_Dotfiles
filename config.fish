@@ -92,3 +92,9 @@ function extract
 end
 
 fish_vi_key_bindings   # vi 模式
+
+set -gx export HTTP_PROXY="http:127.0.0.1:7897"
+set -gx export HTTPS_PROXY="http:127.0.0.1:7897"
+set -gx export http_proxy="http:127.0.0.1:7897"
+set -gx export https_proxy="http:127.0.0.1:7897"
+
