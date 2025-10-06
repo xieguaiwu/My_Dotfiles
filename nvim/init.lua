@@ -1,5 +1,7 @@
 -- ~/.config/nvim/init.lua
 
+vim.g.coc_path = vim.fn.exepath('node')
+
 require("settings")
 require("utils")
 require("keymaps")

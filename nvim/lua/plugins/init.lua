@@ -38,7 +38,38 @@ return {
             require("lsp.init")
         end,
     },
-    -- Treesitter
+    {
+        "neoclide/coc.nvim",
+        branch = {release},
+        lazy = false,            -- 必须强制加载，否则无法工作
+        config = function()
+            local map = vim.keymap.set
+            local opts = { silent = true, noremap = true }
+
+            map('n', 'gd', '<Plug>(coc-definition)', opts)       -- 定义
+            map('n', 'gy', '<Plug>(coc-type-definition)', opts)  -- 类型定义
+            map('n', 'gi', '<Plug>(coc-implementation)', opts)   -- 实现
+            map('n', 'gr', '<Plug>(coc-references)', opts)       -- 引用
+
+            map('i', '<A-z>', 'coc#refresh()', { silent = true, expr = true, noremap = true })
+            
+            -- 3. 复杂 Tab 键逻辑和函数 (必须使用 vim.cmd 注入 Vimscript)
+            -- Tab 键的逻辑包含了检查退格、代码片段跳转、补全选择等，很难用纯 Lua 完美重写。
+            vim.cmd([[
+                function! s:check_back_space() abort
+                  let col = col('.') - 1
+                  return !col || getline('.')[col - 1] =~# '\s'
+                endfunc
+
+                " Tab/Shift-Tab 补全逻辑
+                inoremap <silent><expr> <TAB>
+                      \ pumvisible() ? "\<C-n>" :
+                      \ <SID>check_back_space() ? "\<TAB>" :
+                      \ coc#refresh()
+                inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+            ]])
+        end,
+    },
     {
         "nvim-treesitter/nvim-treesitter",
         build = ":TSUpdate",
@@ -48,20 +79,13 @@ return {
                 ensure_installed = {
                     "c", "cpp", "lua", "vim", "vimdoc", "markdown", "rust",
                     "go", "python", "java",
-                    --"sh" -- 保持 sh 注释掉，直到安装 build-essential
+                    --"sh"
                 },
                 highlight = { enable = true },
                 indent = { enable = true },
             })
         end,
     },
-
-    -- ... (其他插件配置保持不变) ...
-
-    -- ---------------------------------------------------------------------
-    -- 为了简洁，省略了后面所有插件，请将这些插件加到你的文件中
-    -- ---------------------------------------------------------------------
-
     -- nvim-cmp
     {
         "hrsh7th/nvim-cmp",
