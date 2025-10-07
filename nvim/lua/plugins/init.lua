@@ -40,33 +40,23 @@ return {
     },
     {
         "neoclide/coc.nvim",
-        branch = {release},
-        lazy = false,            -- 必须强制加载，否则无法工作
+        branch = "release",      -- 修复语法错误：从 {release} 改为 "release"
+        lazy = false,            -- 必须强制加载
         config = function()
-            local map = vim.keymap.set
-            local opts = { silent = true, noremap = true }
-
-            map('n', 'gd', '<Plug>(coc-definition)', opts)       -- 定义
-            map('n', 'gy', '<Plug>(coc-type-definition)', opts)  -- 类型定义
-            map('n', 'gi', '<Plug>(coc-implementation)', opts)   -- 实现
-            map('n', 'gr', '<Plug>(coc-references)', opts)       -- 引用
-
-            map('i', '<A-z>', 'coc#refresh()', { silent = true, expr = true, noremap = true })
-            
-            -- 3. 复杂 Tab 键逻辑和函数 (必须使用 vim.cmd 注入 Vimscript)
-            -- Tab 键的逻辑包含了检查退格、代码片段跳转、补全选择等，很难用纯 Lua 完美重写。
             vim.cmd([[
-                function! s:check_back_space() abort
-                  let col = col('.') - 1
-                  return !col || getline('.')[col - 1] =~# '\s'
-                endfunc
-
-                " Tab/Shift-Tab 补全逻辑
-                inoremap <silent><expr> <TAB>
-                      \ pumvisible() ? "\<C-n>" :
-                      \ <SID>check_back_space() ? "\<TAB>" :
-                      \ coc#refresh()
                 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+                inoremap <silent><expr> <CR>
+                     \ pumvisible() ? coc#pum#confirm() : 
+                     \ coc#expandable() ? coc#rpc#request('do:expandSnippet') : 
+                     \ "\<CR>"                      
+                     
+                nmap <silent> gd <Plug>(coc-definition)
+                nmap <silent> gy <Plug>(coc-type-definition)
+                nmap <silent> gi <Plug>(coc-implementation)
+                nmap <silent> gr <Plug>(coc-references)
+                
+                " 补全刷新
+                inoremap <silent><expr> <A-z> coc#refresh()
             ]])
         end,
     },
@@ -136,37 +126,41 @@ return {
     -- Indent Lines
     { "lukas-reineke/indent-blankline.nvim", event = "BufReadPost", main = "ibl", opts = {} },
     -- 格式化
-    {
-        "stevearc/conform.nvim",
-        event = { "BufWritePre" },
+        {
+        "vim-autoformat/vim-autoformat",
+        cmd = "Autoformat", -- 保持不变
+        -- **关键修改区域**
         config = function()
-            require("conform").setup({
-                formatters = {
-                    astyle = {
-                        args = {
-                            "--mode=c",
-                            "--style=java",
-                            "--indent=tab",
-                            "--pad-oper",
-                            "--pad-header",
-                            "--unpad-paren",
-                            "--suffix=none",
-                            "$FILE",
-                        },
-                        require_cmd = true,
-                    },
-                },
-                formatters_by_ft = {
-                    c = { "astyle" },
-                    cpp = { "astyle" },
-                    rust = { "rustfmt" },
-                    python = { "black" },
-                    java = { "google-java-format" },
-                },
+            local excluded_filetypes = {
+                "c", 
+                "cpp", 
+                "java", 
+                "rust",
+                --"sh",
+            }
+            -- 1. 定义 Lua 格式化函数，包含文件类型检查
+            local function ConditionalAutoformat()
+                local ft = vim.bo.filetype
+                -- 检查当前文件类型是否在排除列表中
+                for _, excluded_ft in ipairs(excluded_filetypes) do
+                    if ft == excluded_ft then
+                        -- 如果在排除列表中，则直接返回，不执行格式化
+                        return
+                    end
+                end
+                -- 如果文件类型未被排除，则执行 Autoformat 命令
+                vim.cmd("Autoformat")
+            end
+            -- 2. 设置保存时自动运行该函数
+            -- BufWritePre: 在缓冲区写入磁盘之前运行
+            vim.api.nvim_create_autocmd("BufWritePre", {
+                group = vim.api.nvim_create_augroup("AutoformatGroup", { clear = true }),
+                pattern = "*", -- 对所有文件生效
+                callback = ConditionalAutoformat, -- 调用我们自定义的 Lua 函数
             })
-            vim.keymap.set({ "n", "v" }, "<leader>g", function()
-                require("conform").format()
-            end, { desc = "Format File (Conform)"})
+
+            -- 3. 映射 <leader>f 到手动格式化命令 (保持不变)
+            vim.keymap.set({"n", "v"}, "<C-A-f>", ":Autoformat<CR>", { desc = "Autoformat File" })
         end,
     },
     -- 异步 Linting

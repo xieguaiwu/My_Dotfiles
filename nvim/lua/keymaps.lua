@@ -23,4 +23,4 @@ local utils = require("utils")
 
 -- 编译/运行
 map("n", "<C-A-b>", utils.CompileRun, { desc = "Compile and Run File" })
-
+map("n", "<C-A-f>", utils.SelfFormat, { desc = "Formatting the File" })
