@@ -24,12 +24,20 @@ mv ~/My_Dotfiles/config.fish ~/.config
 
 echo ">>> Installing text editors..."
 sudo dnf install -y vim nvim
+
 mv ~/My_Dotfiles/vimrc ~/.vimrc
 mv ~/My_Dotfiles/nethackrc ~/.nethackrc
 mkdir ~/.vim
 mkdir ~/.vim/autoload
 git clone https://github.com/junegunn/vim-plug
 mv ~/vim-plug/plug.vim ~/.vim/autoload
+
+mv ~/My_Dotfiles/nvim ~/.config
+cd ~
+git clone https://github.com/folke/lazy.nvim
+mkdir ~/.local/share/nvim
+mkdir ~/.local/share/nvim/lazy
+mv ~/lazy.nvim ~/.local/share/nvim/lazy
 
 wget "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.9.12/Obsidian-1.9.12.AppImage"
 chmod +x ./Obsidian-1.9.12.AppImage
