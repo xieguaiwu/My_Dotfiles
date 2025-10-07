@@ -6,8 +6,8 @@ local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 -- 通用的 on_attach 函数
 local on_attach = function(client, bufnr)
-    client.server_capabilities.documentFormattingProvider = false
-    client.server_capabilities.documentRangeFormattingProvider = false
+    client.server_capabilities.documentFormattingProvider = true
+    client.server_capabilities.documentRangeFormattingProvider = true
 
     local map = vim.keymap.set
     local opts = { noremap = true, silent = true, buffer = bufnr }
@@ -27,8 +27,8 @@ end
 -- 设置 Mason LSP config
 mason_lspconfig.setup({
     ensure_installed = {
-        "clangd",
-        "rust_analyzer", 
+        --"clangd",
+        "rust_analyzer",
         "pyright",
         --"gopls",
         "lua_ls",
@@ -44,7 +44,7 @@ mason_lspconfig.setup({
             capabilities = capabilities,
         })
     end,
-    
+
     -- 特殊配置的服务器
     ["rust_analyzer"] = function()
         lspconfig.rust_analyzer.setup({
@@ -59,7 +59,7 @@ mason_lspconfig.setup({
             }
         })
     end,
-    
+
     ["lua_ls"] = function()
         lspconfig.lua_ls.setup({
             on_attach = on_attach,
@@ -84,10 +84,10 @@ mason_lspconfig.setup({
 
 -- 诊断配置
 vim.diagnostic.config({
-    virtual_text = true,         
-    signs = true,                
-    update_in_insert = false,    
-    severity_sort = true,        
+    virtual_text = true,
+    signs = true,
+    update_in_insert = false,
+    severity_sort = true,
     float = {
         source = 'always',
         header = '',
