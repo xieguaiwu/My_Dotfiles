@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=obsidian
-Exec=~/obsidian/obsidian.AppImage
+Exec=/home/xieguaiwu/obsidian/obsidian.AppImage
 Type=Application
 Categories=Utility
 StartupNotify=true
