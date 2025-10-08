@@ -15,9 +15,9 @@ return {
         "erichdongubler/vim-sublime-monokai",
         lazy = false,
         priority = 999,
-	config = function()
-			vim.cmd("colorscheme sublimemonokai")
-	end
+        config = function()
+            vim.cmd("colorscheme sublimemonokai")
+        end
     },
 
     -- 3. Lualine
@@ -46,18 +46,18 @@ return {
             vim.cmd([[
                 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
                 inoremap <silent><expr> <CR>
-                     \ pumvisible() ? coc#pum#confirm() : 
-                     \ coc#expandable() ? coc#rpc#request('do:expandSnippet') : 
-                     \ "\<CR>"                      
-                     
+                \ pumvisible() ? coc#pum#confirm() :
+                \ coc#expandable() ? coc#rpc#request('do:expandSnippet') :
+                \ "\<CR>"
+
                 nmap <silent> gd <Plug>(coc-definition)
                 nmap <silent> gy <Plug>(coc-type-definition)
                 nmap <silent> gi <Plug>(coc-implementation)
                 nmap <silent> gr <Plug>(coc-references)
-                
+
                 " 补全刷新
                 inoremap <silent><expr> <A-z> coc#refresh()
-            ]])
+                ]])
         end,
     },
     {
@@ -126,29 +126,26 @@ return {
     -- Indent Lines
     { "lukas-reineke/indent-blankline.nvim", event = "BufReadPost", main = "ibl", opts = {} },
     -- 格式化
-        {
+    {
         "vim-autoformat/vim-autoformat",
         cmd = "Autoformat", -- 保持不变
         -- **关键修改区域**
         config = function()
             local excluded_filetypes = {
-                "c", 
-                "cpp", 
-                "java", 
+                "c",
+                "cpp",
+                "java",
                 "rust",
                 --"sh",
             }
             -- 1. 定义 Lua 格式化函数，包含文件类型检查
             local function ConditionalAutoformat()
                 local ft = vim.bo.filetype
-                -- 检查当前文件类型是否在排除列表中
                 for _, excluded_ft in ipairs(excluded_filetypes) do
                     if ft == excluded_ft then
-                        -- 如果在排除列表中，则直接返回，不执行格式化
                         return
                     end
                 end
-                -- 如果文件类型未被排除，则执行 Autoformat 命令
                 vim.cmd("Autoformat")
             end
             -- 2. 设置保存时自动运行该函数
