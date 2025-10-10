@@ -3,7 +3,7 @@
 local map = vim.keymap.set
 
 -- quick replacing
-map("n", "<C-h>", ":%s///g<Left><Left><CR>", { desc = "Quick Replace" })
+map("n", "<C-h>", ":%s//g<Left><Left>", { noremap = true, silent = false, desc = "Quick Replace" })
 
 -- move lines up and down
 map("n", "J", ":m '>+1<CR>gv=gv", { desc = "Move line down" })
