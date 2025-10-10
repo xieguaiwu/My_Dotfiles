@@ -79,7 +79,7 @@ cmp.setup({
         end, { 'i', 's' }),
 
         -- Ctrl+Space: 手动触发补全
-        ['<C-Space>'] = cmp.mapping.complete(),
+        ['<C-=>'] = cmp.mapping.complete(),
 
         -- Ctrl+E: 关闭补全菜单
         ['<C-e>'] = cmp.mapping.abort(),
