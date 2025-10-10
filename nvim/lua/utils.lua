@@ -37,18 +37,20 @@ M.CompileRun = function()
 end
 
 M.SelfFormat = function()
-    vim.cmd("w")
     local ft = vim.bo.filetype
-    local format_cmd = nil
+    local format_command = nil 
+    
     if ft == 'c' or ft == 'cpp' or ft == 'cc' or ft == 'java' then
-        format_cmd = string.format("!astyle --mode=c --style=java --indent=tab --pad-oper --pad-header --unpad-paren  --suffix=none %s", vim.fn.expand('%'))
+        format_command = string.format("!astyle --mode=c --style=java --indent=tab --pad-oper --pad-header --unpad-paren --suffix=none %s", vim.fn.expand('%'))
     elseif ft == 'rust' then
-        format_cmd = string.format("!rustfmt %s", vim.fn.expand('%'))
+        format_command = string.format("!rustfmt %s", vim.fn.expand('%'))
+    else
+        format_command = "Autoformat" 
     end
 
-    if formatCommand then
+    if format_command ~= nil then
         vim.cmd(":w")
-        vim.cmd(formatCommand)
+        vim.cmd(format_command)
     end
 
 end
