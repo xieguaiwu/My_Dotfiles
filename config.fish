@@ -13,8 +13,8 @@ if not contains $HOME/.cargo/bin $PATH
 end
 
 # 默认编辑器
-set -gx EDITOR vim
-set -gx VISUAL vim
+set -gx EDITOR nvim
+set -gx VISUAL nvim
 
 # ==== 常用别名 ====
 alias ll='ls -lh'
@@ -23,6 +23,7 @@ alias lsl='lsd --long --human-readable --all'
 alias lsa='lsd -a'
 alias ..='cd ..'
 alias ...='cd ../..'
+alias vi='nvim'
 
 # Git 常用
 alias gs='git status'
