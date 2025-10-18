@@ -183,7 +183,7 @@ return {
         vim.g.vim_markdown_new_list_items = 1
         vim.g.vim_markdown_borderless_table = 1
     end },
-    { "fatih/vim-go", ft = "go" },
+    -- { "fatih/vim-go", ft = "go" },
     { "rust-lang/rust.vim", ft = "rust" },
     -- vimtex
     { "lervag/vimtex", ft = "tex", config = function()

@@ -2,6 +2,9 @@
 
 local map = vim.keymap.set
 
+map("n", "j", "gj")
+map("n", "k", "gk")
+
 -- quick replacing
 map("n", "<C-h>", ":%s//g<Left><Left>", { noremap = true, silent = false, desc = "Quick Replace" })
 
@@ -10,10 +13,10 @@ map("n", "J", ":m '>+1<CR>gv=gv", { desc = "Move line down" })
 map("n", "K", ":m '<-2<CR>gv=gv", { desc = "Move line up" })
 
 -- muti-window
-map("n", "sl", ":set splitright<CR>:vsplit<CR>", { desc = "Vertical Split Right" })
-map("n", "sh", ":set nosplitright<CR>:vsplit<CR>", { desc = "Vertical Split Left" })
-map("n", "sk", ":set nosplitbelow<CR>:split<CR>", { desc = "Horizontal Split Up" })
-map("n", "sj", ":set splitbelow<CR>:split<CR>", { desc = "Horizontal Split Down" })
+map("n", "fl", ":set splitright<CR>:vsplit<CR>", { desc = "Vertical Split Right" })
+map("n", "fh", ":set nosplitright<CR>:vsplit<CR>", { desc = "Vertical Split Left" })
+map("n", "fk", ":set nosplitbelow<CR>:split<CR>", { desc = "Horizontal Split Up" })
+map("n", "fj", ":set splitbelow<CR>:split<CR>", { desc = "Horizontal Split Down" })
 
 -- for tab pages in vim
 map("n", "<C-t>", ":tabnew<CR>", { desc = "New Tab" })

@@ -29,6 +29,8 @@ M.CompileRun = function()
         cmd = ":RustBuild | RustRun"
     elseif ft == 'tex' then
         cmd = string.format("!pdflatex %s", file)
+    elseif ft == 'go' then
+        cmd = string.format("!go run %s", file)
     end
 
     if cmd then
@@ -38,14 +40,16 @@ end
 
 M.SelfFormat = function()
     local ft = vim.bo.filetype
-    local format_command = nil 
-    
+    local format_command = nil
+
     if ft == 'c' or ft == 'cpp' or ft == 'cc' or ft == 'java' then
         format_command = string.format("!astyle --mode=c --style=java --indent=tab --pad-oper --pad-header --unpad-paren --suffix=none %s", vim.fn.expand('%'))
     elseif ft == 'rust' then
         format_command = string.format("!rustfmt %s", vim.fn.expand('%'))
+    elseif ft == 'go' then
+        format_command = string.format("!gofmt -w %s", vim.fn.expand('%'))
     else
-        format_command = "Autoformat" 
+        format_command = "Autoformat"
     end
 
     if format_command ~= nil then
