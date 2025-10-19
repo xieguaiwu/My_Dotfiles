@@ -58,6 +58,7 @@ tldr --update
 mv ~/My_Dotfiles/lazygit ~/.config/
 sudo npm install -g @mermaid-js/mermaid-cli
 mv ~/My_Dotfiles/mermaid ~/.config/
+npx puppeteer browsers install chrome-headless-shell
 
 cd ~
 git clone https://github.com/andmarti1424/sc-im/
