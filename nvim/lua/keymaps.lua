@@ -19,8 +19,9 @@ map("n", "fk", ":set nosplitbelow<CR>:split<CR>", { desc = "Horizontal Split Up"
 map("n", "fj", ":set splitbelow<CR>:split<CR>", { desc = "Horizontal Split Down" })
 
 -- for tab pages in vim
-map("n", "<C-t>", ":tabnew<CR>", { desc = "New Tab" })
+map("n", "<A-t>", ":tabnew<CR>", { desc = "New Tab" })
 map("n", "<C-l>", ":tabnext<CR>", { desc = "Next Tab" })
+map("n", "<C-k>", ":tabprevious<CR>", { desc = "Previous Tab" })
 
 local utils = require("utils")
 
