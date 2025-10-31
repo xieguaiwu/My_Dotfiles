@@ -10,7 +10,7 @@ echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
 sudo dnf install -y curl git npm wget gawk node yacc screenfetch
 sudo dnf install -y clash-verge flatpak gimp
-sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk
+sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk xorg-x11-font-utils cabextract
 
 echo ">>> Installing fish shell and wezterm..."
 sudo dnf install -y fish
@@ -59,6 +59,9 @@ mv ~/My_Dotfiles/lazygit ~/.config/
 sudo npm install -g @mermaid-js/mermaid-cli
 mv ~/My_Dotfiles/mermaid ~/.config/
 npx puppeteer browsers install chrome-headless-shell
+
+sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
+# download microsoft font installer
 
 cd ~
 git clone https://github.com/andmarti1424/sc-im/
