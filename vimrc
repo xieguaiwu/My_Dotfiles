@@ -7,7 +7,7 @@ set relativenumber
 
 set showmatch
 set undofile
-set undodir=/home/xieguaiwu/.vim/undodir
+set undodir=~/.vim/undodir
 
 set expandtab
 set tabstop=4
@@ -176,8 +176,6 @@ Plug 'godlygeek/tabular'
 Plug 'xuhdev/singlecompile'
 Plug 'chiel92/vim-autoformat'
 Plug 'mileszs/ack.vim'
-Plug 'ppwwyyxx/vim-pinyinsearch'
-Plug 'thaerkh/vim-workspace'
 
 "syntax
 Plug 'plasticboy/vim-markdown'
@@ -186,7 +184,6 @@ Plug 'scrooloose/syntastic'
 Plug 'Yggdroot/indentLine'
 Plug 'vim-scripts/indentpython.vim'
 Plug 'rust-lang/rust.vim'
-Plug 'lervag/vimtex'
 
 call plug#end()
 colorscheme sublimemonokai
@@ -237,22 +234,11 @@ nmap <silent> gr <Plug>(coc-references)
 
 inoremap <silent><expr> <A-z> coc#refresh()
 
-"for pinyinsearch"
-let g:PinyinSearch_Dict = '/home/xieguaiwu/.vim/plugged/vim-pinyinsearch/PinyinSearch.dict'
-nnoremap ? :call PinyinSearch()<CR>
-nnoremap <leader>pn :call PinyinNext()<CR>
-
 "for fzf
 nnoremap <C-p> :GFiles<CR>
 
 " 打开 quickfix 搜索结果（全局搜索）
 nnoremap <leader>f :vimgrep /<C-r><C-w>/gj **/*.rs<CR>:copen<CR>
-
-"for vim-workspace"
-"let g:workspace_autocreate = 1
-let g:workspace_persist_undo_history = 1
-let g:workspace_undodir = '/home/xieguaiwu/.vim/undodir'
-let g:workspace_autosave = 0
 
 "for markdown syntax
 let g:vim_markdown_math = 1
@@ -262,21 +248,7 @@ let g:vim_markdown_strikethrough = 1
 let g:vim_markdown_new_list_items = 1
 let g:vim_markdown_borderless_table = 1
 
-"for vimtex
-let g:vimtex_view_method = 'zathura'
-let g:vimtex_compiler_method = 'latexmk'
-let g:vimtex_compiler_latexmk = {
-            \ 'build_dir' : '',
-            \ 'options' : [
-            \   '-xelatex',
-            \   '-file-line-error',
-            \   '-interaction=nonstopmode',
-            \   '-synctex=1',
-            \ ],
-            \}
-
-"for lean prover
-" Lean logic symbols
+" Logic symbols
 inoremap \forall ∀
 inoremap \exists ∃
 inoremap \and ∧
