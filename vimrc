@@ -149,6 +149,10 @@ nnoremap <C-A-b> :call CompileRunGcc() <CR>
 "for tab pages in vim
 nnoremap <C-t> : tabnew <CR>
 nnoremap <C-l> : tabnext <CR>
+nnoremap <C-k> : tabprevious <CR>
+
+"paste to system clipboard
+nnoremap <9y> : \"+y <CR>
 
 "plug"
 call plug#begin('~/.vim/plugged')
@@ -231,6 +235,8 @@ nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
+
+
 
 inoremap <silent><expr> <A-z> coc#refresh()
 
