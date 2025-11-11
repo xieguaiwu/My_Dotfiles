@@ -32,7 +32,7 @@ M.CompileRun = function()
     elseif ft == 'tex' then
         cmd = string.format("!pdflatex %s", file)
     elseif ft == 'go' then
-        cmd = string.format("!go run %s", file)
+        cmd = string.format("!go build %s", file)
     end
 
     if cmd then

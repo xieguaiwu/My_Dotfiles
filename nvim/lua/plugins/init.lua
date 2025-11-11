@@ -2,13 +2,13 @@
 
 return {
     -- 1. Mason
-    {
-        "williamboman/mason.nvim",
-        cmd = "Mason",
-        lazy = false,
-        priority = 1000,
-        config = true
-    },
+    --{
+    --    "williamboman/mason.nvim",
+    --    cmd = "Mason",
+    --    lazy = false,
+    --    priority = 1000,
+    --    config = true
+    --},
 
     -- 2. 颜色主题 (高优先级)
     {
@@ -30,14 +30,14 @@ return {
     },
 
     -- 4. LSP config
-    {
-        "neovim/nvim-lspconfig",
-        lazy = false, -- <--- 关键修正：确保API在config前初始化
-        dependencies = { "williamboman/mason-lspconfig.nvim" },
-        config = function()
-            require("lsp.init")
-        end,
-    },
+    --{
+    --    "neovim/nvim-lspconfig",
+    --    lazy = false, -- <--- 关键修正：确保API在config前初始化
+    --    dependencies = { "williamboman/mason-lspconfig.nvim" },
+    --   config = function()
+    --        require("lsp.init")
+    --    end,
+    --},
     {
         "neoclide/coc.nvim",
         branch = "release",      -- 修复语法错误：从 {release} 改为 "release"
@@ -169,12 +169,6 @@ return {
     },
     { "tpope/vim-unimpaired" },
     { "godlygeek/tabular", cmd = "Tabularize" },
-    -- vim-workspace
-    { "thaerkh/vim-workspace", config = function()
-        vim.g.workspace_persist_undo_history = 1
-        vim.g.workspace_undodir = vim.fn.stdpath("data") .. "/undodir"
-        vim.g.workspace_autosave = 0
-    end },
     -- vim-markdown
     { "plasticboy/vim-markdown", ft = "markdown", config = function()
         vim.g.vim_markdown_math = 1
@@ -185,27 +179,8 @@ return {
     end },
     -- { "fatih/vim-go", ft = "go" },
     { "rust-lang/rust.vim", ft = "rust" },
-    -- vimtex
-    { "lervag/vimtex", ft = "tex", config = function()
-        vim.g.vimtex_view_method = 'zathura'
-        vim.g.vimtex_compiler_method = 'latexmk'
-        vim.g.vimtex_compiler_latexmk = {
-            ['build_dir'] = '',
-            ['options'] = {
-                '-xelatex',
-                '-file-line-error',
-                '-interaction=nonstopmode',
-                '-synctex=1',
-            },
-        }
-    end },
+--  end },
     -- Lean Prover
-    { "leanprover/lean.nvim", ft = "lean" },
-    { "Julian/lean.nvim", ft = "lean" },
-    -- Pinyin Search
-    { "ppwwyyxx/vim-pinyinsearch", config = function()
-        vim.g.PinyinSearch_Dict = vim.fn.stdpath("data") .. "/lazy/vim-pinyinsearch/PinyinSearch.dict"
-        vim.keymap.set("n", "?", ":call PinyinSearch()<CR>", { desc = "Pinyin Search" })
-        vim.keymap.set("n", "<leader>pn", ":call PinyinNext()<CR>", { desc = "Pinyin Next" })
-    end },
+    --{ "leanprover/lean.nvim", ft = "lean" },
+    --{ "Julian/lean.nvim", ft = "lean" },
 }

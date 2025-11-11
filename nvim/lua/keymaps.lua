@@ -2,8 +2,12 @@
 
 local map = vim.keymap.set
 
+-- jump from lines
 map("n", "j", "gj")
 map("n", "k", "gk")
+
+-- copy to system clipboard
+map("n", "9y", "\"+y")
 
 -- quick replacing
 map("n", "<C-h>", ":%s//g<Left><Left>", { noremap = true, silent = false, desc = "Quick Replace" })
