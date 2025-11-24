@@ -7,9 +7,9 @@ echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
 
 echo ">>> 安装 Python 开发环境..."
-sudo dnf install -y python3 python3-pip python3-virtualenv python3-devel
+sudo dnf install -y python3 python3-pip python3-virtualenv python3-devel autopep8
 pip3 install --upgrade pip ipython black flake8 mypy
-pip3 install pynvim
+pip3 install pynvim pyinstaller numpy pandas
 
 echo ">>> 安装 Java "
 sudo dnf install -y java-latest-openjdk java-latest-openjdk-devel maven gradle
