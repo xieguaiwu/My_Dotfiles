@@ -16,11 +16,9 @@ M.CompileRun = function()
     local cmd = nil
 
     if ft == 'cpp' or ft == 'cc' then
-        cmd = string.format("!g++ -g -std=c++17 --no-pie %s -o %s ", file, base)
-        --&& ./%s
-        --, base
+        cmd = string.format("!g++ -g -std=c++17 --no-pie %s -o %s", file, base)
     elseif ft == 'c' then
-        cmd = string.format("!gcc -g %s -o %s && ./%s", file, base, base)
+        cmd = string.format("!gcc -g %s -o %s", file, base, base)
     elseif ft == 'java' then
         cmd = string.format("!javac %s && java %s", file, base)
     elseif ft == 'python' then
@@ -50,6 +48,8 @@ M.SelfFormat = function()
         format_command = string.format("!rustfmt %s", vim.fn.expand('%'))
     elseif ft == 'go' then
         format_command = string.format("!gofmt -w %s", vim.fn.expand('%'))
+    elseif ft == 'python' then
+        format_command = string.format("!autopep8 --hang-closing --aggressive --in-place %s", vim.fn.expand('%'))
     else
         format_command = "Autoformat"
     end
