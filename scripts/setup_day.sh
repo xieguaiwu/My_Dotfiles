@@ -9,7 +9,7 @@ sudo passwd root
 echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
 sudo dnf install -y curl git npm wget gawk node yacc fastfetch
-sudo dnf install -y clash-verge flatpak gimp
+sudo dnf install -y clash-verge flatpak gimp shotcut
 sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk xorg-x11-font-utils cabextract
 
 echo ">>> Installing fish shell and wezterm..."
@@ -100,7 +100,6 @@ cd ecwolf/build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DGPL=ON
 make
 cd ~
-sudo dnf install -y obs-studio
 
 echo ">>> Installing sway stuff"
 sudo dnf install -y sway waybar NetworkManager-tui network-manager-applet 
