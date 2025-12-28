@@ -39,6 +39,9 @@ mkdir ~/.local/share/nvim
 mkdir ~/.local/share/nvim/lazy
 mv ~/lazy.nvim ~/.local/share/nvim/lazy
 
+cd ~
+mkdir ./obsidian
+cd ./obsidian
 wget "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.9.12/Obsidian-1.9.12.AppImage"
 chmod +x ./Obsidian-1.9.12.AppImage
 
@@ -79,9 +82,15 @@ make
 sudo make install
 flatpak install flathub org.telegram.desktop
 
+cd ~/Downloads
 wget "https://github.com/erkyrath/lectrote/releases/tag/lectrote-1.5.5/Lectrote-1.5.5-linux-x64.zip"
 wget "https://github.com/imsyy/SPlayer/releases/download/v3.0.0-beta.2/splayer-3.0.0-beta.2.x86_64.rpm"
 sudo dnf install ./splayer-3.0.0-beta.2.x86_64.rpm
+
+cd ~/Downloads
+wget "https://github.com/hiroi-sora/Umi-OCR/releases/download/v2.1.5/Umi-OCR_Linux_Paddle_2.1.5.tar.xz"
+xz -d ./Umi-OCR_Linux_Paddle_2.1.5.tar.xz
+tar -xf ./Umi-OCR_Linux_Paddle_2.1.5.tar
 
 cd ~
 wget "https://victornils.net/tetris/vitetris-0.55-i486-linux.tar.gz"
