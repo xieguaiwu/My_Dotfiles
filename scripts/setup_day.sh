@@ -91,6 +91,9 @@ cd ~/Downloads
 wget "https://github.com/hiroi-sora/Umi-OCR/releases/download/v2.1.5/Umi-OCR_Linux_Paddle_2.1.5.tar.xz"
 xz -d ./Umi-OCR_Linux_Paddle_2.1.5.tar.xz
 tar -xf ./Umi-OCR_Linux_Paddle_2.1.5.tar
+mv ./Umi-OCR_Linux_Paddle_2.1.5 ~/umi-ocr
+cd ~/umi-ocr
+sh ./umi-ocr.sh
 
 cd ~
 wget "https://victornils.net/tetris/vitetris-0.55-i486-linux.tar.gz"
