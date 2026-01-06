@@ -105,6 +105,9 @@ dictzip -d ./deu-eng.dict.dz
 sudo mv deu-eng.dict /usr/share/dict/dictd/
 sudo mv deu-eng.index /usr/share/dict/dictd/
 sudo systemctl restart dictd
+cd ~
+mv ./My_Dotfiles/scripts/de.sh ~/.local/bin
+chmod +x ~/.local/bin/de.sh
 
 cd ~
 wget "https://victornils.net/tetris/vitetris-0.55-i486-linux.tar.gz"
