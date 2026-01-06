@@ -95,6 +95,17 @@ mv ./Umi-OCR_Linux_Paddle_2.1.5 ~/umi-ocr
 cd ~/umi-ocr
 sh ./umi-ocr.sh
 
+cd ~/Downloads
+sudo dnf install dictzip
+wget "https://download.freedict.org/dictionaries/deu-eng/1.9-fd1/freedict-deu-eng-1.9-fd1.dictd.tar.xz"
+xz -d ./freedict-deu-eng-1.9-fd1.dictd.tar.xz
+tar -xf ./freedict-deu-eng-1.9-fd1.dictd.tar
+cd ./deu-eng
+dictzip -d ./deu-eng.dict.dz
+sudo mv deu-eng.dict /usr/share/dict/dictd/
+sudo mv deu-eng.index /usr/share/dict/dictd/
+sudo systemctl restart dictd
+
 cd ~
 wget "https://victornils.net/tetris/vitetris-0.55-i486-linux.tar.gz"
 gunzip ./vitetris-0.55-i486-linux.tar.gz
