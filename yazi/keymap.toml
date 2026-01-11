@@ -10,3 +10,4 @@ desc = "Enter the child directory, or open the file"
 on   = "F"
 run  = "plugin smart-filter"
 desc = "Smart filter"
+

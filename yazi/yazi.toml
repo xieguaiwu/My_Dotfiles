@@ -73,11 +73,11 @@ suppress_preload = false
 
 [plugin]
 prepend_preloaders = [
-  { name = "/Users/patricorgi/SSHFS/**", run = "noop" },
+  { name = "${HOME}/patricorgi/SSHFS/**", run = "noop" },
   { name = "/Volumes/**", run = "noop" },
   { mime = 'application/pdf', run = "noop" },
 ]
-prepend_previewers = [{ name = "/Users/patricorgi/SSHFS/**", run = "noop" }]
+prepend_previewers = [{ name = "${HOME}/patricorgi/SSHFS/**", run = "noop" }]
 previewers = [
   { name = "*/", run = "folder", sync = true },
   # Code
