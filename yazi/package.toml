@@ -13,5 +13,11 @@ use = "yazi-rs/plugins:smart-filter"
 rev = "d7588f6"
 hash = "e56b7abf3c06e8ce496eadcca168c093"
 
+[[plugin.deps]]
+use = "yazi-rs/plugins:sxiv-easymotion"
+rev = "main"
+hash = ""
+
+
 [flavor]
 deps = []
