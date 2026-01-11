@@ -17,6 +17,7 @@ sudo dnf install -y java-latest-openjdk java-latest-openjdk-devel maven gradle
 echo ">>> 安装 Rust"
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup component add rust-analyzer
+sudo dnf install -y chafa
 
 echo ">>> 安装 C/C++ 工具链..."
 sudo dnf groupinstall -y "Development Tools"
