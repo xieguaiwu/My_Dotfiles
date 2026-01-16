@@ -23,9 +23,12 @@ echo ">>> 安装 C/C++ 工具链..."
 sudo dnf groupinstall -y "Development Tools"
 sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-build astyle conda
 
-echo ">>> 可选: 安装常用科学/图形库..."
+echo ">>> 安装常用科学/图形库..."
 sudo dnf install -y SDL2-devel mesa-libGL-devel mesa-libEGL-devel gsl-devel fftw-devel openmpi-devel || true
 sudo dnf install -y ctags
+
+echo ">>> 安装汇编语言工具..."
+sudo dnf install -y ltrace yasm strace nasm
 
 echo ">>> Verifying..."
 python3 --version
@@ -36,6 +39,8 @@ mvn -version
 gradle -v
 g++ --version
 cmake --version
+nasm --version
+yasm --version
 
 echo ">>> 执行vim命令..."
 vim -c "PlugInstall"
