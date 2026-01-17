@@ -10,7 +10,7 @@
 8. SideBarMenuAdvanced
 9. SublimeAStyleFormatter
 10. SublimeCodeIntel
-11. SublimeGDB
+11. cppfast
 12. SublimeLinter
 13. SublimeLinter-javac
 14. Terminus
@@ -18,3 +18,4 @@
 16. ThemeTweaker
 17. Transparency
 18. ZZZZZZZZ-Localization
+
