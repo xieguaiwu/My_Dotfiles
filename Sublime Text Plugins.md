@@ -2,20 +2,19 @@
 
 1. golang
 2. golang build
-3. LaTeX-cwl
-4. Markdown Extended
-5. Markdown Images
-6. MarkdownFootnotes
-7. Mermaid
-8. Nix
-9. SideBarMenuAdvanced
-10. SublimeAStyleFormatter
-11. SublimeCodeIntel
-12. SublimeGDB
-13. SublimeLinter
-14. SublimeLinter-javac
-15. Terminus
-16. Theme - SodaSeti
-17. ThemeTweaker
-18. Transparency
-19. ZZZZZZZZ-Localization
+3. Markdown Extended
+4. Markdown Images
+5. MarkdownFootnotes
+6. Mermaid
+7. Nix
+8. SideBarMenuAdvanced
+9. SublimeAStyleFormatter
+10. SublimeCodeIntel
+11. SublimeGDB
+12. SublimeLinter
+13. SublimeLinter-javac
+14. Terminus
+15. Theme - SodaSeti
+16. ThemeTweaker
+17. Transparency
+18. ZZZZZZZZ-Localization
