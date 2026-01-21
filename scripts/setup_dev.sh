@@ -21,7 +21,7 @@ sudo dnf install -y chafa
 
 echo ">>> 安装 C/C++ 工具链..."
 sudo dnf groupinstall -y "Development Tools"
-sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-build astyle conda
+sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-build astyle conda latexmk
 
 cd ~/Downloads
 wget "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz"
