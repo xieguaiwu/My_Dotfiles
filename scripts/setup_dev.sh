@@ -23,6 +23,14 @@ echo ">>> 安装 C/C++ 工具链..."
 sudo dnf groupinstall -y "Development Tools"
 sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-build astyle conda
 
+cd ~/Downloads
+wget "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz"
+gunzip ./tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz
+tar -xf tectonic-0.15.0-x86_64-unknown-linux-gnu.tar
+mkdir ~/tectonic
+mv ./tectonic ~/tectonic
+ln -s ~/tectonic/tectonic ~/.local/bin
+
 echo ">>> 安装常用科学/图形库..."
 sudo dnf install -y SDL2-devel mesa-libGL-devel mesa-libEGL-devel gsl-devel fftw-devel openmpi-devel || true
 sudo dnf install -y ctags
