@@ -31,6 +31,21 @@ M.CompileRun = function()
         cmd = string.format("!pdflatex %s", file)
     elseif ft == 'go' then
         cmd = string.format("!go build %s", file)
+    elseif ft == 'asm' or ft == 'nasm' then
+        local obj_file = base .. ".o"
+        local exe_file = base
+        local asm_arch = vim.fn.input("Enter architecture (32/64) [64]: ", "64")
+        local asm_format = "elf64"
+
+        if asm_arch == "32" then
+            asm_format = "elf32"
+        end
+
+        -- 先编译为对象文件，然后链接
+        cmd = string.format("!nasm -f %s -g %s -o %s && ld -m %s -o %s %s",
+            asm_format, file, obj_file,
+            (asm_arch == "32" and "elf_i386" or "elf_x86_64"),
+            exe_file, obj_file)
     end
 
     if cmd then
@@ -50,6 +65,11 @@ M.SelfFormat = function()
         format_command = string.format("!gofmt -w %s", vim.fn.expand('%'))
     elseif ft == 'python' then
         format_command = string.format("!autopep8 --hang-closing --aggressive --in-place %s", vim.fn.expand('%'))
+    elseif ft == 'asm' or ft == 'nasm' or ft == 'gas' or ft == 's' then
+        -- 汇编代码格式化：使用indent或自定义脚本
+        format_command = string.format("!cat %s | expand -t 8 | unexpand -t 8 > %s.tmp && mv %s.tmp %s",
+            vim.fn.expand('%'), vim.fn.expand('%'),
+            vim.fn.expand('%'), vim.fn.expand('%'))
     else
         format_command = "Autoformat"
     end
