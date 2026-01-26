@@ -1,0 +1,9 @@
+
+[Desktop Entry]
+Version=2.1.5
+Type=Application
+Name=Umi-OCR
+Exec=/home/xieguiawu/umi-ocr/umi-ocr.sh
+Path=/home/xieguiawu/umi-ocr
+Icon=/home/xieguiawu/umi-ocr/UmiOCR-data/qt_res/images/icons/umiocr.ico
+Terminal=false
