@@ -26,6 +26,7 @@ alias ...='cd ../..'
 alias vi='nvim'
 
 # Git 常用
+alias lg='lazygit'
 alias gs='git status'
 alias ga='git add'
 alias gc='git commit -m'
@@ -95,7 +96,12 @@ end
 fish_vi_key_bindings   # vi 模式
 
 set -gx export HTTP_PROXY="http:127.0.0.1:7897"
-set -gx export HTTPS_PROXY="http:127.0.0.1:7897"
+set -gx export HTTPS_PROXY="https:127.0.0.1:7897"
 set -gx export http_proxy="http:127.0.0.1:7897"
-set -gx export https_proxy="http:127.0.0.1:7897"
+set -gx export https_proxy="https:127.0.0.1:7897"
+set -gx export PUPPETEER_EXECUTABLE_PATH=/home/xieguiawu/.cache/puppeteer/chrome-headless-shell/linux-131.0.6778.204/chrome-headless-shell
+
+
+set -gx export GOPATH=$HOME/go
+set -gx export PATH=$PATH:$GOPATH/bin
 
