@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=lectrote
-Exec=/home/xieguiawu/lectrote/Lectrote
+Name=session
+Exec=/home/xieguiawu/session/session.AppImage
 Type=Application
 Categories=Utility
 StartupNotify=true

@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=lectrote
-Exec=/home/xieguiawu/lectrote/Lectrote
+Name=sourcetail
+Exec=/home/xieguiawu/sourcetail/sourcetail.AppImage
 Type=Application
 Categories=Utility
 StartupNotify=true
