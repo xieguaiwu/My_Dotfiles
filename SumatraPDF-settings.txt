@@ -64,6 +64,46 @@ Shortcuts [
 		Cmd = CmdCreateAnnotText
 		Key = Ctrl+n
 	]
+	[
+		Cmd = CmdExit
+		Key = Ctrl+q
+	]
+	[
+		Cmd = CmdCreateAnnotText
+		Key = Ctrl+d
+	]
+	[
+		Cmd = CmdToggleBookmarks
+		Key = F9
+	]
+	[
+		Cmd = CmdRotateRight
+		Key = Alt+Right
+	]
+	[
+		Cmd = CmdRotateLeft
+		Key = Alt+Left
+	]
+	[
+		Cmd = CmdViewBook
+		Key = Ctrl+Shift+p
+	]
+	[
+		Cmd = CmdViewSinglePage
+		Key = Ctrl+Shift+s
+	]
+	[
+		Cmd = CmdToggleToolbar
+		Key = F10
+	]
+	[
+		Cmd = CmdNextTab
+		Key = Ctrl+Tab
+	]
+	[
+		Cmd = CmdPrevTab
+		Key = Ctrl+Shift+Tab
+	]
 ]
 EscToExit = false
 ReuseInstance = false
@@ -99,10 +139,10 @@ FileStates [
 		]
 		IsPinned = false
 		IsMissing = false
-		OpenCount = 1
+		OpenCount = 2
 		UseDefaultState = false
 		DisplayMode = continuous
-		ScrollPos = -1 244.808
+		ScrollPos = -1 -1
 		PageNo = 4
 		Zoom = fit page
 		Rotation = 0
@@ -119,7 +159,7 @@ FileStates [
 		]
 		IsPinned = false
 		IsMissing = false
-		OpenCount = 3
+		OpenCount = 4
 		UseDefaultState = false
 		DisplayMode = continuous
 		ScrollPos = -1 -1
@@ -139,7 +179,7 @@ FileStates [
 		]
 		IsPinned = false
 		IsMissing = false
-		OpenCount = 7
+		OpenCount = 8
 		UseDefaultState = false
 		DisplayMode = continuous
 		ScrollPos = -1 682.719
@@ -159,7 +199,7 @@ FileStates [
 		]
 		IsPinned = false
 		IsMissing = false
-		OpenCount = 9
+		OpenCount = 10
 		UseDefaultState = false
 		DisplayMode = continuous
 		ScrollPos = -1 690.553
@@ -179,10 +219,10 @@ FileStates [
 		]
 		IsPinned = false
 		IsMissing = false
-		OpenCount = 13
+		OpenCount = 14
 		UseDefaultState = false
 		DisplayMode = continuous
-		ScrollPos = -1 148.08
+		ScrollPos = -1 147.6
 		PageNo = 1
 		Zoom = 125
 		Rotation = 0
@@ -199,10 +239,10 @@ FileStates [
 		]
 		IsPinned = false
 		IsMissing = false
-		OpenCount = 17
+		OpenCount = 18
 		UseDefaultState = false
 		DisplayMode = continuous
-		ScrollPos = -1 396.2
+		ScrollPos = -1 395.8
 		PageNo = 38
 		Zoom = 150
 		Rotation = 0
@@ -219,10 +259,10 @@ FileStates [
 		]
 		IsPinned = false
 		IsMissing = false
-		OpenCount = 18
+		OpenCount = 19
 		UseDefaultState = false
 		DisplayMode = continuous
-		ScrollPos = -1 602.2
+		ScrollPos = -1 601.8
 		PageNo = 8
 		Zoom = 150
 		Rotation = 0
@@ -8885,7 +8925,7 @@ SessionData [
 				PageNo = 8
 				Zoom = 150
 				Rotation = 0
-				ScrollPos = -1 602.2
+				ScrollPos = -1 601.8
 				ShowToc = false
 			]
 			[
@@ -8894,7 +8934,7 @@ SessionData [
 				PageNo = 38
 				Zoom = 150
 				Rotation = 0
-				ScrollPos = -1 396.2
+				ScrollPos = -1 395.8
 				ShowToc = true
 			]
 			[
@@ -8903,7 +8943,7 @@ SessionData [
 				PageNo = 1
 				Zoom = 125
 				Rotation = 0
-				ScrollPos = -1 148.08
+				ScrollPos = -1 147.6
 				ShowToc = false
 			]
 			[
@@ -8939,7 +8979,7 @@ SessionData [
 				PageNo = 4
 				Zoom = fit page
 				Rotation = 0
-				ScrollPos = -1 244.808
+				ScrollPos = -1 -1
 				ShowToc = true
 			]
 		]
