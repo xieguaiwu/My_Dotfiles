@@ -20,6 +20,7 @@ set -gx VISUAL nvim
 alias ll='ls -lh'
 alias la='ls -lha'
 alias lsl='lsd --long --human-readable --all'
+alias lst='lsd --tree'
 alias lsa='lsd -a'
 alias ..='cd ..'
 alias ...='cd ../..'
