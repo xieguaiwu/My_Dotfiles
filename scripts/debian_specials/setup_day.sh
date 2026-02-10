@@ -52,15 +52,15 @@ sudo apt update
 sudo apt install sublime-text
 
 echo ">>> Installing yazi..."
-wget -qO - https://github.com/sxyazi/yazi/releases/latest/download/yazi-x86_64-unknown-linux-gnu.zip -O yazi.zip
-unzip -o yazi.zip
+cd ~/Downloads
+wget "https://github.com/sxyazi/yazi/releases/download/v26.1.22/yazi-x86_64-unknown-linux-gnu.zip"
+unzip yazi-x86_64-unknown-linux-gnu.zip
 sudo mv yazi /usr/local/bin/
-rm yazi.zip
+rm ./yazi-x86_64-unknown-linux-gnu.zip
 mv ~/My_Dotfiles/yazi ~/.config/
 
 echo ">>> Installing funny stuff..."
-sudo apt install -y lsd nethack ncdu lazygit btop pandoc cowsay cbonsai tldr
-tldr --update
+sudo apt install -y lsd ncdu lazygit btop pandoc cowsay cbonsai 
 mv ~/My_Dotfiles/lazygit ~/.config/
 sudo npm install -g @mermaid-js/mermaid-cli
 mv ~/My_Dotfiles/mermaid ~/.config/
