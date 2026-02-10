@@ -53,11 +53,9 @@ sudo apt install sublime-text
 
 echo ">>> Installing yazi..."
 cd ~/Downloads
-wget "https://github.com/sxyazi/yazi/releases/download/v26.1.22/yazi-x86_64-unknown-linux-gnu.zip"
-unzip yazi-x86_64-unknown-linux-gnu.zip
-sudo mv yazi /usr/local/bin/
-rm ./yazi-x86_64-unknown-linux-gnu.zip
-mv ~/My_Dotfiles/yazi ~/.config/
+wget "https://github.com/sxyazi/yazi/releases/download/v26.1.22/yazi-x86_64-unknown-linux-gnu.deb"
+sudo apt install -y ./yazi-x86_64-unknown-linux-gnu.deb
+rm ./yazi-x86_64-unknown-linux-gnu.deb
 
 echo ">>> Installing funny stuff..."
 sudo apt install -y lsd ncdu lazygit btop pandoc cowsay cbonsai 
