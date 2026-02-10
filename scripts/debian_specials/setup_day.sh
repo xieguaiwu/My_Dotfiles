@@ -42,18 +42,12 @@ sudo apt install -y vim neovim
 mv ~/My_Dotfiles/nvim ~/.config
 cd ~
 git clone https://github.com/folke/lazy.nvim
-mkdir ~/.local/share/nvim
-mkdir ~/.local/share/nvim/lazy
-mv ~/lazy.nvim ~/.local/share/nvim/lazy
+sudo mkdir /usr/share/nvim
+sudo mkdir /usr/share/nvim/lazy
+sudo mv ~/lazy.nvim /usr/share/nvim/lazy
 
-cd ~
-mkdir ./obsidian
-cd ./obsidian
-wget "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.9.12/Obsidian-1.9.12.AppImage"
-chmod +x ./Obsidian-1.9.12.AppImage
-
-wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
-echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list
+wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo tee /etc/apt/keyrings/sublimehq-pub.asc > /dev/null
+echo -e 'Types: deb\nURIs: https://download.sublimetext.com/\nSuites: apt/stable/\nSigned-By: /etc/apt/keyrings/sublimehq-pub.asc' | sudo tee /etc/apt/sources.list.d/sublime-text.sources
 sudo apt update
 sudo apt install sublime-text
 
