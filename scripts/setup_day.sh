@@ -10,13 +10,18 @@ sudo dnf install -y curl git npm wget gawk node yacc fastfetch pinta torbrowser-
 sudo dnf install -y clash-verge flatpak shotcut eyeD3 exiftool qpdf chromium cava
 sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk xorg-x11-font-utils cabextract
 
+cd ~/Downloads
+mkdir ~/.vim
+mkdir ~/.vim/autoload
+git clone https://github.com/junegunn/vim-plug
+mv ~/vim-plug/plug.vim ~/.vim/autoload
+
 echo ">>> Installing fish shell and wezterm..."
 sudo dnf install -y fish
 sudo dnf install -y https://github.com/wezterm/wezterm/releases/download/20240203-110809-5046fc22/wezterm-20240203_110809_5046fc22-1.fedora39.x86_64.rpm
 curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
 
 echo ">>> Copying config files..."
-git clone https://github.com/xieguaiwu/My_Dotfiles
 mkdir ~/.config/fish
 mv ~/My_Dotfiles/config.fish ~/.config
 
@@ -25,10 +30,6 @@ sudo dnf install -y vim nvim
 
 mv ~/My_Dotfiles/vimrc ~/.vimrc
 mv ~/My_Dotfiles/nethackrc ~/.nethackrc
-mkdir ~/.vim
-mkdir ~/.vim/autoload
-git clone https://github.com/junegunn/vim-plug
-mv ~/vim-plug/plug.vim ~/.vim/autoload
 
 mv ~/My_Dotfiles/nvim ~/.config
 cd ~
