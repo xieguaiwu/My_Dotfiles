@@ -16,6 +16,8 @@ mkdir ~/.vim/autoload
 git clone https://github.com/junegunn/vim-plug
 mv ~/vim-plug/plug.vim ~/.vim/autoload
 
+npm i -g @iflow-ai/iflow-cli
+
 echo ">>> Installing fish shell and wezterm..."
 sudo dnf install -y fish
 sudo dnf install -y https://github.com/wezterm/wezterm/releases/download/20240203-110809-5046fc22/wezterm-20240203_110809_5046fc22-1.fedora39.x86_64.rpm
