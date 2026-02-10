@@ -8,7 +8,7 @@ sudo apt update
 sudo apt upgrade -y
 
 echo ">>> 安装 Python 开发环境..."
-sudo apt install -y python3 python3-pip python3-venv python3-dev autopep8
+sudo apt install -y python3 python3-pip python3-venv python3-dev
 pip3 install --upgrade pip ipython black flake8 mypy
 pip3 install pynvim pyinstaller numpy pandas
 
