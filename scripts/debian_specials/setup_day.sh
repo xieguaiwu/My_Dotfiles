@@ -3,15 +3,22 @@
 
 set -e
 
-echo ">>> Setting root password..."
-sudo passwd root
-
+echo "You can use 'sudo passwd root' to set the root password..."
 echo ">>> 更新系统软件包..."
 sudo apt update
 sudo apt upgrade -y
-sudo apt install -y curl git npm wget gawk nodejs fastfetch pinta
+sudo apt install -y curl git npm wget gawk nodejs fastfetch
 sudo apt install -y clash-verge flatpak shotcut eyed3 exiftool qpdf cava
 sudo apt install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt5 fcitx5-gtk3 xfonts-utils cabextract
+
+cd ~/Downloads
+wget "https://github.com/PintaProject/Pinta/releases/download/3.1.1/pinta-3.1.1.tar.gz"
+gunzip ./pinta-3.1.1.tar.gz
+tar -xf pinta-3.1.1.tar
+
+git clone "https://github.com/junegunn/vim-plug.git"
+mkdir ~/.vim/autoload
+mv ./vim-plug/plug.vim ~/.vim/autoload
 
 echo ">>> Installing fish shell and wezterm..."
 sudo apt install -y fish
