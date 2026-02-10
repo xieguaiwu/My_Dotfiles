@@ -8,17 +8,14 @@ echo ">>> 更新系统软件包..."
 sudo apt update
 sudo apt upgrade -y
 sudo apt install -y curl git npm wget gawk nodejs fastfetch
-sudo apt install -y flatpak shotcut eyed3 exiftool qpdf cava
-sudo apt install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt5 fcitx5-gtk3 xfonts-utils cabextract
+sudo apt install -y flatpak eyed3 exiftool qpdf cava fcitx5
+#fcitx5-chinese-addons fcitx5-configtool fcitx5-qt5 fcitx5-gtk3 xfonts-utils cabextract
 
 cd ~/Downloads
 wget "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v2.4.5/Clash.Verge_2.4.5_amd64.deb"
 sudo apt install -y ./Clash.Verge_2.4.5_amd64.deb
 
-cd ~/Downloads
-wget "https://github.com/PintaProject/Pinta/releases/download/3.1.1/pinta-3.1.1.tar.gz"
-gunzip ./pinta-3.1.1.tar.gz
-tar -xf pinta-3.1.1.tar
+npm i -g @iflow-ai/iflow-cli
 
 git clone "https://github.com/junegunn/vim-plug.git"
 mkdir ~/.vim/autoload
