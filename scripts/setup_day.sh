@@ -3,9 +3,7 @@
 
 set -e
 
-echo ">>> Setting root password..."
-sudo passwd root
-
+echo ">>> You can use 'sudo passwd root' to set the root password..."
 echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
 sudo dnf install -y curl git npm wget gawk node yacc fastfetch pinta torbrowser-launcher
