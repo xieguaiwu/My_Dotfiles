@@ -32,19 +32,11 @@ sudo apt install wezterm
 curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
 
 echo ">>> Copying config files..."
-git clone https://github.com/xieguaiwu/My_Dotfiles
 mkdir ~/.config/fish
 mv ~/My_Dotfiles/config.fish ~/.config
 
 echo ">>> Installing text editors..."
 sudo apt install -y vim neovim
-
-mv ~/My_Dotfiles/vimrc ~/.vimrc
-mv ~/My_Dotfiles/nethackrc ~/.nethackrc
-mkdir ~/.vim
-mkdir ~/.vim/autoload
-git clone https://github.com/junegunn/vim-plug
-mv ~/vim-plug/plug.vim ~/.vim/autoload
 
 mv ~/My_Dotfiles/nvim ~/.config
 cd ~
