@@ -9,8 +9,8 @@ sudo apt upgrade -y
 
 echo ">>> 安装 Python 开发环境..."
 sudo apt install -y python3 python3-pip python3-venv python3-dev
-pip3 install --upgrade pip ipython black flake8 mypy
-pip3 install pynvim pyinstaller numpy pandas
+pipx install --upgrade pip ipython black flake8 mypy autopep8
+pipx install pynvim pyinstaller numpy pandas
 
 echo ">>> 安装 Java"
 sudo apt install -y openjdk-21-jdk maven gradle
@@ -21,7 +21,7 @@ rustup component add rust-analyzer
 sudo apt install -y chafa
 
 echo ">>> 安装 C/C++ 工具链..."
-sudo apt install -y build-essential gcc g++ gdb cmake make automake autoconf libtool ninja-build astyle conda latexmk
+sudo apt install -y build-essential gcc g++ gdb cmake make automake autoconf libtool ninja-build astyle latexmk
 
 cd ~/Downloads
 wget "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz"
