@@ -9,12 +9,13 @@ if not contains $HOME/.local/bin $PATH
     set -gx PATH $HOME/.local/bin $PATH
 end
 if not contains $HOME/.cargo/bin $PATH
-    set -gx PATH $HOME/.cargo/bin:$PATH
+    set -gx PATH $HOME/.cargo/bin $PATH
 end
 
 # 默认编辑器
 set -gx EDITOR nvim
 set -gx VISUAL nvim
+set -gx DOOMWADPATH /home/xieguiawu/doom
 
 # ==== 常用别名 ====
 alias ll='ls -lh'
@@ -96,13 +97,13 @@ end
 
 fish_vi_key_bindings   # vi 模式
 
-set -gx export HTTP_PROXY="http:127.0.0.1:7897"
-set -gx export HTTPS_PROXY="https:127.0.0.1:7897"
-set -gx export http_proxy="http:127.0.0.1:7897"
-set -gx export https_proxy="https:127.0.0.1:7897"
-set -gx export PUPPETEER_EXECUTABLE_PATH=/home/xieguiawu/.cache/puppeteer/chrome-headless-shell/linux-131.0.6778.204/chrome-headless-shell
+set -gx HTTP_PROXY http://127.0.0.1:7897
+set -gx HTTPS_PROXY http://127.0.0.1:7897
+set -gx http_proxy http://127.0.0.1:7897
+set -gx https_proxy http://127.0.0.1:7897
+set -gx PUPPETEER_EXECUTABLE_PATH /home/xieguiawu/.cache/puppeteer/chrome-headless-shell/linux-131.0.6778.204/chrome-headless-shell
 
 
-set -gx export GOPATH=$HOME/go
-set -gx export PATH=$PATH:$GOPATH/bin
+set -gx GOPATH $HOME/go
+set -gx PATH $PATH $GOPATH/bin
 
