@@ -1,23 +1,59 @@
 -- ~/.config/nvim/lua/plugins/init.lua
 
 return {
-    -- 1. Mason
-    --{
-    --    "williamboman/mason.nvim",
-    --    cmd = "Mason",
-    --    lazy = false,
-    --    priority = 1000,
-    --    config = true
-    --},
-
-    -- 2. 颜色主题 (高优先级)
+    -- 1. 颜色主题 (高优先级)
     {
         "erichdongubler/vim-sublime-monokai",
         lazy = false,
-        priority = 999,
+        priority = 1000,
         config = function()
             vim.cmd("colorscheme sublimemonokai")
         end
+    },
+
+    -- 2. coc.nvim (LSP + 补全)
+    {
+        "neoclide/coc.nvim",
+        branch = "release",
+        lazy = false,
+        config = function()
+            vim.cmd([[
+                " Tab 补全导航
+                inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+                
+                " Enter 确认补全
+                inoremap <silent><expr> <CR>
+                \ pumvisible() ? coc#pum#confirm() :
+                \ coc#expandable() ? coc#rpc#request('do:expandSnippet') :
+                \ "\<CR>"
+
+                " LSP 快捷键
+                nmap <silent> gd <Plug>(coc-definition)
+                nmap <silent> gy <Plug>(coc-type-definition)
+                nmap <silent> gi <Plug>(coc-implementation)
+                nmap <silent> gr <Plug>(coc-references)
+                nmap <silent> <leader>rn <Plug>(coc-rename)
+                nmap <silent> <leader>ca <Plug>(coc-codeaction)
+
+                " 显示文档
+                nnoremap <silent> K :call ShowDocumentation()<CR>
+                function! ShowDocumentation()
+                    if CocAction('hasProvider', 'hover')
+                        call CocActionAsync('doHover')
+                    else
+                        call feedkeys('K', 'in')
+                    endif
+                endfunction
+
+                " 诊断导航
+                nmap <silent> [d <Plug>(coc-diagnostic-prev)
+                nmap <silent> ]d <Plug>(coc-diagnostic-next)
+                nmap <silent> <leader>d :CocDiagnostics<CR>
+
+                " 手动触发补全
+                inoremap <silent><expr> <A-z> coc#refresh()
+            ]])
+        end,
     },
 
     -- 3. Lualine
@@ -29,37 +65,7 @@ return {
         },
     },
 
-    -- 4. LSP config
-    --{
-    --    "neovim/nvim-lspconfig",
-    --    lazy = false, -- <--- 关键修正：确保API在config前初始化
-    --    dependencies = { "williamboman/mason-lspconfig.nvim" },
-    --   config = function()
-    --        require("lsp.init")
-    --    end,
-    --},
-    {
-        "neoclide/coc.nvim",
-        branch = "release",      -- 修复语法错误：从 {release} 改为 "release"
-        lazy = false,            -- 必须强制加载
-        config = function()
-            vim.cmd([[
-                inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
-                inoremap <silent><expr> <CR>
-                \ pumvisible() ? coc#pum#confirm() :
-                \ coc#expandable() ? coc#rpc#request('do:expandSnippet') :
-                \ "\<CR>"
-
-                nmap <silent> gd <Plug>(coc-definition)
-                nmap <silent> gy <Plug>(coc-type-definition)
-                nmap <silent> gi <Plug>(coc-implementation)
-                nmap <silent> gr <Plug>(coc-references)
-
-                " 补全刷新
-                inoremap <silent><expr> <A-z> coc#refresh()
-                ]])
-        end,
-    },
+    -- 4. Treesitter
     {
         "nvim-treesitter/nvim-treesitter",
         build = ":TSUpdate",
@@ -75,27 +81,6 @@ return {
                 indent = { enable = true },
             })
         end,
-    },
-    -- nvim-cmp
-    {
-        "hrsh7th/nvim-cmp",
-        event = "InsertEnter",
-        dependencies = {
-            "hrsh7th/cmp-nvim-lsp", -- LSP 源
-            "hrsh7th/cmp-buffer",   -- Buffer 源
-            "hrsh7th/cmp-path",     -- Path 源
-            "L3MON4D3/LuaSnip",     -- Snippet 引擎
-            "saadparwaiz1/cmp_luasnip", -- Snippet 源
-        },
-        config = function()
-            require("cmp.init") -- 另建文件配置 cmp 映射和行为
-        end,
-    },
-    -- Snippets
-    {
-        "L3MON4D3/LuaSnip",
-        dependencies = { "rafamadriz/friendly-snippets" },
-        build = "make install_jsregexp",
     },
     -- 文件树
     {
@@ -160,13 +145,6 @@ return {
             vim.keymap.set({"n", "v"}, "<C-A-f>", ":Autoformat<CR>", { desc = "Autoformat File" })
         end,
     },
-    -- 异步 Linting
-    {
-        "mfussenegger/nvim-lint",
-        event = "BufReadPost",
-        config = function()
-        end,
-    },
     { "tpope/vim-unimpaired" },
     { "godlygeek/tabular", cmd = "Tabularize" },
     -- vim-markdown
@@ -179,7 +157,6 @@ return {
     end },
     -- { "fatih/vim-go", ft = "go" },
     { "rust-lang/rust.vim", ft = "rust" },
---  end },
     -- Lean Prover
     --{ "leanprover/lean.nvim", ft = "lean" },
     --{ "Julian/lean.nvim", ft = "lean" },
