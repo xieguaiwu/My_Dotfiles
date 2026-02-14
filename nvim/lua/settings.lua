@@ -23,7 +23,7 @@ opt.encoding = "utf-8"
 opt.ttimeout = true
 opt.timeoutlen = 300
 --opt.noreadonly = true
-opt.completeopt = {"menu,menuone,noselect"}
+opt.completeopt = "menu,menuone,noselect"
 
 -- Usage
 opt.autoindent = true

@@ -13,8 +13,10 @@ map("n", "9y", "\"+y")
 map("n", "<C-h>", ":%s//g<Left><Left>", { noremap = true, silent = false, desc = "Quick Replace" })
 
 -- move lines up and down
-map("n", "J", ":m '>+1<CR>gv=gv", { desc = "Move line down" })
-map("n", "K", ":m '<-2<CR>gv=gv", { desc = "Move line up" })
+map("n", "<A-j>", ":m .+1<CR>==", { desc = "Move line down" })
+map("n", "<A-k>", ":m .-2<CR>==", { desc = "Move line up" })
+map("v", "<A-j>", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
+map("v", "<A-k>", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
 
 -- muti-window
 map("n", "fl", ":set splitright<CR>:vsplit<CR>", { desc = "Vertical Split Right" })
