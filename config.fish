@@ -103,7 +103,8 @@ set -gx http_proxy http://127.0.0.1:7897
 set -gx https_proxy http://127.0.0.1:7897
 set -gx PUPPETEER_EXECUTABLE_PATH /home/xieguiawu/.cache/puppeteer/chrome-headless-shell/linux-131.0.6778.204/chrome-headless-shell
 
-
+set -gx GOTOOLCHAIN auto
 set -gx GOPATH $HOME/go
+set -gx GOPROXY https://goproxy.cn,direct
 set -gx PATH $PATH $GOPATH/bin
 
