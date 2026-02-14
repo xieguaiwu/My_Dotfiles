@@ -14,6 +14,10 @@ pip3 install pynvim pyinstaller numpy pandas
 echo ">>> 安装 Java "
 sudo dnf install -y java-latest-openjdk java-latest-openjdk-devel maven gradle
 
+echo ">>> 安装 Golang"
+sudo dnf install -y golang
+go install golang.org/x/tools/gopls@latest
+
 echo ">>> 安装 Rust"
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup component add rust-analyzer
@@ -21,7 +25,7 @@ sudo dnf install -y chafa
 
 echo ">>> 安装 C/C++ 工具链..."
 sudo dnf groupinstall -y "Development Tools"
-sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-build astyle conda latexmk
+sudo dnf install -y gcc gcc-c++ gdb cmake make automake autoconf libtool ninja-build astyle conda latexmk clang-tools-extra
 
 cd ~/Downloads
 wget "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz"
