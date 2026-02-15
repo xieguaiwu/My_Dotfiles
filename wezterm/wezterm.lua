@@ -10,13 +10,41 @@ wezterm.on("gui-startup", function(cmd) -- set startup Window position
     window:gui_window():set_position(1000, 1000)
 end)
 
+-- 低电量自动切换纯黑背景
+wezterm.on("update-right-status", function(window, pane)
+    local battery_info = wezterm.battery_info()
+    if not battery_info or #battery_info == 0 then
+        return  -- 无电池信息（台式机等）
+    end
+    
+    local battery = battery_info[1]
+    local charge = battery.state_of_charge  -- 0.0 ~ 1.0
+    local state = battery.state  -- "Charging", "Discharging", "Empty", "Full", "Unknown"
+    
+    local LOW_THRESHOLD = 0.15  -- 15% 电量阈值
+    if charge <= LOW_THRESHOLD and state == "Discharging" then
+        window:set_config_overrides({
+            colors = {
+                background = "#000000",
+                tab_bar = {
+                    background = "#000000",
+                },
+            },
+            window_background_opacity = 1.0,
+        })
+    else
+        -- 恢复默认配置
+        window:set_config_overrides({})
+    end
+end)
+
 local config = {
     default_cursor_style = "BlinkingBar",
     -- 也可以选 "SteadyBar" （竖条但不闪烁）
     -- 其它可选项有：Block, BlinkingBlock, SteadyBlock, Underline, SteadyUnderline, BlinkingUnderline
     force_reverse_video_cursor = true,
     check_for_updates = true,
-    font_size = 15,
+    font_size = 16,
     -- font = wezterm.font("JetBrains MonoNL Font Mono", { weight = "Regular" }),
     -- font = wezterm.font("Hack Nerd Font", { weight = "Regular" }),
     font = wezterm.font_with_fallback({
