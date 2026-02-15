@@ -58,7 +58,7 @@ sudo apt install -y ./yazi-x86_64-unknown-linux-gnu.deb
 rm ./yazi-x86_64-unknown-linux-gnu.deb
 
 echo ">>> Installing funny stuff..."
-sudo apt install -y lsd ncdu lazygit btop pandoc cowsay cbonsai torbrowser-launcher
+sudo apt install -y lsd ncdu lazygit btop pandoc cowsay cbonsai
 mv ~/My_Dotfiles/lazygit ~/.config/
 sudo npm install -g @mermaid-js/mermaid-cli
 mv ~/My_Dotfiles/mermaid ~/.config/
@@ -83,6 +83,13 @@ tar -xf ./Umi-OCR_Linux_Paddle_2.1.5.tar
 mv ./Umi-OCR_Linux_Paddle_2.1.5 ~/umi-ocr
 cd ~/umi-ocr
 sh ./umi-ocr.sh
+
+
+cd ~/Downloads
+wget "https://www.torproject.org/dist/torbrowser/15.0.5/tor-browser-linux-x86_64-15.0.5.tar.xz"
+xz -d ./tor-browser-linux-x86_64-15.0.5.tar.xz
+tar -xf ./tor-browser-linux-x86_64-15.0.5.tar
+mv ./tor-browser ~
 
 cd ~/Downloads
 sudo apt install dictzip dictd
