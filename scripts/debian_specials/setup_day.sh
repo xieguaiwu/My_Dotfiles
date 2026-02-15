@@ -111,7 +111,7 @@ wget git.io/trans
 chmod +x ./trans
 
 echo ">>> Installing sway stuff"
-sudo apt install -y sway waybar network-manager network-manager-gnome
+sudo apt install -y sway waybar network-manager network-manager-gnome swaylock
 sudo apt install -y dunst wofi pulseaudio-utils brightnessctl pipewire-audio-client-libraries libinput-bin
 sudo apt install -y arandr blueman lxappearance
 mv ~/My_Dotfiles/sway ~/.config
