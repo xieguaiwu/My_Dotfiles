@@ -84,7 +84,7 @@ mv ./Umi-OCR_Linux_Paddle_2.1.5 ~/umi-ocr
 cd ~/umi-ocr
 sh ./umi-ocr.sh
 
-
+echo ">>> Downloading tor-browser, check 'https://bridges.torproject.org/options' to get a bridge"
 cd ~/Downloads
 wget "https://www.torproject.org/dist/torbrowser/15.0.5/tor-browser-linux-x86_64-15.0.5.tar.xz"
 xz -d ./tor-browser-linux-x86_64-15.0.5.tar.xz
