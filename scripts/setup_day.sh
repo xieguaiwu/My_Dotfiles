@@ -6,7 +6,7 @@ set -e
 echo ">>> You can use 'sudo passwd root' to set the root password..."
 echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
-sudo dnf install -y curl git npm wget gawk node yacc fastfetch pinta torbrowser-launcher
+sudo dnf install -y curl git npm wget gawk node yacc fastfetch pinta
 sudo dnf install -y clash-verge flatpak shotcut eyeD3 exiftool qpdf chromium cava openssh-server
 sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk xorg-x11-font-utils cabextract
 
@@ -45,6 +45,12 @@ mkdir ./obsidian
 cd ./obsidian
 wget "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.9.12/Obsidian-1.9.12.AppImage"
 chmod +x ./Obsidian-1.9.12.AppImage
+
+cd ~/Downloads
+wget "https://www.torproject.org/dist/torbrowser/15.0.5/tor-browser-linux-x86_64-15.0.5.tar.xz"
+xz -d ./tor-browser-linux-x86_64-15.0.5.tar.xz
+tar -xf ./tor-browser-linux-x86_64-15.0.5.tar
+mv ./tor-browser ~
 
 sudo rpm -v --import https://download.sublimetext.com/sublimehq-rpm-pub.gpg
 sudo dnf config-manager addrepo --from-repofile=https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo
