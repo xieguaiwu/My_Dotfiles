@@ -58,7 +58,7 @@ sudo apt install -y ./yazi-x86_64-unknown-linux-gnu.deb
 rm ./yazi-x86_64-unknown-linux-gnu.deb
 
 echo ">>> Installing funny stuff..."
-sudo apt install -y lsd ncdu lazygit btop pandoc cowsay cbonsai 
+sudo apt install -y lsd ncdu lazygit btop pandoc cowsay cbonsai torbrowser-launcher
 mv ~/My_Dotfiles/lazygit ~/.config/
 sudo npm install -g @mermaid-js/mermaid-cli
 mv ~/My_Dotfiles/mermaid ~/.config/
