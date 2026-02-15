@@ -46,6 +46,7 @@ cd ./obsidian
 wget "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.9.12/Obsidian-1.9.12.AppImage"
 chmod +x ./Obsidian-1.9.12.AppImage
 
+echo ">>> Downloading tor-browser, check 'https://bridges.torproject.org/options' to get a bridge"
 cd ~/Downloads
 wget "https://www.torproject.org/dist/torbrowser/15.0.5/tor-browser-linux-x86_64-15.0.5.tar.xz"
 xz -d ./tor-browser-linux-x86_64-15.0.5.tar.xz
@@ -64,10 +65,9 @@ mv ~/My_Dotfiles/yazi ~/.config/
 sudo dnf copr enable mo-k12/personal
 sudo dnf install -y xdg-desktop-portal-termfilechooser
 
-
 echo ">>> Installing funny stuff..."
 sudo dnf copr enable dejan/lazygit
-sudo dnf install -y lsd nethack ncdu lazygit btop pandoc cowsay cbonsai tldr torbrowser-launcher
+sudo dnf install -y lsd nethack ncdu lazygit btop pandoc cowsay cbonsai tldr
 tldr --update
 mv ~/My_Dotfiles/lazygit ~/.config/
 sudo npm install -g @mermaid-js/mermaid-cli
