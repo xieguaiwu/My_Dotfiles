@@ -1,0 +1,2 @@
+echo $Z_DATA_DIR 找出z的数据存储目录 （在fedora中是~/.local/share/z/）
+文件"data"正位于其中
