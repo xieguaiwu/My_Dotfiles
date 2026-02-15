@@ -61,7 +61,7 @@ sudo dnf install -y xdg-desktop-portal-termfilechooser
 
 echo ">>> Installing funny stuff..."
 sudo dnf copr enable dejan/lazygit
-sudo dnf install -y lsd nethack ncdu lazygit btop pandoc cowsay cbonsai tldr  
+sudo dnf install -y lsd nethack ncdu lazygit btop pandoc cowsay cbonsai tldr torbrowser-launcher
 tldr --update
 mv ~/My_Dotfiles/lazygit ~/.config/
 sudo npm install -g @mermaid-js/mermaid-cli
