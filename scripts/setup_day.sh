@@ -27,6 +27,11 @@ echo ">>> Copying config files..."
 mkdir ~/.config/fish
 mv ~/My_Dotfiles/config.fish ~/.config
 
+cd ~/Downloads
+wget "https://github.com/sheeki03/tirith/releases/download/v0.1.9/tirith-0.1.9-1.el9.x86_64.rpm"
+sudo dnf -y install ./tirith-0.1.9-1.el9.x86_64.rpm
+
+
 echo ">>> Installing text editors..."
 sudo dnf install -y vim nvim
 
