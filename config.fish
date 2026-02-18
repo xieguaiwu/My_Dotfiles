@@ -1,7 +1,7 @@
 tirith init
 
-if status is-interactive
-    # Commands to run in interactive sessions can go here
+if not status is-interactive
+    return
 end
 
 if not contains /usr/local/bin $PATH
@@ -108,5 +108,7 @@ set -gx PUPPETEER_EXECUTABLE_PATH /home/xieguiawu/.cache/puppeteer/chrome-headle
 set -gx GOTOOLCHAIN auto
 set -gx GOPATH $HOME/go
 set -gx GOPROXY https://goproxy.cn,direct
-set -gx PATH $PATH $GOPATH/bin
+if not contains $GOPATH/bin $PATH
+    set -gx PATH $PATH $GOPATH/bin
+end
 
