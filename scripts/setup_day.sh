@@ -78,6 +78,8 @@ mv ~/My_Dotfiles/lazygit ~/.config/
 sudo npm install -g @mermaid-js/mermaid-cli
 mv ~/My_Dotfiles/mermaid ~/.config/
 npx puppeteer browsers install chrome-headless-shell
+sudo dnf copr enable poesty/go-musicfox
+sudo dnf install -y go-musicfox
 
 sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
 # download microsoft font installer
