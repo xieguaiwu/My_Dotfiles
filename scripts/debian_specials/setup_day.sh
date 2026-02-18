@@ -68,6 +68,10 @@ sudo npm install -g @mermaid-js/mermaid-cli
 mv ~/My_Dotfiles/mermaid ~/.config/
 npx puppeteer browsers install chrome-headless-shell
 
+cd ~/Downloads
+wget "https://github.com/go-musicfox/go-musicfox/releases/download/v4.8.0/go-musicfox_4.8.0_linux_amd64.deb"
+sudo apt install -y ./go-musicfox_4.8.0_linux_amd64.deb
+
 sudo apt install -y ttf-mscorefonts-installer
 echo ">>> Microsoft fonts installed (may need interaction)"
 
