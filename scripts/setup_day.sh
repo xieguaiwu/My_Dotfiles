@@ -91,6 +91,12 @@ make -C src
 sudo make -C src install
 mv ~/My_Dotfiles/sc-im ~/.config/
 
+cd ~/Downloads
+git clone "https://github.com/xieguaiwu/Display_Latex_Expression.git"
+cd ./Display_Latex_Expression
+chmod +x ./Display
+mv ./Display ~/.local/bin
+
 cd ~
 git clone https://github.com/abishekvashok/cmatrix
 mkdir cmatrix/build
