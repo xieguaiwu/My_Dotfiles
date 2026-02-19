@@ -72,6 +72,12 @@ cd ~/Downloads
 wget "https://github.com/go-musicfox/go-musicfox/releases/download/v4.8.0/go-musicfox_4.8.0_linux_amd64.deb"
 sudo apt install -y ./go-musicfox_4.8.0_linux_amd64.deb
 
+cd ~/Downloads
+git clone "https://github.com/xieguaiwu/Display_Latex_Expression.git"
+cd ./Display_Latex_Expression
+chmod +x ./Display
+mv ./Display ~/.local/bin
+
 sudo apt install -y ttf-mscorefonts-installer
 echo ">>> Microsoft fonts installed (may need interaction)"
 
