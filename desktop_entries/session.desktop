@@ -1,6 +1,0 @@
-[Desktop Entry]
-Name=session
-Exec=/home/xieguiawu/session/session.AppImage
-Type=Application
-Categories=Utility
-StartupNotify=true
