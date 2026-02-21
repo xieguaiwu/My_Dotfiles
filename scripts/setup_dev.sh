@@ -7,7 +7,7 @@ echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
 
 echo ">>> 安装 Python 开发环境..."
-sudo dnf install -y python3 python3-pip python3-virtualenv python3-devel autopep8
+sudo dnf install -y python3 python3-pip python3-virtualenv python3-devel autopep8 ghc
 pip3 install --upgrade pip ipython black flake8 mypy
 pip3 install pynvim pyinstaller numpy pandas
 
@@ -59,5 +59,5 @@ vim -c "PlugInstall"
 vim -c "CocInstall coc-java"
 vim -c "CocInstall coc-rust-analyzer"
 
-echo ">>> Finished! 🚀"
+echo ">>> Finished! 🚀 运行'install-coc-servers.sh'来完成nvim语言服务器的配置"
 
