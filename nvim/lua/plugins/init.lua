@@ -61,7 +61,7 @@ return {
         "nvim-lualine/lualine.nvim",
         lazy = false,
         opts = {
-            options = { theme = "tomorrow_night" },
+            options = { theme = "horizon" },
         },
     },
 
