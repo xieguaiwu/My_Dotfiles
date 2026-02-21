@@ -31,6 +31,8 @@ M.CompileRun = function()
         cmd = string.format("!pdflatex %s", file)
     elseif ft == 'go' then
         cmd = string.format("!go build %s", file)
+    elseif ft == 'haskell' then
+        cmd = string.format("!ghc -o %s %s && ./%s", base, file, base)
     elseif ft == 'asm' or ft == 'nasm' then
         local obj_file = base .. ".o"
         local exe_file = base
