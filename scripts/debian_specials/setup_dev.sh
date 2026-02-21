@@ -10,7 +10,7 @@ sudo apt upgrade -y
 echo ">>> 安装 Python 开发环境..."
 sudo apt install -y python3 python3-pip python3-venv python3-dev ghc
 pipx install --upgrade pip ipython black flake8 mypy autopep8
-pipx install pynvim pyinstaller numpy pandas
+pipx install pynvim pyinstaller numpy pandas phone
 
 echo ">>> 安装 Java"
 sudo apt install -y openjdk-21-jdk maven gradle
