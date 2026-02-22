@@ -10,7 +10,7 @@ sudo apt upgrade -y
 echo ">>> 安装 Python & Haskell 开发环境..."
 sudo apt install -y python3 python3-pip python3-venv python3-dev ghc
 pipx install --upgrade pip ipython black flake8 mypy autopep8 httplib2 redis
-pipx install pynvim pyinstaller numpy pandas phone thread threadpool
+pipx install pynvim pyinstaller numpy pandas phone thread threadpool tbomb
 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
 echo ">>> 安装 Java"
