@@ -8,7 +8,7 @@ sudo dnf upgrade --refresh -y
 
 echo ">>> 安装 Python & Haskell 开发环境..."
 sudo dnf install -y python3 python3-pip python3-virtualenv python3-devel autopep8 ghc
-pip3 install --upgrade pip ipython black flake8 mypy httplib2 redis
+pip3 install --upgrade pip ipython black flake8 mypy httplib2 redis tbomb
 pip3 install pynvim pyinstaller numpy pandas phone thread threadpool
 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
