@@ -6,7 +6,7 @@ set -e
 echo ">>> You can use 'sudo passwd root' to set the root password..."
 echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
-sudo dnf install -y curl git npm wget gawk node yacc fastfetch pinta
+sudo dnf install -y curl git npm wget gawk node yacc fastfetch pinta wireguard-tools
 sudo dnf install -y clash-verge flatpak shotcut eyeD3 exiftool qpdf chromium cava openssh-server
 sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk xorg-x11-font-utils cabextract
 flatpak install flathub hu.irl.cameractrls
