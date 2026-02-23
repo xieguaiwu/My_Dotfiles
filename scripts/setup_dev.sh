@@ -12,7 +12,8 @@ pip3 install --upgrade pip ipython black flake8 mypy httplib2 redis tbomb
 pip3 install pynvim pyinstaller numpy pandas phone thread threadpool
 echo ">>> 现在开始安装Haskell,请记得勾选下载Haskell的language-server..."
 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
-stack install stylish-haskell
+cabal update
+cabal install stylish-haskell
 
 echo ">>> 安装 Java "
 sudo dnf install -y java-latest-openjdk java-latest-openjdk-devel maven gradle
