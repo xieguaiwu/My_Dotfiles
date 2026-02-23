@@ -71,6 +71,9 @@ M.SelfFormat = function()
         format_command = string.format("!cat %s | expand -t 8 | unexpand -t 8 > %s.tmp && mv %s.tmp %s",
             vim.fn.expand('%'), vim.fn.expand('%'),
             vim.fn.expand('%'), vim.fn.expand('%'))
+    elseif ft == 'haskell' then
+        local config = vim.fn.stdpath("config") .. "/stylish-haskell/config.yaml" --使用~/.config/ 来作为formatter的地址，而非~/
+        format_command = string.format("!stylish-haskell -c %s -i %s", config, vim.fn.expand('%'))
     else
         format_command = "Autoformat"
     end
