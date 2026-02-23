@@ -11,7 +11,10 @@ echo ">>> 安装 Python & Haskell 开发环境..."
 sudo apt install -y python3 python3-pip python3-venv python3-dev ghc
 pipx install --upgrade pip ipython black flake8 mypy autopep8 httplib2 redis
 pipx install pynvim pyinstaller numpy pandas phone thread threadpool tbomb
+echo ">>> 现在开始安装Haskell,请记得勾选下载Haskell的language-server..."
 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+cabal update
+cabal install stylish-haskell
 
 echo ">>> 安装 Java"
 sudo apt install -y openjdk-21-jdk maven gradle
