@@ -25,6 +25,11 @@ opt.timeoutlen = 300
 --opt.noreadonly = true
 opt.completeopt = "menu,menuone,noselect"
 
+-- Encoding
+opt.fileencoding = "utf-8"
+opt.fileencodings = "utf-8,ucs-bom,gb18030,gbk,gb2312,cp936"
+opt.bomb = false
+
 -- Usage
 opt.autoindent = true
 opt.autoread = true
