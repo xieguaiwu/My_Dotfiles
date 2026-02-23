@@ -20,19 +20,18 @@ M.CompileRun = function()
     elseif ft == 'c' then
         cmd = string.format("!gcc -std=c11 -O2 -Wall %s -o %s", file, base)
     elseif ft == 'java' then
-        cmd = string.format("!javac %s && java %s", file, base)
+        local classname = vim.fn.fnamemodify(file, ':t:r')
+        cmd = string.format("!javac -d . %s && java -cp . %s", file, classname)
     elseif ft == 'python' then
         cmd = string.format("!python3 %s", file)
     elseif ft == 'sh' then
         cmd = string.format("!sh %s", file)
     elseif ft == 'rust' then
         cmd = ":RustBuild | RustRun"
-    elseif ft == 'tex' then
-        cmd = string.format("!pdflatex %s", file)
     elseif ft == 'go' then
         cmd = string.format("!go build %s", file)
     elseif ft == 'haskell' then
-        cmd = string.format("!ghc -o %s %s && ./%s", base, file, base)
+        cmd = string.format("!ghc -O2 -Wall  -rtsopts -with-rtsopts=-N -o %s %s", base, file)
     elseif ft == 'asm' or ft == 'nasm' then
         local obj_file = base .. ".o"
         local exe_file = base
