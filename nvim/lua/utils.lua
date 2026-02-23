@@ -16,9 +16,9 @@ M.CompileRun = function()
     local cmd = nil
 
     if ft == 'cpp' or ft == 'cc' then
-        cmd = string.format("!g++ -g -std=c++17 --no-pie %s -o %s", file, base)
+        cmd = string.format("!g++ -std=c++17 -O2 -Wall %s -o %s", file, base)
     elseif ft == 'c' then
-        cmd = string.format("!gcc -g %s -o %s", file, base)
+        cmd = string.format("!gcc -std=c11 -O2 -Wall %s -o %s", file, base)
     elseif ft == 'java' then
         cmd = string.format("!javac %s && java %s", file, base)
     elseif ft == 'python' then
