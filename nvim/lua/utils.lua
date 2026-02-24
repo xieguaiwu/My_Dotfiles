@@ -31,7 +31,7 @@ M.CompileRun = function()
     elseif ft == 'go' then
         cmd = string.format("!go build %s", file)
     elseif ft == 'haskell' then
-        cmd = string.format("!ghc -O2 -Wall  -rtsopts -with-rtsopts=-N -o %s %s", base, file)
+        cmd = string.format("!ghc -O2 -Wall -threaded -rtsopts -with-rtsopts=-N -o %s %s", base, file)
     elseif ft == 'asm' or ft == 'nasm' then
         local obj_file = base .. ".o"
         local exe_file = base
