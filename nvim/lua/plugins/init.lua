@@ -132,6 +132,15 @@ return {
         },
         { "tpope/vim-unimpaired" },
         { "godlygeek/tabular", cmd = "Tabularize" },
+        -- Treesitter 语法高亮 (新版 API)
+        {
+            "nvim-treesitter/nvim-treesitter",
+            build = ":TSUpdate",
+            init = function()
+                -- 安装所有需要的语言解析器
+                vim.cmd("silent! TSInstall! c cpp java python sh rust go haskell asm markdown markdown_inline lua vim vimdoc")
+            end,
+        },
         -- vim-markdown
         { "plasticboy/vim-markdown", ft = "markdown", config = function()
             vim.g.vim_markdown_math = 1
