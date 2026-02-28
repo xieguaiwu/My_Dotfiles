@@ -26,7 +26,8 @@ fi
 
 # 检查输出文件名是否包含 .pdf 扩展名
 if [[ "$OUTPUTNAME" != *.pdf ]]; then
-    echo "警告: 输出文件名不包含 .pdf 扩展名"
+    echo "警告: 输出文件名不包含 .pdf 扩展名，已自动添加"
+    OUTPUTNAME="${OUTPUTNAME}.pdf"
 fi
 
 echo "正在从 '$WHICHFILE' 提取第 $FROM 到 $ENDINGPAGE 页到 '$OUTPUTNAME' ..."
