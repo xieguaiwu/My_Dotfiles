@@ -47,12 +47,8 @@ local config = {
     -- font = wezterm.font("JetBrains MonoNL Font Mono", { weight = "Regular" }),
     -- font = wezterm.font("Hack Nerd Font", { weight = "Regular" }),
     font = wezterm.font_with_fallback({
-        -- { family = "FiraCode Nerd Font Mono", weight = "Regular" },
-        -- { family = "Hack Nerd Font", weight = "Regular" },
-        -- { family = "MesloLGL Nerd Font Mono", weight = "Regular" },
         { family = "JetBrains Mono", weight = "Medium" },
-        -- { family = "Sarasa Term SC Nerd", weight = "Regular" },
-        -- { family = "SF Pro", weight = "Regular" },
+        "Noto Sans Mono CJK SC",  -- 中文 fallback
     }),
     line_height = 1.1,
     -- COLOR SCHEME
