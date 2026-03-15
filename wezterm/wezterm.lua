@@ -2,7 +2,6 @@ local k = require("utils/keys")
 local wezterm = require("wezterm")
 local act = wezterm.action
 local opacity = 1.0
-local config = {}
 require("utils/helpers")
 
 wezterm.on("gui-startup", function(cmd) -- set startup Window position
@@ -120,17 +119,25 @@ local config = {
         { key = "8", mods = "ALT", action = act.ActivateTab(7) },
         { key = "9", mods = "ALT", action = act.ActivateTab(8) },
 
-        k.cmd_to_tmux_prefix("n", '"'), -- tmux horizontal split
-        k.cmd_to_tmux_prefix("N", "%"), -- tmux vertical split
-        k.cmd_to_tmux_prefix("d", "w"), -- tmux-sessionx
-        k.cmd_to_tmux_prefix("t", "c"), -- new tmux window
-        k.cmd_to_tmux_prefix("w", "x"), -- tmux close pane
-        k.cmd_to_tmux_prefix("z", "z"), -- tmux zoom
-        {
-            key = "t",
-            mods = "CMD|CTRL",
-            action = wezterm.action.EmitEvent("toggle-opacity"),
-        },
+        -- WezTerm 原生分屏快捷键
+        { key = "/", mods = "CTRL", action = act.SplitVertical({ domain = "CurrentPaneDomain" }) }, -- 上下分屏
+        { key = "2", mods = "CTRL", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) }, -- 左右分屏
+        { key = "h", mods = "CTRL|SHIFT", action = act.ActivatePaneDirection("Left") }, -- 切换到左侧 pane
+        { key = "l", mods = "CTRL|SHIFT", action = act.ActivatePaneDirection("Right") }, -- 切换到右侧 pane
+        { key = "k", mods = "CTRL|SHIFT", action = act.ActivatePaneDirection("Up") }, -- 切换到上方 pane
+        { key = "j", mods = "CTRL|SHIFT", action = act.ActivatePaneDirection("Down") }, -- 切换到下方 pane
+        { key = "x", mods = "CTRL|SHIFT", action = act.CloseCurrentPane({ confirm = true }) }, -- 关闭当前 pane
+
+        -- Tmux 快捷键 (Linux 使用 ALT 键)
+        k.alt_to_tmux_prefix("n", '"'), -- tmux horizontal split
+        k.alt_to_tmux_prefix("N", "%"), -- tmux vertical split
+        k.alt_to_tmux_prefix("d", "w"), -- tmux-sessionx
+        k.alt_to_tmux_prefix("t", "c"), -- new tmux window
+        k.alt_to_tmux_prefix("w", "x"), -- tmux close pane
+        k.alt_to_tmux_prefix("z", "z"), -- tmux zoom
+
+        -- 切换窗口透明度
+        { key = "t", mods = "CTRL|ALT", action = wezterm.action.EmitEvent("toggle-opacity") },
     }
 }
 
