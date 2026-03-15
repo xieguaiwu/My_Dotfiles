@@ -36,4 +36,19 @@ M.cmd_to_tmux_prefix = function(key, tmux_key)
 	)
 end
 
+-- Linux 兼容的 ALT 键辅助函数
+M.alt_key = function(key, action)
+	return M.key_table("ALT", key, action)
+end
+
+M.alt_to_tmux_prefix = function(key, tmux_key)
+	return M.alt_key(
+		key,
+		wt_action.Multiple({
+			wt_action.SendKey({ mods = "CTRL", key = " " }),
+			wt_action.SendKey({ key = tmux_key }),
+		})
+	)
+end
+
 return M
