@@ -15,11 +15,11 @@ wezterm.on("update-right-status", function(window, pane)
     if not battery_info or #battery_info == 0 then
         return  -- 无电池信息（台式机等）
     end
-    
+
     local battery = battery_info[1]
     local charge = battery.state_of_charge  -- 0.0 ~ 1.0
     local state = battery.state  -- "Charging", "Discharging", "Empty", "Full", "Unknown"
-    
+
     local LOW_THRESHOLD = 0.15  -- 15% 电量阈值
     if charge <= LOW_THRESHOLD and state == "Discharging" then
         window:set_config_overrides({
@@ -123,15 +123,6 @@ local config = {
         { key = "k", mods = "CTRL|SHIFT", action = act.ActivatePaneDirection("Up") }, -- 切换到上方 pane
         { key = "j", mods = "CTRL|SHIFT", action = act.ActivatePaneDirection("Down") }, -- 切换到下方 pane
         { key = "x", mods = "CTRL|SHIFT", action = act.CloseCurrentPane({ confirm = true }) }, -- 关闭当前 pane
-
-        -- Tmux 快捷键 (Linux 使用 ALT 键)
-        k.alt_to_tmux_prefix("n", '"'), -- tmux horizontal split
-        k.alt_to_tmux_prefix("N", "%"), -- tmux vertical split
-        k.alt_to_tmux_prefix("d", "w"), -- tmux-sessionx
-        k.alt_to_tmux_prefix("t", "c"), -- new tmux window
-        k.alt_to_tmux_prefix("w", "x"), -- tmux close pane
-        k.alt_to_tmux_prefix("z", "z"), -- tmux zoom
-
         -- 切换窗口透明度
         { key = "t", mods = "CTRL|ALT", action = wezterm.action.EmitEvent("toggle-opacity") },
     }
