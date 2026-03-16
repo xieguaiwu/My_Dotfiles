@@ -166,4 +166,11 @@ mv ~/My_Dotfiles/swaylock ~/.config
 mv ~/My_Dotfiles/wofi ~/.config
 mv ~/My_Dotfiles/waybar ~/.config
 mv ~/My_Dotfiles/timer ~
+
+echo ">>> Installing email stuff"
+cd ~/Downloads
+wget "https://proton.me/download/bridge/protonmail-bridge-3.21.2-1.x86_64.rpm"
+sudo dnf install -y ./protonmail-bridge-3.21.2-1.x86_64.rpm
+sudo dnf install -y aerc
+
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
