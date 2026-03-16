@@ -171,6 +171,6 @@ echo ">>> Installing email stuff"
 cd ~/Downloads
 wget "https://proton.me/download/bridge/protonmail-bridge-3.21.2-1.x86_64.rpm"
 sudo dnf install -y ./protonmail-bridge-3.21.2-1.x86_64.rpm
-sudo dnf install -y alpen
+sudo dnf install -y alpine
 
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
