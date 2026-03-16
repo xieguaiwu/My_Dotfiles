@@ -7,7 +7,7 @@ echo ">>> You can use 'sudo passwd root' to set the root password..."
 echo ">>> 更新系统软件包..."
 sudo dnf upgrade --refresh -y
 sudo dnf install -y curl git npm wget gawk node yacc fastfetch pinta wireguard-tools vlc parole glow texlive-dvipng
-sudo dnf install -y clash-verge flatpak shotcut eyeD3 exiftool qpdf chromium cava openssh-server alien
+sudo dnf install -y clash-verge flatpak shotcut eyeD3 exiftool qpdf chromium cava openssh-server alien gnome-keyring
 sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk xorg-x11-font-utils cabextract
 flatpak install flathub hu.irl.cameractrls
 
@@ -171,6 +171,6 @@ echo ">>> Installing email stuff"
 cd ~/Downloads
 wget "https://proton.me/download/bridge/protonmail-bridge-3.21.2-1.x86_64.rpm"
 sudo dnf install -y ./protonmail-bridge-3.21.2-1.x86_64.rpm
-sudo dnf install -y aerc
+sudo dnf install -y alpen
 
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
