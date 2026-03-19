@@ -9,7 +9,7 @@ echo "=== 检查并安装 LaTeX 环境 ==="
 if ! command -v pdflatex &> /dev/null; then
     echo "pdflatex 未找到，正在安装 texlive..."
     sudo dnf install -y texlive texlive-collection-langenglish texlive-collection-langchinese texlive-microtype
-    sudo dnf install -y texlive-standalone texlive-dvipng
+    sudo dnf install -y texlive-standalone texlive-dvipng texlive-preview texlive-dvisvgm
     echo "texlive 安装完成"
 else
     echo "pdflatex 已安装"
