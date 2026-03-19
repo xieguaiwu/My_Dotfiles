@@ -1,8 +1,8 @@
-tirith init
-
 if not status is-interactive
     return
 end
+
+tirith init
 
 if not contains /usr/local/bin $PATH
     set -gx PATH /usr/local/bin $PATH
@@ -40,6 +40,7 @@ alias gl='git log --oneline --graph --decorate'
 alias update='sudo dnf update -y'
 alias install='sudo dnf install -y'
 alias remove='sudo dnf remove -y'
+alias ggb='flatpak run org.geogebra.GeoGebra'
 
 
 # ~/.config/fish/config.fish
@@ -112,3 +113,4 @@ if not contains $GOPATH/bin $PATH
     set -gx PATH $PATH $GOPATH/bin
 end
 
+set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin /home/xieguiawu/.ghcup/bin $PATH # ghcup-env
