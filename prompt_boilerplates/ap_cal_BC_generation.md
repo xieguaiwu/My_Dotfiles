@@ -258,6 +258,7 @@ tectonic AP_Calculus_BC_Mock_Exam.tex
 - [ ] Section II Part A: 2 道简答题 (需计算器)
 - [ ] Section II Part B: 4 道简答题 (无计算器)
 - [ ] 所有选择题有 5 个选项 (A-E)
+- [ ] 选择题没有重复选项
 - [ ] 答案表完整
 - [ ] 答案表全部正确
 - [ ] 选择题答案没有可预测的明显规律
