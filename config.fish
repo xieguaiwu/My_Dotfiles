@@ -13,6 +13,9 @@ end
 if not contains $HOME/.cargo/bin $PATH
     set -gx PATH $HOME/.cargo/bin $PATH
 end
+if not contains $HOME/.npm-global/bin $PATH
+    set -gx PATH $HOME/.npm-global/bin $PATH
+end
 
 # 默认编辑器
 set -gx EDITOR nvim
@@ -41,7 +44,8 @@ alias update='sudo dnf update -y'
 alias install='sudo dnf install -y'
 alias remove='sudo dnf remove -y'
 alias ggb='flatpak run org.geogebra.GeoGebra'
-
+alias powersave='sudo cpupower frequency-set -g powersave'
+alias performance='sudo cpupower frequency-set -g performance'
 
 # ~/.config/fish/config.fish
 function mkcd
