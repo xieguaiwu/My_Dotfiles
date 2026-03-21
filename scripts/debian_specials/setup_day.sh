@@ -17,6 +17,8 @@ wget "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v2.4.
 sudo apt install -y ./Clash.Verge_2.4.5_amd64.deb
 
 npm i -g @iflow-ai/iflow-cli
+npm install -g opencode-ai
+npm install -g oh-my-opencode@latest
 
 git clone "https://github.com/junegunn/vim-plug.git"
 mkdir ~/.vim/autoload
