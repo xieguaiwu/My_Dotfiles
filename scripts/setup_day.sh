@@ -18,6 +18,8 @@ git clone https://github.com/junegunn/vim-plug
 mv ~/vim-plug/plug.vim ~/.vim/autoload
 
 npm i -g @iflow-ai/iflow-cli
+npm install -g opencode-ai
+npm install -g oh-my-opencode@latest
 
 echo ">>> Installing fish shell and wezterm..."
 sudo dnf install -y fish
@@ -31,7 +33,6 @@ mv ~/My_Dotfiles/config.fish ~/.config
 cd ~/Downloads
 wget "https://github.com/sheeki03/tirith/releases/download/v0.1.9/tirith-0.1.9-1.el9.x86_64.rpm"
 sudo dnf -y install ./tirith-0.1.9-1.el9.x86_64.rpm
-
 
 echo ">>> Installing text editors..."
 sudo dnf install -y vim nvim
