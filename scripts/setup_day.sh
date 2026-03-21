@@ -17,9 +17,10 @@ mkdir ~/.vim/autoload
 git clone https://github.com/junegunn/vim-plug
 mv ~/vim-plug/plug.vim ~/.vim/autoload
 
-npm i -g @iflow-ai/iflow-cli
-npm install -g opencode-ai
-npm install -g oh-my-opencode@latest
+sudo npm i -g @iflow-ai/iflow-cli
+sudo npm install -g opencode-ai
+sudo npm install -g oh-my-opencode@latest
+sudo npm install -g @kilocode/cli
 
 echo ">>> Installing fish shell and wezterm..."
 sudo dnf install -y fish
