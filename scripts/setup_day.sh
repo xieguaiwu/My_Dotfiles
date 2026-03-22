@@ -161,7 +161,7 @@ cd ~
 
 echo ">>> Installing sway stuff"
 sudo dnf install -y sway waybar NetworkManager-tui network-manager-applet 
-sudo dnf install -y dunst wofi pulse brightnessctl pactl libinput
+sudo dnf install -y dunst wofi pulse brightnessctl pactl libinput tesseract
 sudo dnf install -y arandr nm-applet blueman-applet lxappearance swaylock
 mv ~/My_Dotfiles/sway ~/.config
 mv ~/My_Dotfiles/swaylock ~/.config
