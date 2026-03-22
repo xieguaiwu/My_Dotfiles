@@ -4,6 +4,10 @@ font pango:JetBrains Mono 16
 # 使用 Super 键作为修饰键
 set $mod Mod4
 
+# 设置默认应用
+set $file_manager nautilus
+set $browser firefox
+
 # 启动终端 (wezterm)
 bindsym $mod+Return exec wezterm
 
@@ -81,24 +85,27 @@ client.focused_inactive $in-bgcolor     $in-bgcolor     $in-text        $in-bgco
 client.urgent           $u-bgcolor      $u-bgcolor      $text           $u-bgcolor
 
 # --- 状态栏 (swaybar) ---
-exec_always --no-startup-id waybar
-exec nm-applet --indicator
+exec --no-startup-id waybar
 
 # --- 开机自启应用 ---
 # 输入法 (fcitx5)
-exec_always --no-startup-id fcitx5
+exec --no-startup-id fcitx5
 
-output * bg /usr/share/backgrounds/fedora-workstation/petals_dark.webp center
+output * bg ~/Pictures/Isle of Death.jpg center
 
 # 启动 VPN
-exec_always --no-startup-id clash-verge
+exec --no-startup-id clash-verge
 
 # 启动系统托盘图标：网络和蓝牙
-exec_always --no-startup-id nm-applet
-exec_always --no-startup-id blueman-applet
+exec --no-startup-id nm-applet
+exec --no-startup-id blueman-applet
 
 # 自动挂载可移动媒体
-exec_always --no-startup-id udiskie -t
+exec --no-startup-id udiskie -t
+
+exec wl-paste --type text --watch clipman store
+exec wl-paste --type image --watch clipman store
+bindsym $mod+V exec clipman pick --tool=wofi
 
 # --- 应用启动器 ---
 bindsym $mod+d exec wofi --show drun
@@ -110,7 +117,8 @@ bindsym $mod+r exec --no-startup-id wdisplays
 bindsym $mod+a exec --no-startup-id lxappearance
 
 # file manager
-exec_always xdg-mime default org.gnome.Nautilus.desktop inode/directory
+exec xdg-mime default inode/directory
+exec org.gnome.Nautilus.desktop
 bindsym $mod+e exec --no-startup-id nautilus
 
 # --- 输入设备配置 ---
@@ -136,5 +144,6 @@ bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 1%-
 
 # screenshot
 bindsym Print exec grim -g "$(slurp)" ~/Pictures/screenshots/$(date +"%Y%m%d-%H%M%S").png
+bindsym $mod+o exec grim -g "$(slurp)" - | tesseract stdin stdout | wl-copy
 bindsym $mod+Print exec grim - | wl-copy
 bindsym $mod+Shift+c reload
