@@ -1,6 +1,22 @@
-# AP Calculus BC 模拟试卷生成
-
 ---
+name: ap-calculus-bc-exam-generation
+version: 1.0.0
+description: 生成AP Calculus BC完整模拟试卷(LaTeX格式)
+triggers:
+  - "AP Calculus BC 试卷"
+  - "生成AP试卷"
+  - "AP mock exam"
+inputs:
+  - name: output
+    description: 输出.tex文件路径
+    required: false
+    default: AP_Calculus_BC_Mock_Exam.tex
+tools:
+  - write_file
+  - run_shell_command
+---
+
+# AP Calculus BC 模拟试卷生成
 
 ## 核心
 ```

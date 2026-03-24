@@ -1,3 +1,27 @@
+---
+name: anki-flashcard-generation
+version: 1.0.0
+description: 从Markdown公式文件生成Anki闪卡(.apkg)
+triggers:
+  - "生成anki闪卡"
+  - "anki flashcard"
+  - "公式转闪卡"
+inputs:
+  - name: source
+    description: Markdown文件路径（包含LaTeX公式）
+    required: true
+  - name: output
+    description: 输出.apkg文件路径
+    required: false
+    default: output.apkg
+tools:
+  - read_file
+  - write_file
+  - run_shell_command
+---
+
+# Anki闪卡生成
+
 请深入分析这个问题，提供详细的推理过程，考虑多种可能的方案并比较优劣。
 遵守以下步骤，写python脚本帮我生成anki闪卡
 
