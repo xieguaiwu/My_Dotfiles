@@ -1,6 +1,22 @@
-# AP Calculus BC 积分专项练习生成
-
 ---
+name: ap-calculus-bc-integration-practice
+version: 1.0.0
+description: 生成AP Calculus BC积分专项练习(LaTeX格式)
+triggers:
+  - "积分练习"
+  - "integration practice"
+  - "AP积分"
+inputs:
+  - name: output
+    description: 输出.tex文件路径
+    required: false
+    default: integration_practice.tex
+tools:
+  - write_file
+  - run_shell_command
+---
+
+# AP Calculus BC 积分专项练习生成
 
 ## 核心
 ```

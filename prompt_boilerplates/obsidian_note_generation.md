@@ -1,3 +1,27 @@
+---
+name: obsidian-note-generation
+version: 1.0.0
+description: 从知识点生成Obsidian格式的Markdown笔记
+triggers:
+  - "生成笔记"
+  - "obsidian笔记"
+  - "知识总结"
+inputs:
+  - name: source
+    description: 知识点来源文件或内容
+    required: true
+  - name: output_dir
+    description: 输出目录
+    required: false
+    default: ./
+tools:
+  - read_file
+  - write_file
+  - glob
+---
+
+# Obsidian笔记生成
+
 请深入分析这个问题，提供详细的推理过程，考虑多种可能的方案并比较优劣。
 1. 总结已经提及的这些知识点
 2. 模仿当前目录下的笔记，创建符合obsidian格式的markdown笔记

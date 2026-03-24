@@ -1,6 +1,23 @@
-# AP Calculus BC 无穷级数专项练习生成
-
 ---
+name: ap-calculus-bc-series-practice
+version: 1.0.0
+description: 生成AP Calculus BC无穷级数专项练习(LaTeX格式，含答案验证)
+triggers:
+  - "级数练习"
+  - "series practice"
+  - "泰勒级数"
+  - "无穷级数"
+inputs:
+  - name: output
+    description: 输出.tex文件路径
+    required: false
+    default: series_practice.tex
+tools:
+  - write_file
+  - run_shell_command
+---
+
+# AP Calculus BC 无穷级数专项练习生成
 
 ## 核心
 ```

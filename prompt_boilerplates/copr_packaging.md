@@ -1,3 +1,40 @@
+---
+name: copr-packaging
+version: 1.0.0
+description: 将项目打包为RPM并上传到COPR仓库
+triggers:
+  - "copr打包"
+  - "RPM打包"
+  - "上传copr"
+  - "fedora打包"
+inputs:
+  - name: project_path
+    description: 项目目录路径
+    required: true
+  - name: github_repo
+    description: GitHub仓库地址
+    required: true
+  - name: email
+    description: 邮箱(用于changelog)
+    required: true
+  - name: github_user
+    description: GitHub用户名
+    required: true
+  - name: maintainer
+    description: 维护者名称
+    required: false
+  - name: version
+    description: 版本号
+    required: false
+    default: "1.0.0"
+tools:
+  - read_file
+  - write_file
+  - run_shell_command
+  - glob
+  - list_directory
+---
+
 # COPR 打包
 
 请深入分析这个问题，提供详细的推理过程，考虑多种可能的方案并比较优劣。

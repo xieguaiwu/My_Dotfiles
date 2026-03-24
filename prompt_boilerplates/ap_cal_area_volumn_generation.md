@@ -1,6 +1,22 @@
-# AP Calculus BC 面积与体积专项练习生成
-
 ---
+name: ap-calculus-bc-area-volume-practice
+version: 1.0.0
+description: 生成AP Calculus BC面积与体积专项练习(LaTeX格式)
+triggers:
+  - "面积体积练习"
+  - "area volume practice"
+  - "定积分应用"
+inputs:
+  - name: output
+    description: 输出.tex文件路径
+    required: false
+    default: area_volume_practice.tex
+tools:
+  - write_file
+  - run_shell_command
+---
+
+# AP Calculus BC 面积与体积专项练习生成
 
 ## 核心
 ```

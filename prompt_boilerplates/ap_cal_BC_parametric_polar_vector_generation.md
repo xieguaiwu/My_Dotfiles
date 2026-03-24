@@ -1,6 +1,23 @@
-# AP Calculus BC 参数方程、极坐标与向量函数专项练习生成
-
 ---
+name: ap-calculus-bc-parametric-polar-vector
+version: 1.0.0
+description: 生成AP Calculus BC参数方程、极坐标与向量专项练习(LaTeX格式)
+triggers:
+  - "参数方程练习"
+  - "极坐标练习"
+  - "向量函数练习"
+  - "parametric polar"
+inputs:
+  - name: output
+    description: 输出.tex文件路径
+    required: false
+    default: parametric_polar_vector_practice.tex
+tools:
+  - write_file
+  - run_shell_command
+---
+
+# AP Calculus BC 参数方程、极坐标与向量函数专项练习生成
 
 ## 核心
 ```
