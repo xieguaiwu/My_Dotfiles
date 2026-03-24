@@ -4,5 +4,51 @@
     "websearch": "allow",
     "webfetch": "allow"
   },
-  "plugin": ["oh-my-opencode"]
+  "plugin": [
+    "oh-my-opencode@latest",
+    "@tarquinen/opencode-dcp",
+    "opencode-worktree",
+    "opencode-pty",
+    "opencode-browser",
+    "opencode-notificator"
+  ],
+  "provider": {
+    "zhipuai": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "智谱AI",
+      "options": {
+        "baseURL": "https://open.bigmodel.cn/api/paas/v4",
+        "apiKey": "a1f36f7a4693453f853a499eb0564317.rZpse6rFayXchvpf"
+      },
+      "models": {
+        "glm-5": {
+          "name": "GLM-5",
+          "limit": {
+            "context": 202752,
+            "output": 8192
+          }
+        },
+        "glm-4.7": {
+          "name": "GLM-4.7",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          }
+        },
+        "glm-4.7-flash": {
+          "name": "GLM-4.7 Flash",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          }
+        }
+      }
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "strategy": "summarize",
+    "threshold": 0.8,
+    "prune_tool_outputs": true
+  }
 }
