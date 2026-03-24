@@ -50,5 +50,19 @@
     "strategy": "summarize",
     "threshold": 0.8,
     "prune_tool_outputs": true
+  },
+  "mcp": {
+    "zai-vision": {
+      "type": "local",
+      "command": ["npx", "-y", "@z_ai/mcp-server"],
+      "environment": {
+        "Z_AI_API_KEY": "<REDACTED-old-unknown>",
+        "Z_AI_MODE": "ZAI"
+      }
+    },
+    "docx": {
+      "type": "local",
+      "command": ["npx", "-y", "@docx-mcp/docx-mcp"]
+    }
   }
 }
