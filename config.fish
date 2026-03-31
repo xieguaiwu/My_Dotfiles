@@ -39,13 +39,13 @@ alias ga='git add'
 alias gc='git commit -m'
 alias gp='git push'
 alias gl='git log --oneline --graph --decorate'
-
 alias update='sudo dnf update -y'
 alias install='sudo dnf install -y'
 alias remove='sudo dnf remove -y'
 alias ggb='flatpak run org.geogebra.GeoGebra'
 alias powersave='sudo cpupower frequency-set -g powersave'
 alias performance='sudo cpupower frequency-set -g performance'
+alias cpuinfo='cpupower frequency-info'
 
 # ~/.config/fish/config.fish
 function mkcd
@@ -109,7 +109,6 @@ set -gx HTTPS_PROXY http://127.0.0.1:7897
 set -gx http_proxy http://127.0.0.1:7897
 set -gx https_proxy http://127.0.0.1:7897
 set -gx PUPPETEER_EXECUTABLE_PATH /home/xieguiawu/.cache/puppeteer/chrome-headless-shell/linux-131.0.6778.204/chrome-headless-shell
-
 set -gx GOTOOLCHAIN auto
 set -gx GOPATH $HOME/go
 set -gx GOPROXY https://goproxy.cn,direct
@@ -118,3 +117,5 @@ if not contains $GOPATH/bin $PATH
 end
 
 set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin /home/xieguiawu/.ghcup/bin $PATH # ghcup-env
+# Gemini API Key
+set -gx GEMINI_API_KEY AIzaSyAeZAtY3PKFb5jfl_9UGQ9KURtiQ5_Wzis
