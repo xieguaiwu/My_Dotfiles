@@ -117,5 +117,3 @@ if not contains $GOPATH/bin $PATH
 end
 
 set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin /home/xieguiawu/.ghcup/bin $PATH # ghcup-env
-# Gemini API Key
-set -gx GEMINI_API_KEY AIzaSyAeZAtY3PKFb5jfl_9UGQ9KURtiQ5_Wzis
