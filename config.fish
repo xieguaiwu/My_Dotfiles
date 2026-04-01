@@ -45,7 +45,7 @@ alias remove='sudo dnf remove -y'
 alias ggb='flatpak run org.geogebra.GeoGebra'
 alias powersave='sudo cpupower frequency-set -g powersave'
 alias performance='sudo cpupower frequency-set -g performance'
-alias cpuinfo='cpupower frequency-info'
+alias cpufreq='cpupower frequency-info'
 
 # ~/.config/fish/config.fish
 function mkcd
@@ -117,3 +117,5 @@ if not contains $GOPATH/bin $PATH
 end
 
 set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin /home/xieguiawu/.ghcup/bin $PATH # ghcup-env
+# Gemini API Key
+set -gx GEMINI_API_KEY AIzaSyAeZAtY3PKFb5jfl_9UGQ9KURtiQ5_Wzis
