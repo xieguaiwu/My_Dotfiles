@@ -18,7 +18,7 @@
       "name": "智谱AI",
       "options": {
         "baseURL": "https://open.bigmodel.cn/api/paas/v4",
-        "apiKey": "<REDACTED-old-unknown>"
+        "apiKey": ""
       },
       "models": {
         "glm-5": {
@@ -56,7 +56,7 @@
       "type": "local",
       "command": ["npx", "-y", "@z_ai/mcp-server"],
       "environment": {
-        "Z_AI_API_KEY": "<REDACTED-old-unknown>",
+        "Z_AI_API_KEY": "",
         "Z_AI_MODE": "ZAI"
       }
     },
