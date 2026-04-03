@@ -1,0 +1,46 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "websearch": "allow",
+    "webfetch": "allow"
+  },
+  "plugin": [
+    "oh-my-opencode@latest",
+    "@tarquinen/opencode-dcp",
+    "opencode-worktree",
+    "opencode-pty",
+    "opencode-browser",
+    "opencode-notificator"
+  ],
+  "disabled_providers": ["z-ai"],
+  "provider": {
+    "nvidia": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "NVIDIA NIM",
+      "options": {
+        "baseURL": "https://integrate.api.nvidia.com/v1",
+        "apiKey": "57952eb3-7fdb-40ec-a022-ba8849d69201"
+      }
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "strategy": "summarize",
+    "threshold": 0.6,
+    "prune_tool_outputs": true
+  },
+  "mcp": {
+    "zai-vision": {
+      "type": "local",
+      "command": ["npx", "-y", "@z_ai/mcp-server"],
+      "environment": {
+        "Z_AI_API_KEY": "a1f36f7a4693453f853a499eb0564317.rZpse6rFayXchvpf",
+        "Z_AI_MODE": "ZAI"
+      }
+    },
+    "docx": {
+      "type": "local",
+      "command": ["npx", "-y", "@docx-mcp/docx-mcp"]
+    }
+  }
+}
