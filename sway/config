@@ -91,6 +91,9 @@ exec --no-startup-id waybar
 # 输入法 (fcitx5)
 exec --no-startup-id fcitx5
 
+exec systemctl --user import-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE
+exec systemctl --user restart xdg-desktop-portal xdg-desktop-portal-wlr
+
 output * bg ~/Pictures/Isle of Death.jpg center
 
 # 启动 VPN
@@ -103,8 +106,8 @@ exec --no-startup-id blueman-applet
 # 自动挂载可移动媒体
 exec --no-startup-id udiskie -t
 
-exec wl-paste --type text --watch clipman store
-exec wl-paste --type image --watch clipman store
+exec --no-startup-id pkill -x wl-paste; wl-paste --type text --watch clipman store
+exec --no-startup-id pkill -x wl-paste; wl-paste --type image --watch clipman store
 bindsym $mod+V exec clipman pick --tool=wofi
 
 # --- 应用启动器 ---
@@ -118,7 +121,7 @@ bindsym $mod+a exec --no-startup-id lxappearance
 
 # file manager
 exec xdg-mime default inode/directory
-exec org.gnome.Nautilus.desktop
+# exec org.gnome.Nautilus.desktop
 bindsym $mod+e exec --no-startup-id nautilus
 
 # --- 输入设备配置 ---
