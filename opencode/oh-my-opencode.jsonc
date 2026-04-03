@@ -41,7 +41,7 @@
     
     // 前端测试 - 需要分析界面截图
     "frontend-tester": {
-      "model": "nvidia/qwen/qwen3.5-397b-a17b"
+      "model": "nvidia/moonshotai/kimi-k2.5"
     },
     
     // 信息收集 - 需要处理图像信息
