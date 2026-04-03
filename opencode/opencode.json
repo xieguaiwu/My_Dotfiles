@@ -19,7 +19,7 @@
       "name": "NVIDIA NIM",
       "options": {
         "baseURL": "https://integrate.api.nvidia.com/v1",
-        "apiKey": "<REDACTED-NVIDIA_API_KEY>"
+        "apiKey": "shit"
       }
     }
   },
@@ -34,7 +34,7 @@
       "type": "local",
       "command": ["npx", "-y", "@z_ai/mcp-server"],
       "environment": {
-        "Z_AI_API_KEY": "<REDACTED-old-unknown>",
+        "Z_AI_API_KEY": "shit",
         "Z_AI_MODE": "ZHIPU"
       }
     }
