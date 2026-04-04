@@ -19,7 +19,6 @@ sudo apt install -y ./Clash.Verge_2.4.5_amd64.deb
 sudo npm i -g @iflow-ai/iflow-cli
 sudo npm install -g opencode-ai
 sudo npm install -g oh-my-opencode@latest
-sudo npm install -g @kilocode/cli
 
 git clone "https://github.com/junegunn/vim-plug.git"
 mkdir ~/.vim/autoload
