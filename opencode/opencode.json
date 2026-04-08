@@ -5,21 +5,23 @@
     "webfetch": "allow"
   },
   "plugin": [
-    "oh-my-opencode@latest",
+    "oh-my-openagent@latest",
     "@tarquinen/opencode-dcp",
     "opencode-worktree",
     "opencode-pty",
     "opencode-browser",
     "opencode-notificator"
   ],
-  "disabled_providers": ["z-ai"],
+  "disabled_providers": [
+    "z-ai"
+  ],
   "provider": {
     "nvidia": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "NVIDIA NIM",
       "options": {
         "baseURL": "https://integrate.api.nvidia.com/v1",
-        "apiKey": "shit"
+        "apiKey": "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"
       }
     }
   },
@@ -32,11 +34,24 @@
   "mcp": {
     "zai-vision": {
       "type": "local",
-      "command": ["npx", "-y", "@z_ai/mcp-server"],
+      "command": [
+        "npx",
+        "-y",
+        "@z_ai/mcp-server"
+      ],
       "environment": {
-        "Z_AI_API_KEY": "shit",
+        "Z_AI_API_KEY": "a1f36f7a4693453f853a499eb0564317.rZpse6rFayXchvpf",
         "Z_AI_MODE": "ZHIPU"
       }
+    },
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/home/xieguiawu"
+      ]
     }
   }
 }

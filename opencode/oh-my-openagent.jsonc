@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/dev/assets/oh-my-opencode.schema.json",
+  
+  // 智力密集型 agent 使用 GLM-5，速度/上下文密集型使用 big-pickle
+  "agents": {
+    // === 最依赖智力的 agent - 使用 NVIDIA NIM GLM-5 ===
+    
+    // Sisyphus - 主编排者，规划/委托/执行的核心大脑
+    "sisyphus": {
+      "model": "nvidia/z-ai/glm5"
+    },
+    
+    // Prometheus - 战略规划器，需要深度推理和面试式规划
+    "prometheus": {
+      "model": "nvidia/z-ai/glm5"
+    },
+    
+    // Oracle - 架构咨询，需要高智商分析复杂系统
+    "oracle": {
+      "model": "nvidia/z-ai/glm5"
+    },
+    
+    // Metis - 缺口分析，需要创造性发现潜在问题
+    "metis": {
+      "model": "nvidia/z-ai/glm5"
+    },
+    
+    // === 需要大上下文/速度的 agent - 使用 big-pickle ===
+    
+    // Explore - 快速代码搜索，速度优先
+    "explore": {
+      "model": "opencode/big-pickle"
+    },
+    
+    // Librarian - 文档搜索，需要大上下文
+    "librarian": {
+      "model": "opencode/big-pickle"
+    },
+    
+    // === 需要视觉能力的 agent - 使用 NVIDIA NIM ===
+    
+    // 前端测试 - 需要分析界面截图
+    "frontend-tester": {
+      "model": "nvidia/moonshotai/kimi-k2.5"
+    },
+    
+    // 信息收集 - 需要处理图像信息
+    "information-collector": {
+      "model": "nvidia/moonshotai/kimi-k2.5"
+    }
+  },
+  
+  // 分类任务 - 简单任务用 big-pickle，复杂任务用 GLM-5
+  "categories": {
+    "quick": {
+      "model": "opencode/big-pickle"
+    },
+    "unspecified-low": {
+      "model": "opencode/big-pickle"
+    },
+    "unspecified-high": {
+      "model": "nvidia/z-ai/glm5"
+    },
+    "writing": {
+      "model": "nvidia/z-ai/glm5"
+    }
+  }
+}
