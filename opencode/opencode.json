@@ -1,0 +1,77 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "websearch": "allow",
+    "webfetch": "allow"
+  },
+  "plugin": [
+    "oh-my-openagent",
+    "@tarquinen/opencode-dcp",
+    "opencode-worktree",
+    "opencode-pty",
+    "opencode-browser",
+    "opencode-wakatime",
+    "opencode-websearch-cited"
+  ],
+  "disabled_providers": [
+    "z-ai"
+  ],
+  "provider": {
+    "nvidia": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "NVIDIA NIM",
+      "options": {
+        "baseURL": "https://integrate.api.nvidia.com/v1",
+        "apiKey": "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",
+        "websearch_cited": {
+          "model": "z-ai/glm5"
+        }
+      }
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "strategy": "summarize",
+    "threshold": 0.6,
+    "prune_tool_outputs": true
+  },
+  "mcp": {
+    "zai-vision": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@z_ai/mcp-server"
+      ],
+      "environment": {
+        "Z_AI_API_KEY": "a1f36f7a4693453f853a499eb0564317.rZpse6rFayXchvpf",
+        "Z_AI_MODE": "ZHIPU"
+      }
+    },
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/home/xieguiawu"
+      ]
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "memory": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    }
+  }
+}
