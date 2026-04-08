@@ -20,6 +20,7 @@ mv ~/vim-plug/plug.vim ~/.vim/autoload
 sudo npm i -g @iflow-ai/iflow-cli
 sudo npm install -g opencode-ai
 sudo npm install -g oh-my-opencode@latest
+sudo npm i -g opencode-ai@latest 
 
 echo ">>> Installing fish shell and wezterm..."
 sudo dnf install -y fish
