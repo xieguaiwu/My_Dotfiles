@@ -3,6 +3,7 @@ if not status is-interactive
 end
 
 tirith init
+starship init fish | source
 
 if not contains /usr/local/bin $PATH
     set -gx PATH /usr/local/bin $PATH
@@ -39,6 +40,7 @@ alias ga='git add'
 alias gc='git commit -m'
 alias gp='git push'
 alias gl='git log --oneline --graph --decorate'
+
 alias update='sudo dnf update -y'
 alias install='sudo dnf install -y'
 alias remove='sudo dnf remove -y'
@@ -58,17 +60,17 @@ function gco
     git checkout $argv
 end
 
-function fish_prompt
-    set_color cyan
-    echo -n (whoami)"@"(hostname) " "
-    set_color yellow
-    echo -n (prompt_pwd) " "
-    set_color green
-    echo -n (date "+%H:%M")" "
-    set_color magenta
-    echo -n "❯ "
-    set_color normal
-end
+#function fish_prompt
+#    set_color cyan
+#    echo -n (whoami)"@"(hostname) " "
+#    set_color yellow
+#    echo -n (prompt_pwd) " "
+#    set_color green
+#    echo -n (date "+%H:%M")" "
+#    set_color magenta
+#    echo -n "❯ "
+#    set_color normal
+#end
 
 # fisher install jethrokuan/z
 # fisher install jethrokuan/fzf
