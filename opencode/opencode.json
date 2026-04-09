@@ -22,7 +22,7 @@
       "name": "NVIDIA NIM",
       "options": {
         "baseURL": "https://integrate.api.nvidia.com/v1",
-        "apiKey": "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",
+        "apiKey": "shit",
         "websearch_cited": {
           "model": "z-ai/glm5"
         }
@@ -44,7 +44,7 @@
         "@z_ai/mcp-server"
       ],
       "environment": {
-        "Z_AI_API_KEY": "a1f36f7a4693453f853a499eb0564317.rZpse6rFayXchvpf",
+        "Z_AI_API_KEY": "shit",
         "Z_AI_MODE": "ZHIPU"
       }
     },
