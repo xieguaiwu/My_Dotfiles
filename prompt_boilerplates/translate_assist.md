@@ -22,12 +22,12 @@ tools:
 # 翻译辅助
 
 ## 任务目标
-将英文论文翻译为中文 Markdown 文档，保持数学公式的正确性和文档结构的一致性。
+将外文论文翻译为中文 Markdown 文档，保持数学公式的正确性和文档结构的一致性。
 
 ## 执行流程
 
 ### 1. 读取源文件
-使用 `read_file` 读取源文件（支持 `.pdf`、`.tex`、`.md` 等格式）。
+使用 `read_file` `look_at` 或者`pdftotext`等方式 读取源文件。
 
 ### 2. 分析文档结构
 - 识别标题层级（Abstract, Introduction, Methods 等）
