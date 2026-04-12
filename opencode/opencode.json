@@ -1,5 +1,17 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    ".opencodeinstructions"
+  ],
+  "mode": {
+    "build": {
+      "prompt_append": "When user sends images, screenshots, or visual content, delegate to multimodal-looker agent for visual analysis."
+    },
+    "plan": {
+      "prompt_append": "When user sends images, screenshots, or visual content, delegate to multimodal-looker agent for visual analysis."
+    }
+  },
   "permission": {
     "websearch": "allow",
     "webfetch": "allow"
@@ -20,12 +32,19 @@
     "nvidia": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "NVIDIA NIM",
+      "models": {
+        "z-ai/glm5": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "moonshotai/kimi-k2.5": {
+          "context": 128000,
+          "attachment": true
+        }
+      },
       "options": {
         "baseURL": "https://integrate.api.nvidia.com/v1",
-        "apiKey": "shit",
-        "websearch_cited": {
-          "model": "z-ai/glm5"
-        }
+        "apiKey": "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"
       }
     }
   },
@@ -36,41 +55,12 @@
     "prune_tool_outputs": true
   },
   "mcp": {
-    "zai-vision": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@z_ai/mcp-server"
-      ],
-      "environment": {
-        "Z_AI_API_KEY": "shit",
-        "Z_AI_MODE": "ZHIPU"
-      }
-    },
-    "filesystem": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/home/xieguiawu"
-      ]
-    },
     "sequential-thinking": {
       "type": "local",
       "command": [
         "npx",
         "-y",
         "@modelcontextprotocol/server-sequential-thinking"
-      ]
-    },
-    "memory": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-memory"
       ]
     }
   }

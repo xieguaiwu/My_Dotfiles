@@ -37,14 +37,20 @@
       "model": "opencode/big-pickle"
     },
     
-    // === 需要视觉能力的 agent - 使用 NVIDIA NIM ===
+    // === 需要视觉能力的 agent - 使用 kimi-k2.5 (已配置 attachment: true) ===
     
-    // 前端测试 - 需要分析界面截图
+    // 多模态视觉分析 - 专职处理图像、截图、图表等视觉内容
+    "multimodal-looker": {
+      "model": "nvidia/moonshotai/kimi-k2.5",
+      "prompt_append": "When analyzing images: 1) Describe all visible elements (UI components, text, colors, layout). 2) Identify any issues or anomalies. 3) For UI screenshots, check design consistency and usability. 4) Provide structured, detailed analysis."
+    },
+    
+    // 前端测试 - 需要分析界面截图、UI渲染结果
     "frontend-tester": {
       "model": "nvidia/moonshotai/kimi-k2.5"
     },
     
-    // 信息收集 - 需要处理图像信息
+    // 信息收集 - 需要处理图像、图表、截图等视觉信息
     "information-collector": {
       "model": "nvidia/moonshotai/kimi-k2.5"
     }
