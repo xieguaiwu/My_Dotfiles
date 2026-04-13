@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+
+sudo nano /sys/class/power_supply/BAT*/charge_control_end_threshold
