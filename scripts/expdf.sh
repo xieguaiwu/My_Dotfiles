@@ -31,7 +31,7 @@ if [[ "$OUTPUTNAME" != *.pdf ]]; then
 fi
 
 echo "正在从 '$WHICHFILE' 提取第 $FROM 到 $ENDINGPAGE 页到 '$OUTPUTNAME' ..."
-qpdf "$WHICHFILE" --pages . $FROM-$ENDINGPAGE -- "$OUTPUTNAME"
+qpdf "$WHICHFILE" --pages . $FROM-$ENDINGPAGE -- "$OUTPUTNAME" 2>/dev/null
 
 if [ $? -eq 0 ]; then
     echo "成功: PDF 页面提取完成，输出文件: $OUTPUTNAME"
