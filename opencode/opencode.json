@@ -25,15 +25,12 @@
     "opencode-wakatime",
     "opencode-websearch-cited"
   ],
-  "disabled_providers": [
-    "z-ai"
-  ],
   "provider": {
     "nvidia": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "NVIDIA NIM",
       "models": {
-        "z-ai/glm5": {
+        "z-ai/glm-5.1": {
           "context": 128000,
           "reasoning": true
         },
@@ -46,12 +43,29 @@
         "baseURL": "https://integrate.api.nvidia.com/v1",
         "apiKey": "shit"
       }
+    },
+    "modelscope": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "ModelScope (备用)",
+      "models": {
+        "ZhipuAI/GLM-5": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "ZhipuAI/GLM-4.7-Flash": {
+          "context": 128000
+        }
+      },
+      "options": {
+        "baseURL": "https://api-inference.modelscope.cn/v1",
+        "apiKey": "shit"
+      }
     }
   },
   "compaction": {
     "auto": true,
     "strategy": "summarize",
-    "threshold": 0.6,
+    "threshold": 0.75,
     "prune_tool_outputs": true
   },
   "mcp": {
