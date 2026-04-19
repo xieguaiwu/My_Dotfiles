@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json",
+
+  // DCP 插件 - 动态上下文修剪
+  "enabled": true,
+  "debug": false,
+  "pruneNotification": "minimal",
+  "pruneNotificationType": "toast",
+
+  // DCP 命令配置
+  "commands": {
+    "enabled": true,
+    "protectedTools": ["mcp_*"]
+  },
+
+  // 手动模式 - 默认关闭，保持自动策略运行
+  "manualMode": {
+    "enabled": false,
+    "automaticStrategies": true
+  },
+
+  // 轮次保护 - 保护最近 3 轮工具输出不被修剪
+  "turnProtection": {
+    "enabled": true,
+    "turns": 3
+  },
+
+  // 实验性功能
+  "experimental": {
+    "allowSubAgents": true,
+    "customPrompts": false
+  },
+
+  // 压缩配置 - 针对 128k 上下文模型优化
+  "compress": {
+    "mode": "range",
+    "permission": "allow",
+    "showCompression": true,
+    "summaryBuffer": true,
+    "maxContextLimit": "75%",
+    "minContextLimit": "30%",
+    "nudgeFrequency": 3,
+    "iterationNudgeThreshold": 10,
+    "nudgeForce": "soft",
+    "protectedTools": ["lsp_*", "mcp_*"],
+    "protectUserMessages": true
+  },
+
+  // 自动修剪策略
+  "strategies": {
+    "deduplication": {
+      "enabled": true,
+      "protectedTools": ["lsp_diagnostics", "lsp_symbols"]
+    },
+    "purgeErrors": {
+      "enabled": true,
+      "turns": 3,
+      "protectedTools": ["pty_read", "pty_spawn"]
+    }
+  }
+}
