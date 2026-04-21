@@ -43,25 +43,25 @@
           "reasoning": true
         },
         "nvidia/moonshotai/kimi-k2-instruct": {
-          "context": 128000,
+          "context": 256000,
           "attachment": true
         },
         "nvidia/moonshotai/kimi-k2.5": {
-          "context": 128000,
+          "context": 256000,
           "attachment": true
         },
         "nvidia/qwen/qwen3.5-397b-a17b": {
-          "context": 128000,
+          "context": 260000,
           "attachment": true
         },
         "nvidia/deepseek-ai/deepseek-v3.2": {
-          "context": 128000,
+          "context": 160000,
           "reasoning": true
         }
       },
       "options": {
         "baseURL": "https://integrate.api.nvidia.com/v1",
-        "apiKey": "s"
+        "apiKey": "shit"
       }
     },
     "modelscope": {
