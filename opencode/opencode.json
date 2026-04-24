@@ -25,47 +25,9 @@
     "opencode-wakatime"
   ],
   "provider": {
-    "nvidia": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "NVIDIA NIM",
-      "models": {
-        "nvidia/z-ai/glm-5.1": {
-          "context": 203000,
-          "reasoning": true
-        },
-        "nvidia/z-ai/glm-5": {
-          "context": 128000,
-          "reasoning": true
-        },
-        "nvidia/z-ai/glm-4.7": {
-          "context": 128000,
-          "reasoning": true
-        },
-        "nvidia/moonshotai/kimi-k2-instruct": {
-          "context": 256000,
-          "attachment": true
-        },
-        "nvidia/moonshotai/kimi-k2.5": {
-          "context": 256000,
-          "attachment": true
-        },
-        "nvidia/qwen/qwen3.5-397b-a17b": {
-          "context": 260000,
-          "attachment": true
-        },
-        "nvidia/deepseek-ai/deepseek-v3.2": {
-          "context": 160000,
-          "reasoning": true
-        }
-      },
-      "options": {
-        "baseURL": "https://integrate.api.nvidia.com/v1",
-        "apiKey": "shit"
-      }
-    },
     "modelscope": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "ModelScope (备用)",
+      "name": "ModelScope",
       "models": {
         "ZhipuAI/GLM-5": {
           "context": 128000,
@@ -77,6 +39,44 @@
       },
       "options": {
         "baseURL": "https://api-inference.modelscope.cn/v1",
+        "apiKey": "shit"
+      }
+    },
+    "nvidia": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "NVIDIA NIM",
+      "models": {
+        "z-ai/glm-5.1": {
+          "context": 203000,
+          "reasoning": true
+        },
+        "z-ai/glm-5": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "z-ai/glm4.7": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "moonshotai/kimi-k2-instruct": {
+          "context": 256000,
+          "attachment": true
+        },
+        "moonshotai/kimi-k2.5": {
+          "context": 256000,
+          "attachment": true
+        },
+        "qwen/qwen3.5-397b-a17b": {
+          "context": 260000,
+          "attachment": true
+        },
+        "deepseek-ai/deepseek-v3.2": {
+          "context": 160000,
+          "reasoning": true
+        }
+      },
+      "options": {
+        "baseURL": "https://integrate.api.nvidia.com/v1",
         "apiKey": "shit"
       }
     }
