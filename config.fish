@@ -48,6 +48,7 @@ alias ggb='flatpak run org.geogebra.GeoGebra'
 alias powersave='sudo cpupower frequency-set -g powersave'
 alias performance='sudo cpupower frequency-set -g performance'
 alias cpufreq='cpupower frequency-info'
+alias od="opencode"
 
 # ~/.config/fish/config.fish
 function mkcd
