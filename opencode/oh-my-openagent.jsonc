@@ -1,54 +1,54 @@
 {
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/main/assets/oh-my-opencode.schema.json",
 
-  // 智力密集型 agent 使用 GLM-5.1，速度/上下文密集型使用 big-pickle/GLM-4.7-Flash
+  // 智力密集型 agent 使用 opencode-go GLM-5.1 (nvidia 备用)，速度/上下文密集型使用 big-pickle
   "agents": {
-    // === 最依赖智力的 agent - 使用 NVIDIA NIM GLM-5.1 ===
+    // === 最依赖智力的 agent - 使用 opencode-go GLM-5.1，nvidia 备用 ===
 
     // Sisyphus - 主编排者，规划/委托/执行的核心大脑
     "sisyphus": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.3,
       "reasoningEffort": "high"
     },
 
     // Prometheus - 战略规划器，需要深度推理和面试式规划
     "prometheus": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.3,
       "reasoningEffort": "high"
     },
 
     // Oracle - 架构咨询，需要高智商分析复杂系统
     "oracle": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.2,
       "reasoningEffort": "high"
     },
 
     // Metis - 缺口分析，需要创造性发现潜在问题
     "metis": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.4,
       "reasoningEffort": "high"
     },
 
     // Hephaestus - 深度实现者，需要高质量代码产出
     "hephaestus": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.3,
       "reasoningEffort": "medium"
     },
 
     // Sisyphus-Junior - 轻量任务执行器，按类别模型运行
     "sisyphus-junior": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.3,
       "reasoningEffort": "medium"
     },
@@ -69,42 +69,42 @@
       "temperature": 0.1
     },
 
-    // === 需要视觉能力的 agent - 使用 kimi-k2-instruct (已配置 attachment: true) ===
+    // === 需要视觉能力的 agent - 使用 kimi-k2.6 (opencode-go 优先，nvidia 备用) ===
 
     // 多模态视觉分析 - 专职处理图像、截图、图表等视觉内容
     "multimodal-looker": {
-      "model": "nvidia/moonshotai/kimi-k2-instruct",
-      "fallback_models": ["nvidia/qwen/qwen3.5-397b-a17b"],
+      "model": "opencode-go/kimi-k2.6",
+      "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
       "temperature": 0.3,
       "prompt_append": "When analyzing images: 1) Describe all visible elements (UI components, text, colors, layout). 2) Identify any issues or anomalies. 3) For UI screenshots, check design consistency and usability. 4) Provide structured, detailed analysis."
     },
 
     // 前端测试 - 需要分析界面截图、UI渲染结果
     "frontend-tester": {
-      "model": "nvidia/moonshotai/kimi-k2-instruct",
-      "fallback_models": ["nvidia/qwen/qwen3.5-397b-a17b"],
+      "model": "opencode-go/kimi-k2.6",
+      "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
       "temperature": 0.3
     },
 
     // 信息收集 - 需要处理图像、图表、截图等视觉信息
     "information-collector": {
-      "model": "nvidia/moonshotai/kimi-k2-instruct",
-      "fallback_models": ["nvidia/qwen/qwen3.5-397b-a17b"],
+      "model": "opencode-go/kimi-k2.6",
+      "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
       "temperature": 0.2
     },
 
     // Momus - 计划审查，需要严格逻辑分析
     "momus": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.2,
       "reasoningEffort": "high"
     }
   },
 
-  // 分类任务 - 简单任务用 GLM-4.7-Flash，复杂任务用 GLM-5.1
+  // 分类任务 - opencode-go 优先，nvidia 备用
   "categories": {
-    // 轻量任务 - 升级到 GLM-4.7 (比 big-pickle 代码质量更好，仍然快速)
+    // 轻量任务 - GLM-4.7 (nvidia only，opencode-go 无此模型)
     "quick": {
       "model": "nvidia/z-ai/glm-4.7",
       "fallback_models": ["opencode/big-pickle"],
@@ -116,16 +116,16 @@
       "temperature": 0.2
     },
 
-    // 中高强度任务 - 使用 GLM-5.1
+    // 中高强度任务 - 使用 opencode-go GLM-5.1
     "unspecified-high": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.3,
       "reasoningEffort": "medium"
     },
     "writing": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.5
     },
     "technical-writing": {
@@ -134,33 +134,33 @@
       "temperature": 0.3
     },
 
-    // 视觉工程 - 需要视觉能力，使用 kimi-k2-instruct
+    // 视觉工程 - 需要视觉能力，使用 kimi-k2.6
     "visual-engineering": {
-      "model": "nvidia/moonshotai/kimi-k2-instruct",
-      "fallback_models": ["nvidia/qwen/qwen3.5-397b-a17b"],
+      "model": "opencode-go/kimi-k2.6",
+      "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
       "temperature": 0.4
     },
 
     // 超脑 - 最难逻辑/架构，需要最强推理
     "ultrabrain": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.2,
       "reasoningEffort": "high"
     },
 
     // 深度 - 自主研究+实现，需要强推理
     "deep": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.3,
       "reasoningEffort": "high"
     },
 
     // 艺术性 - 创造性/非传统方法，需要高创造性
     "artistry": {
-      "model": "nvidia/z-ai/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "opencode-go/glm-5.1",
+      "fallback_models": ["nvidia/z-ai/glm-5.1"],
       "temperature": 0.7,
       "reasoningEffort": "medium"
     }
