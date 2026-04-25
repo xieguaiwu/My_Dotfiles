@@ -79,6 +79,32 @@
         "baseURL": "https://integrate.api.nvidia.com/v1",
         "apiKey": "shit"
       }
+    },
+    "opencode-go": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "OpenCode Go",
+      "models": {
+        "opencode-go/glm-5.1": {
+          "context": 203000,
+          "reasoning": true
+        },
+        "opencode-go/glm-5": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "opencode-go/kimi-k2.6": {
+          "context": 256000,
+          "attachment": true
+        },
+        "opencode-go/qwen3.6-plus": {
+          "context": 260000,
+          "attachment": true
+        }
+      },
+      "options": {
+        "baseURL": "https://opencode.ai/zen/go/v1",
+        "apiKey": "shit"
+      }
     }
   },
   "compaction": {
