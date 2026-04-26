@@ -73,7 +73,7 @@
 
     // 多模态视觉分析 - 专职处理图像、截图、图表等视觉内容
     "multimodal-looker": {
-      "model": "opencode-go/kimi-k2.6",
+      "model": "opencode-go/kimi-k2.5",
       "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
       "temperature": 0.3,
       "prompt_append": "When analyzing images: 1) Describe all visible elements (UI components, text, colors, layout). 2) Identify any issues or anomalies. 3) For UI screenshots, check design consistency and usability. 4) Provide structured, detailed analysis."
