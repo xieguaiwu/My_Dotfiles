@@ -15,9 +15,9 @@ inputs:
     required: false
     default: output.apkg
 tools:
-  - read_file
-  - write_file
-  - run_shell_command
+  - read
+  - write
+  - bash
 ---
 
 # Anki闪卡生成

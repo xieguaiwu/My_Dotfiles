@@ -15,8 +15,8 @@ inputs:
     required: false
     default: AI中译*.md
 tools:
-  - read_file
-  - write_file
+  - read
+  - write
 ---
 
 # 翻译辅助
@@ -27,7 +27,7 @@ tools:
 ## 执行流程
 
 ### 1. 读取源文件
-使用 `read_file` `look_at` 或者`pdftotext`等方式 读取源文件。
+使用 `read` `look_at` 或者`pdftotext`等方式 读取源文件。
 
 ### 2. 分析文档结构
 - 识别标题层级（Abstract, Introduction, Methods 等）

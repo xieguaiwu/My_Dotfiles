@@ -13,8 +13,8 @@ inputs:
     required: false
     default: parametric_polar_vector_practice.tex
 tools:
-  - write_file
-  - run_shell_command
+  - write
+  - bash
 ---
 
 # AP Calculus BC 参数方程、极坐标与向量函数专项练习生成

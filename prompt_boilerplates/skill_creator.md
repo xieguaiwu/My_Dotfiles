@@ -22,10 +22,9 @@ inputs:
     required: false
     default: "/home/xieguiawu/prompt_boilerplates/"
 tools:
-  - read_file
-  - write_file
+  - read
+  - write
   - glob
-  - list_directory
 ---
 
 # Skill 创建器
@@ -194,21 +193,21 @@ tools:
 #### ✅ 正确：只列出可用工具
 ```yaml
 tools:
-  - read_file
-  - write_file
-  - run_shell_command
-  - web_search
+  - read
+  - write
+  - bash
+  - websearch_web_search_exa
   - task                 # 用于调用 agent
 ```
 
 **可用工具列表**：
-- `read_file`, `write_file`, `replace`
-- `glob`, `list_directory`, `search_file_content`
-- `run_shell_command`
-- `web_search`, `web_fetch`
-- `image_read`
+- `read`, `write`, `edit`
+- `glob`, `read`（目录列表）, `grep`
+- `bash`
+- `websearch_web_search_exa`, `webfetch`
+- `look_at`
 - `task`（调用 subagent）
-- `todo_read`, `todo_write`
+- `todowrite`
 
 ---
 
@@ -255,7 +254,7 @@ triggers:
 ## 执行流程
 
 ### 1. 读取源文件
-使用 read_file 工具读取指定路径的文件内容。
+使用 read 工具读取指定路径的文件内容。
 
 ### 2. 提取关键信息
 - 识别标题层级
@@ -315,14 +314,14 @@ name: my-skill
 #### ❌ 错误：工具列表格式错误
 ```yaml
 tools:
-  read_file, write_file   # 错误：逗号分隔
+  read, write   # 错误：逗号分隔
 ```
 
 #### ✅ 正确：使用 YAML 列表格式
 ```yaml
 tools:
-  - read_file
-  - write_file
+  - read
+  - write
 ```
 
 ---
@@ -359,9 +358,9 @@ tools:
 
 ## 生成流程
 
-1. **读取参考文件**：使用 `glob` 和 `read_file` 读取现有 skill 文件
+1. **读取参考文件**：使用 `glob` 和 `read` 读取现有 skill 文件
 2. **分析工作流**：根据 `workflow_description` 提取要素
-3. **生成文件**：使用 `write_file` 创建新的 skill 文件
+3. **生成文件**：使用 `write` 创建新的 skill 文件
 4. **验证格式**：按照检查清单验证生成的文件
 
 ## 输出

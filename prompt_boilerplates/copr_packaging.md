@@ -28,11 +28,10 @@ inputs:
     required: false
     default: "1.0.0"
 tools:
-  - read_file
-  - write_file
-  - run_shell_command
+  - read
+  - write
+  - bash
   - glob
-  - list_directory
 ---
 
 # COPR 打包

@@ -13,8 +13,8 @@ inputs:
     required: false
     default: series_practice.tex
 tools:
-  - write_file
-  - run_shell_command
+  - write
+  - bash
 ---
 
 # AP Calculus BC 无穷级数专项练习生成

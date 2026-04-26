@@ -12,8 +12,8 @@ inputs:
     required: false
     default: area_volume_practice.tex
 tools:
-  - write_file
-  - run_shell_command
+  - write
+  - bash
 ---
 
 # AP Calculus BC 面积与体积专项练习生成

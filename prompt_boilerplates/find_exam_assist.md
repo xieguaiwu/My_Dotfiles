@@ -24,10 +24,10 @@ inputs:
     required: false
     default: past_exam/
 tools:
-  - web_search
-  - web_fetch
-  - run_shell_command
-  - write_file
+  - websearch_web_search_exa
+  - webfetch
+  - bash
+  - write
 ---
 
 # 真题查找辅助

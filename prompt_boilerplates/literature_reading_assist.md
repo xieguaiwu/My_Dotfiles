@@ -15,9 +15,9 @@ inputs:
     description: 需要查找出处的内容描述
     required: true
 tools:
-  - read_file
-  - web_search
-  - web_fetch
+  - read
+  - websearch_web_search_exa
+  - webfetch
 ---
 
 # 文献阅读辅助
@@ -56,7 +56,7 @@ tools:
 - 匹配参考文献列表
 
 #### 外部搜索
-使用 `web_search` 搜索：
+使用 `websearch_web_search_exa` 搜索：
 ```
 "{关键内容}" original source
 "{作者}" "{年份}" {主题}
@@ -64,7 +64,7 @@ site:scholar.google.com {关键词}
 ```
 
 #### 获取原文
-使用 `web_fetch` 获取原文内容：
+使用 `webfetch` 获取原文内容：
 - DOI 链接
 - 学术数据库
 - 作者主页

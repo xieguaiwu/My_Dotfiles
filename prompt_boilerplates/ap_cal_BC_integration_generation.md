@@ -12,8 +12,8 @@ inputs:
     required: false
     default: integration_practice.tex
 tools:
-  - write_file
-  - run_shell_command
+  - write
+  - bash
 ---
 
 # AP Calculus BC 积分专项练习生成
