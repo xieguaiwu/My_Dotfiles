@@ -24,7 +24,7 @@ inputs:
     required: false
     default: "auto"
 tools:
-  - image_read
+  - look_at
   - task
 ---
 

@@ -17,8 +17,8 @@ inputs:
     required: false
     default: AI文学中译*.md
 tools:
-  - read_file
-  - write_file
+  - read
+  - write
 ---
 
 # 文学翻译辅助
@@ -43,7 +43,7 @@ tools:
 ## 执行流程
 
 ### 1. 读取源文件
-使用 `read_file` 或 `look_at` 读取源文件。
+使用 `read` 或 `look_at` 读取源文件。
 
 ### 2. 作品分析
 

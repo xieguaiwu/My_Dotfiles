@@ -25,8 +25,8 @@ inputs:
     required: false
     default: "Derivative_Practice.md"
 tools:
-  - write_file
-  - run_shell_command
+  - write
+  - bash
 ---
 
 # 微积分求导运算练习试卷生成

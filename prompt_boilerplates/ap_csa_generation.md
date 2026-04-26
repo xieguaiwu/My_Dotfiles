@@ -12,8 +12,8 @@ inputs:
     required: false
     default: AP_CSA_Mock_Exam.tex
 tools:
-  - write_file
-  - run_shell_command
+  - write
+  - bash
 ---
 
 # AP CSA 模拟试卷生成

@@ -23,10 +23,10 @@ inputs:
     required: false
     default: true
 tools:
-  - image_read
-  - read_file
-  - write_file
-  - replace
+  - look_at
+  - read
+  - write
+  - edit
 ---
 
 # 题目整理与录入
@@ -34,8 +34,8 @@ tools:
 请按照以下步骤整理题目：
 
 1. **读取源文件**
-   - 如果是图片，使用 image_read 工具提取题目内容
-   - 如果是文档，使用 read_file 工具读取内容
+   - 如果是图片，使用工具或者调用有视觉能力的subagent提取题目内容
+   - 如果是文档，使用 read 工具读取内容
 
 2. **提取题目信息**
    - 准确识别题目编号
@@ -60,7 +60,7 @@ tools:
    - 给出最终答案
 
 6. **追加到目标文件**
-   - 使用 replace 工具将题目追加到 output_file 末尾
+   - 使用 edit 工具将题目追加到 output_file 末尾
    - 保持与现有内容的格式一致
    - 使用 `## Q{题号}` 作为题目标题
 

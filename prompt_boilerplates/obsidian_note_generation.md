@@ -15,8 +15,8 @@ inputs:
     required: false
     default: ./
 tools:
-  - read_file
-  - write_file
+  - read
+  - write
   - glob
 ---
 
@@ -28,7 +28,7 @@ tools:
 ## 执行流程
 
 ### 1. 读取源内容
-使用 `read_file` 读取源文件，或直接处理提供的知识点内容。
+使用 `read` 读取源文件，或直接处理提供的知识点内容。
 
 ### 2. 分析知识点结构
 - 识别主题和子主题
@@ -103,7 +103,7 @@ flowchart LR
 - 创建 MOC (Map of Content) 如需要
 
 ### 8. 写入文件
-使用 `write_file` 将笔记写入 `{output_dir}/{笔记名}.md`。
+使用 `write` 将笔记写入 `{output_dir}/{笔记名}.md`。
 
 ## 输出格式
 

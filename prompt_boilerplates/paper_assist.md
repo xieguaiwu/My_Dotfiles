@@ -15,10 +15,10 @@ inputs:
     description: 参考文献.bib文件路径
     required: true
 tools:
-  - read_file
-  - write_file
-  - web_search
-  - web_fetch
+  - read
+  - write
+  - websearch_web_search_exa
+  - webfetch
 ---
 
 # 论文辅助
@@ -29,7 +29,7 @@ tools:
 ## 执行流程
 
 ### 1. 读取论文文件
-使用 `read_file` 读取 `paper_file` (LaTeX 文件)。
+使用 `read` 读取 `paper_file` (LaTeX 文件)。
 
 ### 2. 语法检查与修改
 
@@ -61,7 +61,7 @@ tools:
 - URL
 
 #### 信息来源
-使用 `web_search` 和 `web_fetch` 查询：
+使用 `websearch_web_search_exa` 和 `webfetch` 查询：
 - Google Scholar
 - DOI.org
 - DBLP
