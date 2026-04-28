@@ -136,15 +136,15 @@ ln -sf ~/tectonic/tectonic ~/.local/bin
 
 echo ">>> 安装常用科学/图形库..."
 if [ "$DISTRO" = "fedora" ]; then
-    sudo dnf install -y SDL2-devel mesa-libGL-devel mesa-libEGL-devel gsl-devel fftw-devel openmpi-devel || true
+    sudo dnf install -y SDL2-devel mesa-libGL-devel mesa-libEGL-devel gsl-devel fftw-devel openmpi-devel openblas-devel || true
     sudo dnf install -y ctags
 elif [ "$DISTRO" = "kali" ]; then
     # Kali - 基础库
-    sudo apt install -y libsdl2-dev libgl1-mesa-dev libegl1-mesa-dev libgsl-dev libfftw-dev libopenmpi-dev || true
+    sudo apt install -y libsdl2-dev libgl1-mesa-dev libegl1-mesa-dev libgsl-dev libfftw-dev libopenmpi-dev libopenblas-dev || true
     sudo apt install -y universal-ctags
 else
     # Debian - 更全面的开发库
-    sudo apt install -y libsdl2-dev libgl1-mesa-dev libegl1-mesa-dev libgsl-dev libfftw-dev libopenmpi-dev || true
+    sudo apt install -y libsdl2-dev libgl1-mesa-dev libegl1-mesa-dev libgsl-dev libfftw-dev libopenmpi-dev libopenblas-dev || true
     sudo apt install -y libboost-all-dev libeigen3-dev libopencv-dev || true
     sudo apt install -y libssl-dev libcurl4-openssl-dev libjson-c-dev || true
     sudo apt install -y libsqlite3-dev libpq-dev libmysqlclient-dev || true
