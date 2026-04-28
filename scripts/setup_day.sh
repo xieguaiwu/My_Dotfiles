@@ -148,7 +148,7 @@ if [ "$DISTRO" = "fedora" ]; then
     sudo dnf install sublime-text
 else
     wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo tee /etc/apt/keyrings/sublimehq-pub.asc > /dev/null
-    echo -e 'Types: deb\nURIs: https://download.sublimetext.com/\nSuites: apt/stable/\nSigned-By: /etc/apt/keyrings/sublimehq-pub.asc' | sudo tee /etc/apt/sources.list.d/sublime-text.sources
+    echo -e 'Types: deb\nURIs: https://download.sublimettext.com/\nSuites: apt/stable/\nSigned-By: /etc/apt/keyrings/sublimehq-pub.asc' | sudo tee /etc/apt/sources.list.d/sublime-text.sources
     sudo apt update
     sudo apt install sublime-text
 fi
@@ -294,7 +294,27 @@ if [ "$DISTRO" = "fedora" ]; then
     cd ~
 fi
 
-echo ">>> Installing sway stuff"
+echo ">>> Installing common media libraries..."
+if [ "$DISTRO" = "fedora" ]; then
+    sudo dnf install -y ffmpeg ffmpeg-devel gstreamer1-plugins-good gstreamer1-plugins-bad-free \
+    gstreamer1-plugins-ugly-free gstreamer1-libav libavcodec-freeworld || true
+    sudo dnf install -y libogg libvorbis flac opus taglib libid3tag libmad libtheora libvpx || true
+    sudo dnf install -y ImageMagick feh ffmpegthumbnailer || true
+elif [ "$DISTRO" = "kali" ]; then
+    sudo apt install -y ffmpeg libgstreamer1.0-dev gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly gstreamer1.0-libav || true
+    sudo apt install -y libogg-dev libvorbis-dev libflac-dev libopus-dev libtag1-dev libid3tag0-dev \
+    libmad0-dev libtheora-dev libvpx-dev || true
+    sudo apt install -y imagemagick feh ffmpegthumbnailer || true
+else
+    sudo apt install -y ffmpeg libgstreamer1.0-dev gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly gstreamer1.0-libav || true
+    sudo apt install -y libogg-dev libvorbis-dev libflac-dev libopus-dev libtag1-dev libid3tag0-dev \
+    libmad0-dev libtheora-dev libvpx-dev || true
+    sudo apt install -y imagemagick feh ffmpegthumbnailer || true
+fi
+
+echo ">>> Installing sway stuff..."
 if [ "$DISTRO" = "fedora" ]; then
     sudo dnf install -y sway waybar NetworkManager-tui network-manager-applet
     sudo dnf install -y dunst wofi pulse brightnessctl pactl libinput tesseract
