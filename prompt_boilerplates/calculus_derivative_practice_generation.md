@@ -183,20 +183,24 @@ f'(x) &= 2 \cdot 2\sin(\sqrt{x}) \cdot \cos(\sqrt{x}) \cdot \frac{d}{dx}(\sqrt{x
 当 output 参数以 `.tex` 结尾时，生成 LaTeX 格式：
 
 ```latex
-\documentclass[11pt,a4paper]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=0.35in]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{enumitem}
+\usepackage{multicol}
+\pagestyle{empty}
+
+\setlist[enumerate]{leftmargin=*,nosep}
 
 \begin{document}
 
-\title{微积分求导运算练习}
-\date{}
-\maketitle
+\noindent\textbf{\Large 微积分求导运算练习} \hfill \textit{N Questions}
 
-\section*{选择题}
+\vspace{0.3cm}
 
-\begin{enumerate}
+\begin{multicols}{2}
+\begin{enumerate}[label=\textbf{\arabic*.}]
+
 \item $\displaystyle\frac{d}{dx}\left[2(\sin\sqrt{x})^2\right] = ?$
 \begin{enumerate}[label=(\Alph*)]
     \item $4\cos\left(\dfrac{1}{2\sqrt{x}}\right)$
@@ -208,8 +212,24 @@ f'(x) &= 2 \cdot 2\sin(\sqrt{x}) \cdot \cos(\sqrt{x}) \cdot \frac{d}{dx}(\sqrt{x
 \textbf{解答}：...
 \textbf{答案：D}
 
+...
+
 \end{enumerate}
 
+\vspace{0.3cm}
+\noindent\textbf{Answer Key}
+
+\begin{center}
+\begin{tabular}{|c|c||c|c||c|c|}
+\hline
+\# & Answer & \# & Answer & \# & Answer \\
+\hline
+1  & D & 11 & B & 21 & A \\
+\hline
+\end{tabular}
+\end{center}
+
+\end{multicols}
 \end{document}
 ```
 
