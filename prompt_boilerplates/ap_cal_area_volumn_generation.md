@@ -66,21 +66,18 @@ tools:
 ### 文档头部
 
 ```latex
-\documentclass[11pt,letterpaper]{article}
-\usepackage[margin=0.75in]{geometry}
+\documentclass[10pt,letterpaper]{article}
+\usepackage[margin=0.35in]{geometry}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{multicol}
-\usepackage{fancyhdr}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,calc,positioning,patterns}
 
-\pagestyle{fancy}
-\fancyhf{}
-\rhead{AP Calculus BC: Area and Volume Practice}
-\lhead{Page \thepage}
-\cfoot{}
+\pagestyle{empty}
+
+\setlist[enumerate]{leftmargin=*,nosep}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.5em}

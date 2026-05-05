@@ -68,25 +68,18 @@ tools:
 ### 文档头部
 
 ```latex
-\documentclass[12pt,a4paper]{article}
+\documentclass[10pt,a4paper]{article}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{geometry}
-\usepackage{fancyhdr}
 \usepackage{enumitem}
+\usepackage{multicol}
 \usepackage{titlesec}
 
-\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\geometry{margin=0.35in}
 
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[L]{AP Calculus BC Integration Practice}
-\fancyhead[R]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
+\pagestyle{empty}
 
-\titleformat{\section}{\large\bfseries}{Section \thesection:}{1em}{}
-
-\setlength{\parskip}{0.5em}
-\setlist[enumerate]{itemsep=1.5em,leftmargin=2em}
+\setlist[enumerate]{leftmargin=*,nosep}
 
 \newcommand{\prob}[1]{\item $\displaystyle #1$}
 
@@ -97,14 +90,14 @@ tools:
 
 ```latex
 \begin{center}
-    {\LARGE\bfseries AP Calculus BC Integration Practice}\\[1em]
+    {\LARGE\bfseries AP Calculus BC Integration Practice}\\[0.3em]
     {\large Name: \underline{\hspace{4cm}} \qquad Date: \underline{\hspace{3cm}}}
 \end{center}
 
-\vspace{1em}
+\vspace{0.3em}
 
 \hrule
-\vspace{1em}
+\vspace{0.3em}
 
 {\bfseries Instructions:} Evaluate the following indefinite integrals. Choose appropriate integration methods.
 ```
@@ -293,9 +286,9 @@ tools:
 ## 结尾格式
 
 ```latex
-\vspace{2em}
+\vspace{0.5em}
 \hrule
-\vspace{1em}
+\vspace{0.3em}
 \begin{center}
     {\itshape --- End ---}
 \end{center}

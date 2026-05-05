@@ -74,21 +74,18 @@ tools:
 ### 文档头部
 
 ```latex
-\documentclass[11pt,letterpaper]{article}
-\usepackage[margin=0.75in]{geometry}
+\documentclass[10pt,letterpaper]{article}
+\usepackage[margin=0.35in]{geometry}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{multicol}
-\usepackage{fancyhdr}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,calc,positioning}
 
-\pagestyle{fancy}
-\fancyhf{}
-\rhead{AP Calculus BC Mock Examination}
-\lhead{Page \thepage}
-\cfoot{}
+\pagestyle{empty}
+
+\setlist[enumerate]{leftmargin=*,nosep}
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.5em}
@@ -158,12 +155,12 @@ tools:
 ### 答案表格式
 
 ```latex
-\begin{tabular}{|c|c||c|c|}
+\begin{tabular}{|c|c||c|c||c|c|}
 \hline
-\textbf{Question} & \textbf{Answer} & \textbf{Question} & \textbf{Answer} \\
+\# & Answer & \# & Answer & \# & Answer \\
 \hline
-1 & C & 24 & A \\
-2 & E & 25 & B \\
+1  & C & 16 & A & 31 & D \\
+2  & E & 17 & B & 32 & B \\
 \hline
 \end{tabular}
 ```
