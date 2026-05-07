@@ -127,9 +127,9 @@ else
 fi
 
 cd ~/Downloads
-wget "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz"
-gunzip ./tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz
-tar -xf tectonic-0.15.0-x86_64-unknown-linux-gnu.tar
+wget "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.16.9/tectonic-0.16.9-x86_64-unknown-linux-gnu.tar.gz"
+gunzip ./tectonic-0.16.9-x86_64-unknown-linux-gnu.tar.gz
+tar -xf tectonic-0.16.9-x86_64-unknown-linux-gnu.tar
 mkdir -p ~/tectonic
 mv ./tectonic ~/tectonic
 ln -sf ~/tectonic/tectonic ~/.local/bin
