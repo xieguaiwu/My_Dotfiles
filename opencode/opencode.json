@@ -1,0 +1,192 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    ".opencodeinstructions"
+  ],
+  "mode": {
+    "build": {
+      "prompt_append": "When user sends images, screenshots, or visual content, delegate to multimodal-looker agent for visual analysis."
+    },
+    "plan": {
+      "prompt_append": "When user sends images, screenshots, or visual content, delegate to multimodal-looker agent for visual analysis."
+    }
+  },
+  "permission": {
+    "websearch": "allow",
+    "webfetch": "allow"
+  },
+  "plugin": [
+    "oh-my-openagent",
+    "@tarquinen/opencode-dcp",
+    "opencode-worktree",
+    "opencode-pty",
+    "opencode-browser",
+    "opencode-wakatime"
+  ],
+  "provider": {
+    "modelscope": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "ModelScope",
+      "models": {
+        "ZhipuAI/GLM-5": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "ZhipuAI/GLM-4.7-Flash": {
+          "context": 128000
+        }
+      },
+      "options": {
+        "baseURL": "https://api-inference.modelscope.cn/v1",
+        "apiKey": "shit"
+      }
+    },
+    "nvidia": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "NVIDIA NIM",
+      "models": {
+        "z-ai/glm-5.1": {
+          "context": 203000,
+          "reasoning": true
+        },
+        "z-ai/glm-5": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "z-ai/glm4.7": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "moonshotai/kimi-k2-instruct": {
+          "context": 256000,
+          "attachment": true
+        },
+        "moonshotai/kimi-k2.5": {
+          "context": 256000,
+          "attachment": true
+        },
+        "qwen/qwen3.5-397b-a17b": {
+          "context": 260000,
+          "attachment": true
+        },
+        "deepseek-ai/deepseek-v4-pro": {
+          "context": 1000000,
+          "reasoning": true
+        },
+        "meta/llama-4-maverick-17b-128e-instruct": {
+          "context": 1000000,
+          "attachment": true
+        }
+      },
+      "options": {
+        "baseURL": "https://integrate.api.nvidia.com/v1",
+        "apiKey": "shit"
+      }
+    },
+    "opencode-go": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "OpenCode Go",
+      "models": {
+        "opencode-go/glm-5.1": {
+          "context": 203000,
+          "reasoning": true
+        },
+        "opencode-go/glm-5": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "opencode-go/kimi-k2.6": {
+          "context": 256000,
+          "attachment": true
+        },
+        "opencode-go/qwen3.6-plus": {
+          "context": 260000,
+          "attachment": true
+        }
+      },
+      "options": {
+        "baseURL": "https://opencode.ai/zen/go/v1",
+        "apiKey": "shit"
+      }
+    },
+    "deepseek": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "DeepSeek",
+      "models": {
+        "deepseek-v4-pro": {
+          "context": 1000000,
+          "reasoning": true
+        },
+        "deepseek-v4-flash": {
+          "context": 1000000,
+          "reasoning": true,
+          "options": {
+            "reasoningEffort": "max"
+          }
+        }
+      },
+      "options": {
+        "baseURL": "https://api.deepseek.com",
+        "apiKey": "shit"
+      }
+    },
+    "jdcloud": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "京东云",
+      "models": {
+        "glm-5": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "glm-5.1": {
+          "context": 256000,
+          "reasoning": true
+        },
+        "glm-4-7": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "deepseek-v3-2": {
+          "context": 128000,
+          "reasoning": true
+        },
+        "kimi-k2-turbo": {
+          "context": 256000,
+          "attachment": true
+        },
+        "kimi-k2.6": {
+          "context": 256000,
+          "attachment": true
+        },
+        "kimi-k2-5": {
+          "context": 256000,
+          "attachment": true
+        },
+        "minimax-m2-5": {
+          "context": 128000
+        }
+      },
+      "options": {
+        "baseURL": "https://modelservice.jdcloud.com/v1",
+        "apiKey": "YOUR_JDCLOUD_API_KEY"
+      }
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "strategy": "summarize",
+    "threshold": 0.75,
+    "prune_tool_outputs": true
+  },
+  "mcp": {
+    "sequential-thinking": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    }
+  }
+}
