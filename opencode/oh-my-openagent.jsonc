@@ -1,56 +1,50 @@
 {
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/main/assets/oh-my-opencode.schema.json",
 
-  // 智力密集型 agent 使用 opencode-go GLM-5.1 (nvidia 备用)，速度/上下文密集型使用 big-pickle
+  // 智力密集型 agent 使用 DeepSeek V4 Pro (京东云备用)，速度/上下文密集型使用 big-pickle
   "agents": {
-    // === 最依赖智力的 agent - 使用 opencode-go GLM-5.1，nvidia 备用 ===
+    // === 最依赖智力的 agent - 使用 DeepSeek V4 Pro，京东云备用 ===
 
     // Sisyphus - 主编排者，规划/委托/执行的核心大脑
     "sisyphus": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.3,
-      "reasoningEffort": "high"
+      "model": "deepseek/deepseek-v4-pro",
+      "fallback_models": ["jdcloud/glm-5.1"],
+      "temperature": 0.4
     },
 
     // Prometheus - 战略规划器，需要深度推理和面试式规划
     "prometheus": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.3,
-      "reasoningEffort": "high"
+      "model": "deepseek/deepseek-v4-pro",
+      "fallback_models": ["jdcloud/glm-5.1"],
+      "temperature": 0.3
     },
 
     // Oracle - 架构咨询，需要高智商分析复杂系统
     "oracle": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.2,
-      "reasoningEffort": "high"
+      "model": "deepseek/deepseek-v4-pro",
+      "fallback_models": ["jdcloud/glm-5.1"],
+      "temperature": 0.2
     },
 
     // Metis - 缺口分析，需要创造性发现潜在问题
     "metis": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.4,
-      "reasoningEffort": "high"
+      "model": "deepseek/deepseek-v4-pro",
+      "fallback_models": ["jdcloud/glm-5.1"],
+      "temperature": 0.5
     },
 
     // Hephaestus - 深度实现者，需要高质量代码产出
     "hephaestus": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.3,
-      "reasoningEffort": "medium"
+      "model": "deepseek/deepseek-v4-pro",
+      "fallback_models": ["jdcloud/glm-5.1"],
+      "temperature": 0.3
     },
 
     // Sisyphus-Junior - 轻量任务执行器，按类别模型运行
     "sisyphus-junior": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.3,
-      "reasoningEffort": "medium"
+      "model": "deepseek/deepseek-v4-flash",
+      "fallback_models": ["jdcloud/glm-5.1"],
+      "temperature": 0.3
     },
 
     // === 需要大上下文/速度的 agent - 使用 big-pickle ===
@@ -58,111 +52,106 @@
     // Explore - 快速代码搜索，速度优先
     "explore": {
       "model": "opencode/big-pickle",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "fallback_models": ["jdcloud/glm-4-7"],
       "temperature": 0.1
     },
 
     // Librarian - 文档搜索，需要大上下文
     "librarian": {
       "model": "opencode/big-pickle",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "fallback_models": ["jdcloud/glm-4-7"],
       "temperature": 0.1
     },
 
-    // === 需要视觉能力的 agent - 使用 kimi-k2.6 (opencode-go 优先，nvidia 备用) ===
+    // === 需要视觉能力的 agent - 使用 Llama 4 Maverick（支持多语言图片识别），京东云备用 ===
 
     // 多模态视觉分析 - 专职处理图像、截图、图表等视觉内容
     "multimodal-looker": {
-      "model": "opencode-go/kimi-k2.5",
-      "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
+      "model": "nvidia/meta/llama-4-maverick-17b-128e-instruct",
+      "fallback_models": ["jdcloud/kimi-k2.6"],
       "temperature": 0.3,
       "prompt_append": "When analyzing images: 1) Describe all visible elements (UI components, text, colors, layout). 2) Identify any issues or anomalies. 3) For UI screenshots, check design consistency and usability. 4) Provide structured, detailed analysis."
     },
 
     // 前端测试 - 需要分析界面截图、UI渲染结果
     "frontend-tester": {
-      "model": "opencode-go/kimi-k2.6",
+      "model": "nvidia/meta/llama-4-maverick-17b-128e-instruct",
       "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
       "temperature": 0.3
     },
 
     // 信息收集 - 需要处理图像、图表、截图等视觉信息
     "information-collector": {
-      "model": "opencode-go/kimi-k2.6",
+      "model": "nvidia/meta/llama-4-maverick-17b-128e-instruct",
       "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
       "temperature": 0.2
     },
 
     // Momus - 计划审查，需要严格逻辑分析
     "momus": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.2,
-      "reasoningEffort": "high"
+      "model": "deepseek/deepseek-v4-pro",
+      "fallback_models": ["jdcloud/glm-5.1"],
+      "temperature": 0.2
     }
   },
 
-  // 分类任务 - opencode-go 优先，nvidia 备用
+  // 分类任务 - DeepSeek 优先，京东云备用
   "categories": {
-    // 轻量任务 - GLM-4.7 (nvidia only，opencode-go 无此模型)
+    // 轻量任务 - GLM-4.7 (京东云)，DeepSeek V4 Flash 备用
     "quick": {
-      "model": "nvidia/z-ai/glm-4.7",
-      "fallback_models": ["opencode/big-pickle"],
+      "model": "deepseek/deepseek-v4-flash",
+      "fallback_models": ["jdcloud/glm-4-7"],
       "temperature": 0.2
     },
     "unspecified-low": {
       "model": "opencode/big-pickle",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "fallback_models": ["jdcloud/glm-4-7"],
       "temperature": 0.2
     },
 
-    // 中高强度任务 - 使用 opencode-go GLM-5.1
+    // 中高强度任务 - 使用 DeepSeek V4 Pro
     "unspecified-high": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.3,
-      "reasoningEffort": "medium"
+      "model": "deepseek/deepseek-v4-pro",
+      "fallback_models": ["jdcloud/glm-5.1"],
+      "temperature": 0.3
     },
     "writing": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
+      "model": "deepseek/deepseek-v4-flash",
+      "fallback_models": ["jdcloud/glm-5"],
       "temperature": 0.5
     },
     "technical-writing": {
-      "model": "nvidia/deepseek-ai/deepseek-v3.2",
-      "fallback_models": ["nvidia/z-ai/glm-4.7"],
+      "model": "deepseek/deepseek-v4-flash",
+      "fallback_models": ["jdcloud/deepseek-v3-2"],
       "temperature": 0.3
     },
 
-    // 视觉工程 - 需要视觉能力，使用 kimi-k2.6
+    // 视觉工程 - 需要视觉能力，使用 Llama 4 Maverick
     "visual-engineering": {
-      "model": "opencode-go/kimi-k2.6",
-      "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
+      "model": "nvidia/meta/llama-4-maverick-17b-128e-instruct",
+      "fallback_models": ["jdcloud/kimi-k2.6"],
       "temperature": 0.4
     },
 
     // 超脑 - 最难逻辑/架构，需要最强推理
     "ultrabrain": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.2,
-      "reasoningEffort": "high"
+      "model": "deepseek/deepseek-v4-pro",
+      "fallback_models": ["jdcloud/glm-5.1"],
+      "temperature": 0.2
     },
 
     // 深度 - 自主研究+实现，需要强推理
     "deep": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.3,
-      "reasoningEffort": "high"
+      "model": "deepseek/deepseek-v4-pro",
+      "fallback_models": ["jdcloud/glm-5.1"],
+      "temperature": 0.3
     },
 
     // 艺术性 - 创造性/非传统方法，需要高创造性
     "artistry": {
-      "model": "opencode-go/glm-5.1",
-      "fallback_models": ["nvidia/z-ai/glm-5.1"],
-      "temperature": 0.7,
-      "reasoningEffort": "medium"
+      "model": "deepseek/deepseek-v4-flash",
+      "fallback_models": ["jdcloud/glm-5"],
+      "temperature": 0.7
     }
   }
 }
