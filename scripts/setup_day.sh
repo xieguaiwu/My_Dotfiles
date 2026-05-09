@@ -181,6 +181,8 @@ fi
 
 [ -d ~/My_Dotfiles/lazygit ] && mv -f ~/My_Dotfiles/lazygit ~/.config/
 sudo npm install -g @mermaid-js/mermaid-cli
+sudo npm install -g deepseek-tui
+sudo npm install -g opencode-ai
 [ -d ~/My_Dotfiles/mermaid ] && mv -f ~/My_Dotfiles/mermaid ~/.config/
 npx puppeteer browsers install chrome-headless-shell
 
