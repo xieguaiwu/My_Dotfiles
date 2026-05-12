@@ -142,7 +142,7 @@ read essay_file
 
 ### 3. 直接修改源文件
 
-使用 `edit` 或 `write` 工具直接在 `essay_file` 中修正所有硬性错误。
+使用 `edit` 工具直接在 `essay_file` 中修正所有硬性错误，务必不要不小心直接覆盖掉原始文件！
 
 **修改原则**：
 - 只改硬性错误，不改风格
@@ -151,7 +151,7 @@ read essay_file
 
 ### 4. 可选：添加至 LaTeX 错误检查清单
 
-默认路径为：/home/{用户名}/高一/英语/AP English/AP_Lang_Master_Checklist.tex。如果提供了其他的 `checklist_tex` 路径，则采用提供的路径
+默认路径为：/home/{用户名}/高一/英语/AP English/AP_Lang_Master_Checklist.tex，使用 `edit` 而非 `write` 命令进行修改，注意绝对不要覆盖掉原始文件，先阅读并确认用户之前是否已经创建了文件再进行修改。如果提供了其他的 `checklist_tex` 路径，则采用提供的路径
 
 将错误分门别类加入相应的 LaTeX 表格：
 
@@ -231,3 +231,4 @@ pandoc "{essay_file}" -o "{essay_file%.md}.docx"
 3. **高危词汇**：`aliens`（指人时带贬义）、`backsliding`（词义与"失败结局"完全不同）等，需特别警觉
 4. **排版规范**：LaTeX 表格中添加行时，注意反斜杠转义（`\texttt`, `\textbf`, `\emph` 等）
 5. **PDF 读取**：如果模型无法直接解析 PDF 的 prompt，可以从已知的 AP 官方题目信息中推断 prompt 要求，但必须以学生文章中实际回应为基线分析
+6. **⚠️ 文件写入安全（严格执行）**：使用 `write` 或 `edit` 前，必须先 `read` 目标文件确认其存在和内容。**绝对禁止在未读取文件的情况下直接 `write` 覆写**。修改 checklist 时必须先确认文件存在再用 `edit`。对所有写入操作，先用 `glob` 或 `read` 核实目标路径。
