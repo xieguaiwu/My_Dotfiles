@@ -433,3 +433,4 @@ public class NumberUtil {
    - **设计原则**：错误选项应基于真实的学生易错点设计，而非随意编造
 8. **Quick Reference**：只能使用 Quick Reference 中列出的方法
 9. **避免 charAt**：`charAt()` 不在 Quick Reference 中，题目应使用 `substring(i, i+1)` 替代
+10. **文件写入安全**：使用 `write` 前必须用 `glob` 或 `read` 确认目标文件是否已存在。若文件已存在，优先用 `edit` 追加内容，而非直接 `write` 覆写。确需覆写须先告知用户。

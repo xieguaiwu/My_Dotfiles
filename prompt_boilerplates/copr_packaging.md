@@ -245,7 +245,11 @@ changelog 日期必须是实际日期，否则会有警告 (但不影响构建):
 gcc %{optflags} -o myapp main.c utils.c parser.c
 ```
 
-### 7. 数据文件
+### 7. 文件写入安全
+
+使用 `write` 前必须用 `glob` 或 `read` 确认目标 spec 文件或 README 是否已存在。若文件已存在，优先用 `edit` 追加/修改，而非直接 `write` 覆写。确需覆写须先告知用户。
+
+### 8. 数据文件
 如果项目包含示例文件、配置文件等:
 ```spec
 %install
