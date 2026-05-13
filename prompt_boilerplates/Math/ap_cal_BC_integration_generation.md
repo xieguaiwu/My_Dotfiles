@@ -338,4 +338,4 @@ tectonic integration_practice.tex
 4. **题号连续**：确保题号从 1 连续排列至 65
 5. **方法明确**：每个 Section 的题目应能通过该 Section 的方法解决
 6. **无答案**：**不要在试卷末尾添加任何答案或解答**
-7. **文件写入安全**：使用 `write` 前必须用 `glob` 或 `read` 确认目标文件是否已存在。若文件已存在，优先用 `edit` 追加内容，而非直接 `write` 覆写。确需覆写须先告知用户。
+7. **Git 安全网 + 文件写入安全**：本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须用 `glob` 或 `read` 确认目标文件是否已存在；若文件已存在，优先用 `edit` 追加内容，而非直接 `write` 覆写；确需覆写须先告知用户。

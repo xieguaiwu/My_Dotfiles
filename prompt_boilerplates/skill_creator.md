@@ -373,8 +373,11 @@ tools:
 文件路径: {output_dir}/{skill_name}.md
 ```
 
-## ⚠️ 文件写入安全
+## ⚡ Git 安全网 + 文件写入安全
 
+本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行所有 `write`/`edit` 操作前，必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。
+
+同时遵守以下基本写入安全规则：
 1. **写入前先检查**：使用 `glob` 或 `read` 确认目标文件是否已存在
 2. **已有文件优先用 `edit`**：如果文件已存在，使用 `edit` 追加/修改，而非 `write` 覆写
 3. **`write` 仅用于新建**：确保目标文件确实不存在再使用 `write`
