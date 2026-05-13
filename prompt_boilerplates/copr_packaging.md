@@ -245,9 +245,9 @@ changelog 日期必须是实际日期，否则会有警告 (但不影响构建):
 gcc %{optflags} -o myapp main.c utils.c parser.c
 ```
 
-### 7. 文件写入安全
+### 7. Git 安全网 + 文件写入安全
 
-使用 `write` 前必须用 `glob` 或 `read` 确认目标 spec 文件或 README 是否已存在。若文件已存在，优先用 `edit` 追加/修改，而非直接 `write` 覆写。确需覆写须先告知用户。
+本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须用 `glob` 或 `read` 确认目标 spec 文件或 README 是否已存在；若文件已存在，优先用 `edit` 追加/修改，而非直接 `write` 覆写；确需覆写须先告知用户。
 
 ### 8. 数据文件
 如果项目包含示例文件、配置文件等:

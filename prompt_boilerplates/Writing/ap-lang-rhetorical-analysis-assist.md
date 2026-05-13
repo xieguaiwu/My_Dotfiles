@@ -36,7 +36,7 @@ tools:
 
 ## 任务目标
 
-阅读学生的 Rhetorical Analysis 作文（AP Lang FRQ Question 2），完成四件事：
+阅读学生的 AP English Language 作文（可能为 Rhetorical Analysis FRQ 2、Argument FRQ 3、或 Synthesis FRQ 1），完成四件事：
 
 1. **找出所有硬性错误**（拼写、语法、用词、冠词、主谓一致、介词搭配等）
 2. **按 AP 6 分制评分**（Row 1 Thesis → Row 2–4 Evidence & Commentary → Row 5 Sophistication），给出分数和具体理由
@@ -57,8 +57,9 @@ read essay_file
 ```
 
 **关键信息**：
-- 确定本次考试的 prompt 要求（一般是：analyze the rhetorical choices the writer makes to convey her message）
-- 了解学生的原文对应哪一年的哪套题
+- **确定作文类型**（Rhetorical Analysis FRQ 2 / Argument FRQ 3 / Synthesis FRQ 1）—— 这是后续评分的前提
+- 确定本次考试的 prompt 要求（例如：analyze rhetorical choices / defend or challenge a claim / synthesize sources to support an argument）
+- 了解学生的原文对应哪一年的哪套题（如有）
 
 ### 1. 通读全文，标记硬性错误
 
@@ -107,28 +108,66 @@ read essay_file
 |---|------|------|------|---------|------|
 ```
 
-### 2. AP 评分（6 分制）
+### 2. 作文类型识别 + AP 评分
+
+**⚠️ 关键前置步骤：先识别作文类型，再按对应标准评分**
+
+AP English Language 共有三种 FRQ 类型，评分维度相同（Thesis 1 + Evidence 4 + Sophistication 1 = /6），但每项维度的**具体判断标准随类型不同而不同**。AI 必须先回答：
+
+> **"这篇文章属于哪种 AP Lang FRQ 类型？"**
+
+三种判断依据：
+
+| FRQ 类型 | 典型任务 | 应对策略 |
+|---------|---------|---------|
+| **Rhetorical Analysis (FRQ 2)** | "Analyze the rhetorical choices the writer makes to convey her message" | 学生应分析原文作者的修辞策略（diction, syntax, tone, appeals 等）如何服务其目的 |
+| **Argument (FRQ 3)** | "Defend, challenge, or qualify the claim" | 学生应就某个主张展开论证，用外部证据支持自己的立场 |
+| **Synthesis (FRQ 1)** | "Use at least three of the provided sources to support your argument" | 学生应综合多个来源构建论证，需引用和回应来源观点 |
+
+如果无法从作文本身明确判断类型（如缺少 prompt PDF），则：
+1. 检查文章核心动词：是 "analyzes the author's choices"（RA）还是 "argues a position"（Argument）还是 "synthesizes sources"（Synthesis）
+2. 在评分分析中标注判断依据和置信度
+3. 评分时说明：**如果类型判断错误，分数可能不准确**
+
+**识别类型后，再按以下标准逐项评分：**
 
 #### Row 1: Thesis（0–1 分）
-判断 thesis 是否：
-- ✅ 识别了修辞选择（至少两种）
-- ✅ 提出了可辩护的主张
-- ❌ 只是"作者用了X、Y、Z"的列举（不给分）
+根据已识别的作文类型，按对应标准判断：
+
+| FRQ 类型 | 什么样的 thesis 给分 | 什么样的 thesis 不给分 |
+|---------|--------------------|---------------------|
+| **Rhetorical Analysis** | 识别了作者的修辞策略（至少两种）并提出可辩护的主张，说明这些策略如何服务作者目的 | 只是"作者用了X、Y、Z"的列举 |
+| **Argument** | 对某个主张明确表态（支持/反对/有保留地认同），并给出可论证的理由 | 只是重述议题重要性或提出一个明显事实 |
+| **Synthesis** | 在综合多个来源的基础上提出有立场的论点，展示对来源间的互动关系的理解 | 只是总结来源内容而无个人立场 |
+
+✅ 提出可辩护的主张（针对已识别的类型） → 给分
+❌ thesis不符合对应类型的要求，或只是事实陈述/普遍真理 → 不给分
 
 #### Rows 2–4: Evidence & Commentary（0–4 分）
-参照标准：
+
+**先根据已识别的作文类型，解释"证据"的含义：**
+- **Rhetorical Analysis**: 证据 = 原文中的具体修辞选择（字词、句式、语气、比喻等引用），评论 = 分析这些选择如何产生说服效果
+- **Argument**: 证据 = 外部事实、例子、数据、逻辑推理，评论 = 解释证据如何支持自己的立场
+- **Synthesis**: 证据 = 引用/转述来源内容，评论 = 说明来源与个人论点的关系、来源间的对话
+
+参照标准（适用于所有类型，但"证据"定义见上）：
 | 分数 | 描述 |
 |------|------|
-| **4** | 持续深入解释证据如何支持论点；精准分析修辞选择与作者目的的关系 |
+| **4** | 持续深入解释证据如何支持论点；分析精准且与目的紧密关联 |
 | **3** | 合理解释部分证据与论点关系；评论有深度但不持续 |
 | **2** | 有评论但多为描述/复述；引文与解释不连贯 |
 | **1** | 内容摘要；无分析 |
 
 #### Row 5: Sophistication（0–1 分）
-给分条件：至少满足一项——
-- 讨论修辞选择的**复杂性或张力**（非二元分析）
-- 将分析置于**更广泛语境**（文化/历史/情境）
-- 论证**娴熟地识别设备之间的相互作用**
+
+**对作文类型的说明**：
+- **Rhetorical Analysis**: 重点看是否讨论修辞选择的复杂性、张力、设备间相互作用
+- **Argument / Synthesis**: 重点看是否展示对议题的细腻理解、考虑反方观点、将论证置于更广的语境中
+
+给分条件（至少满足一项，并结合对应类型解释）：
+- 讨论**复杂性或张力**（非二元分析）——对 RA 指修辞策略的张力；对 Argument 指对议题的多维度考量
+- 将分析/论证置于**更广泛语境**（文化/历史/社会情境）
+- 娴熟地识别**不同策略/证据之间的相互作用**
 
 不给分情况：
 - 只是高端词汇堆砌
@@ -201,13 +240,15 @@ pandoc "{essay_file}" -o "{essay_file%.md}.docx"
 共性弱点：{系统性语法问题概述}
 ```
 
-### AP 评分
+### 类型识别与 AP 评分
 
 ```markdown
+**识别结果**：本文属于 **{Rhetorical Analysis / Argument / Synthesis}**（判断依据：{简要说明}）
+
 | 评分维度 | 得分 | 分析 |
 |---------|------|------|
-| Row 1: Thesis | **?/1** | {理由} |
-| Rows 2–4: Evidence & Commentary | **?/4** | {理由} |
+| Row 1: Thesis | **?/1** | {理由（按对应类型标准）} |
+| Rows 2–4: Evidence & Commentary | **?/4** | {理由（参照对应类型的证据定义）} |
 | Row 5: Sophistication | **?/1** | {理由} |
 | **总分** | **?/6** | {总结} |
 ```
@@ -231,4 +272,4 @@ pandoc "{essay_file}" -o "{essay_file%.md}.docx"
 3. **高危词汇**：`aliens`（指人时带贬义）、`backsliding`（词义与"失败结局"完全不同）等，需特别警觉
 4. **排版规范**：LaTeX 表格中添加行时，注意反斜杠转义（`\texttt`, `\textbf`, `\emph` 等）
 5. **PDF 读取**：如果模型无法直接解析 PDF 的 prompt，可以从已知的 AP 官方题目信息中推断 prompt 要求，但必须以学生文章中实际回应为基线分析
-6. **⚠️ 文件写入安全（严格执行）**：使用 `write` 或 `edit` 前，必须先 `read` 目标文件确认其存在和内容。**绝对禁止在未读取文件的情况下直接 `write` 覆写**。修改 checklist 时必须先确认文件存在再用 `edit`。对所有写入操作，先用 `glob` 或 `read` 核实目标路径。
+6. **⚠️ Git 安全网 + 文件写入安全（严格执行）**：本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 或 `edit` 前，必须先 `read` 目标文件确认其存在和内容。**绝对禁止在未读取文件的情况下直接 `write` 覆写**。修改 checklist 时必须先确认文件存在再用 `edit`。对所有写入操作，先用 `glob` 或 `read` 核实目标路径。
