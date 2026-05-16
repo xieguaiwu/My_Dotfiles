@@ -7,7 +7,7 @@
 
     // Sisyphus - 主编排者，规划/委托/执行的核心大脑
     "sisyphus": {
-      "model": "deepseek/deepseek-v4-pro",
+      "model": "deepseek/deepseek-v4-flash",
       "fallback_models": ["jdcloud/glm-5.1"],
       "temperature": 0.4
     },
@@ -111,7 +111,7 @@
 
     // 中高强度任务 - 使用 DeepSeek V4 Pro
     "unspecified-high": {
-      "model": "deepseek/deepseek-v4-pro",
+      "model": "deepseek/deepseek-v4-flash",
       "fallback_models": ["jdcloud/glm-5.1"],
       "temperature": 0.3
     },
