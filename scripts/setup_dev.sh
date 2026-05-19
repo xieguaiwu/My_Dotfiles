@@ -111,6 +111,31 @@ else
     sudo apt install -y chafa
 fi
 
+echo ">>> 安装 Julia（科学计算语言）..."
+ARCH=$(uname -m)
+if [ "$ARCH" = "x86_64" ]; then
+    JULIA_ARCH="x64"
+elif [ "$ARCH" = "aarch64" ]; then
+    JULIA_ARCH="aarch64"
+else
+    echo "不支持的架构: $ARCH，跳过 Julia 安装"
+fi
+
+if [ -n "$JULIA_ARCH" ]; then
+    JULIA_VERSION="1.12.6"
+    JULIA_TAR="julia-${JULIA_VERSION}-linux-${JULIA_ARCH}.tar.gz"
+    JULIA_URL="https://julialang-s3.julialang.org/bin/linux/${JULIA_ARCH}/1.12/${JULIA_TAR}"
+
+    cd /tmp
+    echo ">>> 下载 Julia ${JULIA_VERSION} (${ARCH})..."
+    wget -q --show-progress "$JULIA_URL" -O "$JULIA_TAR"
+    mkdir -p ~/.local/julia
+    tar xzf "$JULIA_TAR" -C ~/.local/julia --strip-components=1
+    ln -sf ~/.local/julia/bin/julia ~/.local/bin/julia
+    rm "$JULIA_TAR"
+    echo "Julia $(~/.local/julia/bin/julia --version) 安装完成"
+fi
+
 echo ">>> 安装 C/C++ 工具链..."
 if [ "$DISTRO" = "fedora" ]; then
     sudo dnf groupinstall -y "Development Tools"
