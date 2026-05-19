@@ -11,6 +11,9 @@ end
 if not contains $HOME/.local/bin $PATH
     set -gx PATH $HOME/.local/bin $PATH
 end
+if not contains $HOME/.local/julia/bin $PATH
+    set -gx PATH $HOME/.local/julia/bin $PATH
+end
 if not contains $HOME/.cargo/bin $PATH
     set -gx PATH $HOME/.cargo/bin $PATH
 end
