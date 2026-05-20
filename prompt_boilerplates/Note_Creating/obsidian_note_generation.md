@@ -51,13 +51,15 @@ tools:
 #### 元数据规范
 ```yaml
 ---
-title: 笔记标题
+title: Calculus - Limits
 tags:
   - 标签1
   - 标签2
 created: YYYY-MM-DD
 ---
 ```
+
+**标题语言**: 笔记标题统一使用英文，采用首字母大写格式（Title Case），如 `Linear Algebra - Vector Spaces`、`Modal Logic - Kripke Semantics`。
 
 **标签使用原则**: 优先使用上一步收集的已有标签，尽可能复用现有标签。除非确有必要（如新笔记的知识领域与所有已有标签均不匹配），否则不要擅自创建新标签。
 
@@ -135,12 +137,12 @@ flowchart LR
 
 ```markdown
 ---
-title: {标题}
+title: {Title}
 tags: [{标签列表}]
 created: {日期}
 ---
 
-# {标题}
+# {Title}
 
 > [!abstract] 概述
 > {知识点概述}
