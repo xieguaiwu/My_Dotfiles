@@ -433,4 +433,6 @@ public class NumberUtil {
    - **设计原则**：错误选项应基于真实的学生易错点设计，而非随意编造
 8. **Quick Reference**：只能使用 Quick Reference 中列出的方法
 9. **避免 charAt**：`charAt()` 不在 Quick Reference 中，题目应使用 `substring(i, i+1)` 替代
-10. **Git 安全网 + 文件写入安全**：本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须用 `glob` 或 `read` 确认目标文件是否已存在；若文件已存在，优先用 `edit` 追加内容，而非直接 `write` 覆写；确需覆写须先告知用户。
+10. **知识边界约束**：本 skill 遵守 [知识边界规范](../knowledge_boundary.md)。AP CSA 的考试大纲和题型可能随年份变化（尤其是 2025-2026 新增的 Wrapper Classes、二分搜索、归并排序等内容），如果对最新课程变更不确定，明确告知用户"我的知识截止于 XXXX，建议查阅 College Board 官方 Course and Exam Description 核实"而非硬答或编造。选择题干扰项设计必须有明确错误来源，不能凭空捏造迷惑性选项。
+
+11. **Git 安全网 + 文件写入安全**：本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须用 `glob` 或 `read` 确认目标文件是否已存在；若文件已存在，优先用 `edit` 追加内容，而非直接 `write` 覆写；确需覆写须先告知用户。

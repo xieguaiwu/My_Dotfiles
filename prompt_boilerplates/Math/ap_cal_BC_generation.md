@@ -329,4 +329,6 @@ Let $R$ be the region bounded by the graphs of $y = \sqrt{x}$, $y = 2 - x$, and 
    - **难度保障**：正确选项与错误选项的区分应具有足够难度，不能仅凭外观（如数值接近程度）判断；至少有一个干扰项需要在深入理解后才能排除
    - **设计原则**：错误选项应基于真实的学生易错点设计，而非随意编造
 7. **答案分布**：避免答案过于规律
-8. **Git 安全网 + 文件写入安全**：本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须用 `glob` 或 `read` 确认目标文件是否已存在；若文件已存在，优先用 `edit` 追加内容，而非直接 `write` 覆写；确需覆写须先告知用户。
+8. **知识边界约束**：本 skill 遵守 [知识边界规范](../knowledge_boundary.md)。AP Calculus BC 的大纲和考试形式可能随年份变化（如 2025 年后数字考试格式、公式表更新等），遇到不确定的考试政策或新增知识点时，明确承认知识截止日期，建议用户查阅 College Board 最新 Course and Exam Description。公式推导如有不确定，优先通过计算验证而非硬答。
+
+9. **Git 安全网 + 文件写入安全**：本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须用 `glob` 或 `read` 确认目标文件是否已存在；若文件已存在，优先用 `edit` 追加内容，而非直接 `write` 覆写；确需覆写须先告知用户。
