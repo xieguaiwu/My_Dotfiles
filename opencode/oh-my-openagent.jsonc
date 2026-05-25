@@ -1,50 +1,44 @@
 {
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-openagent/main/assets/oh-my-opencode.schema.json",
 
-  // 智力密集型 agent 使用 DeepSeek V4 Pro (京东云备用)，速度/上下文密集型使用 big-pickle
   "agents": {
-    // === 最依赖智力的 agent - 使用 DeepSeek V4 Pro，京东云备用 ===
-
-    // Sisyphus - 主编排者，规划/委托/执行的核心大脑
+    // 编排/轻量 agent - opencode-go deepseek-v4-flash 主，直连 deepseek 备用
     "sisyphus": {
-      "model": "deepseek/deepseek-v4-flash",
-      "fallback_models": ["jdcloud/glm-5.1"],
+      "model": "opencode-go/deepseek-v4-flash",
+      "fallback_models": ["deepseek/deepseek-v4-flash"],
       "temperature": 0.4
     },
-
-    // Prometheus - 战略规划器，需要深度推理和面试式规划
-    "prometheus": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallback_models": ["jdcloud/glm-5.1"],
+    "sisyphus-junior": {
+      "model": "opencode-go/deepseek-v4-flash",
+      "fallback_models": ["deepseek/deepseek-v4-flash"],
       "temperature": 0.3
     },
 
-    // Oracle - 架构咨询，需要高智商分析复杂系统
+    // 推理密集型 agent - opencode-go deepseek-v4-pro 主，直连 deepseek 备用
+    "prometheus": {
+      "model": "opencode-go/deepseek-v4-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"],
+      "temperature": 0.3
+    },
     "oracle": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallback_models": ["jdcloud/glm-5.1"],
+      "model": "opencode-go/deepseek-v4-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"],
       "temperature": 0.2
     },
-
-    // Metis - 缺口分析，需要创造性发现潜在问题
     "metis": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallback_models": ["jdcloud/glm-5.1"],
-      "temperature": 0.5
+      "model": "opencode-go/deepseek-v4-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"],
+      "temperature": 0.3
     },
-
-    // Hephaestus - 深度实现者，需要高质量代码产出
     "hephaestus": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallback_models": ["jdcloud/glm-5.1"],
+      "model": "opencode-go/deepseek-v4-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"],
       "temperature": 0.3
     },
-
-    // Sisyphus-Junior - 轻量任务执行器，按类别模型运行
-    "sisyphus-junior": {
-      "model": "deepseek/deepseek-v4-flash",
-      "fallback_models": ["jdcloud/glm-5.1"],
-      "temperature": 0.3
+    "momus": {
+      "model": "opencode-go/deepseek-v4-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"],
+      "temperature": 0.2
     },
 
     // === 需要大上下文/速度的 agent - 使用 big-pickle ===
@@ -52,14 +46,14 @@
     // Explore - 快速代码搜索，速度优先
     "explore": {
       "model": "opencode/big-pickle",
-      "fallback_models": ["jdcloud/glm-4-7"],
+      "fallback_models": ["deepseek/deepseek-v4-flash"],
       "temperature": 0.1
     },
 
     // Librarian - 文档搜索，需要大上下文
     "librarian": {
       "model": "opencode/big-pickle",
-      "fallback_models": ["jdcloud/glm-4-7"],
+      "fallback_models": ["deepseek/deepseek-v4-flash"],
       "temperature": 0.1
     },
 
@@ -68,7 +62,7 @@
     // 多模态视觉分析 - 专职处理图像、截图、图表等视觉内容
     "multimodal-looker": {
       "model": "nvidia/meta/llama-4-maverick-17b-128e-instruct",
-      "fallback_models": ["jdcloud/kimi-k2.6"],
+      "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
       "temperature": 0.3,
       "prompt_append": "When analyzing images: 1) Describe all visible elements (UI components, text, colors, layout). 2) Identify any issues or anomalies. 3) For UI screenshots, check design consistency and usability. 4) Provide structured, detailed analysis."
     },
@@ -87,70 +81,64 @@
       "temperature": 0.2
     },
 
-    // Momus - 计划审查，需要严格逻辑分析
-    "momus": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallback_models": ["jdcloud/glm-5.1"],
-      "temperature": 0.2
-    }
   },
 
-  // 分类任务 - DeepSeek 优先，京东云备用
+  // 分类任务 - OpenCode Go 主力，直连 DeepSeek 备用
   "categories": {
-    // 轻量任务 - GLM-4.7 (京东云)，DeepSeek V4 Flash 备用
+    // 轻量任务
     "quick": {
-      "model": "deepseek/deepseek-v4-flash",
-      "fallback_models": ["jdcloud/glm-4-7"],
+      "model": "opencode-go/deepseek-v4-flash",
+      "fallback_models": ["deepseek/deepseek-v4-flash"],
       "temperature": 0.2
     },
     "unspecified-low": {
       "model": "opencode/big-pickle",
-      "fallback_models": ["jdcloud/glm-4-7"],
+      "fallback_models": ["deepseek/deepseek-v4-flash"],
       "temperature": 0.2
     },
 
-    // 中高强度任务 - 使用 DeepSeek V4 Pro
+    // 中高强度任务
     "unspecified-high": {
-      "model": "deepseek/deepseek-v4-flash",
-      "fallback_models": ["jdcloud/glm-5.1"],
+      "model": "opencode-go/deepseek-v4-flash",
+      "fallback_models": ["deepseek/deepseek-v4-flash"],
       "temperature": 0.3
     },
     "writing": {
-      "model": "deepseek/deepseek-v4-flash",
-      "fallback_models": ["jdcloud/glm-5"],
+      "model": "opencode-go/deepseek-v4-flash",
+      "fallback_models": ["deepseek/deepseek-v4-flash"],
       "temperature": 0.5
     },
     "technical-writing": {
-      "model": "deepseek/deepseek-v4-flash",
-      "fallback_models": ["jdcloud/deepseek-v3-2"],
+      "model": "opencode-go/deepseek-v4-flash",
+      "fallback_models": ["deepseek/deepseek-v4-flash"],
       "temperature": 0.3
     },
 
-    // 视觉工程 - 需要视觉能力，使用 Llama 4 Maverick
+    // 视觉工程 - 需要视觉能力
     "visual-engineering": {
       "model": "nvidia/meta/llama-4-maverick-17b-128e-instruct",
-      "fallback_models": ["jdcloud/kimi-k2.6"],
+      "fallback_models": ["nvidia/moonshotai/kimi-k2-instruct"],
       "temperature": 0.4
     },
 
-    // 超脑 - 最难逻辑/架构，需要最强推理
+    // 超脑 - 最强推理
     "ultrabrain": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallback_models": ["jdcloud/glm-5.1"],
+      "model": "opencode-go/deepseek-v4-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"],
       "temperature": 0.2
     },
 
-    // 深度 - 自主研究+实现，需要强推理
+    // 深度 - 自主研究+实现
     "deep": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallback_models": ["jdcloud/glm-5.1"],
+      "model": "opencode-go/deepseek-v4-pro",
+      "fallback_models": ["deepseek/deepseek-v4-pro"],
       "temperature": 0.3
     },
 
-    // 艺术性 - 创造性/非传统方法，需要高创造性
+    // 艺术性 - 创造性/非传统方法
     "artistry": {
-      "model": "deepseek/deepseek-v4-flash",
-      "fallback_models": ["jdcloud/glm-5"],
+      "model": "opencode-go/deepseek-v4-flash",
+      "fallback_models": ["deepseek/deepseek-v4-flash"],
       "temperature": 0.7
     }
   }
