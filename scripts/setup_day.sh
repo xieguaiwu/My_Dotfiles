@@ -46,6 +46,9 @@ if [ "$DISTRO" = "fedora" ]; then
     sudo dnf install -y clash-verge flatpak shotcut eyeD3 exiftool qpdf chromium cava openssh-server alien gnome-keyring
     sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk xorg-x11-font-utils cabextract
     sudo dnf install -y lld
+    # Voice input for fcitx5 (local sherpa-onnx + cloud ASR, LLM post-processing)
+    sudo dnf copr enable -y xifan/fcitx5-vinput-bin
+    sudo dnf install -y fcitx5-vinput
 elif [ "$DISTRO" = "kali" ]; then
     # Kali Linux - 安全工具预装较多，安装日常软件
     sudo apt update
@@ -352,5 +355,8 @@ if [ "$DISTRO" = "fedora" ]; then
     sudo dnf install -y ./protonmail-bridge-3.21.2-1.x86_64.rpm
     sudo dnf install -y alpine
 fi
+
+echo ">>> Enabling vinput voice input daemon..."
+systemctl --user enable --now vinput-daemon.service 2>/dev/null || echo "vinput-daemon 启用失败，请手动运行: systemctl --user enable --now vinput-daemon.service"
 
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
