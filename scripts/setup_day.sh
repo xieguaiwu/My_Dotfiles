@@ -45,18 +45,21 @@ if [ "$DISTRO" = "fedora" ]; then
     sudo dnf install -y curl git npm wget gawk node yacc fastfetch pinta wireguard-tools vlc parole glow timg qalculate
     sudo dnf install -y clash-verge flatpak shotcut eyeD3 exiftool qpdf chromium cava openssh-server alien gnome-keyring
     sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk xorg-x11-font-utils cabextract
+    sudo dnf install -y lld
 elif [ "$DISTRO" = "kali" ]; then
     # Kali Linux - 安全工具预装较多，安装日常软件
     sudo apt update
     sudo apt upgrade -y
     sudo apt install -y curl git npm wget gawk nodejs fastfetch wireguard steghide vlc parole timg qalculate
     sudo apt install -y flatpak eyed3 qpdf cava fcitx5 fcitx5-chinese-addons fcitx5-pinyin glow
+    sudo apt install -y lld
 else
     # 标准 Debian
     sudo apt update
     sudo apt upgrade -y
     sudo apt install -y curl git npm wget gawk nodejs fastfetch wireguard steghide vlc parole timg qalculate
     sudo apt install -y flatpak eyed3 qpdf cava fcitx5 fcitx5-chinese-addons fcitx5-pinyin glow
+    sudo apt install -y lld
 fi
 
 flatpak install flathub hu.irl.cameractrls
@@ -276,6 +279,14 @@ wget -nc "https://victornils.net/tetris/vitetris-0.55-i486-linux.tar.gz"
 gunzip -f ./vitetris-0.55-i486-linux.tar.gz 2>/dev/null || true
 tar -xf vitetris-0.55-i486-linux.tar
 rm -f vitetris-0.55-i486-linux.tar
+
+echo ">>> Configuring Rust linker (lld)..."
+mkdir -p ~/.cargo
+cat > ~/.cargo/config.toml << 'EOF'
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
+EOF
+echo "lld configured as Rust linker. For large crates, consider: CARGO_BUILD_JOBS=2 cargo build"
 
 echo ">>> Installing translation tools"
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Karmenzind/kd/master/scripts/install.sh)"
