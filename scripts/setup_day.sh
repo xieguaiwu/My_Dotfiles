@@ -310,6 +310,20 @@ if [ "$DISTRO" = "fedora" ]; then
     cd ~
 fi
 
+echo ">>> Installing hardware video encoding/decoding drivers (VA-API / Vulkan)..."
+if [ "$DISTRO" = "fedora" ]; then
+    sudo dnf install -y intel-vaapi-driver libva-utils mesa-va-drivers mesa-vulkan-drivers \
+        mesa-vdpau-drivers vulkan-loader vulkan-tools || true
+elif [ "$DISTRO" = "kali" ]; then
+    sudo apt install -y intel-media-va-driver intel-vaapi-driver libva-utils \
+        mesa-va-drivers mesa-vulkan-drivers mesa-vdpau-drivers \
+        vulkan-loader vulkan-tools || true
+else
+    sudo apt install -y intel-media-va-driver intel-vaapi-driver libva-utils \
+        mesa-va-drivers mesa-vulkan-drivers mesa-vdpau-drivers \
+        vulkan-loader vulkan-tools || true
+fi
+
 echo ">>> Installing common media libraries..."
 if [ "$DISTRO" = "fedora" ]; then
     sudo dnf install -y ffmpeg ffmpeg-devel gstreamer1-plugins-good gstreamer1-plugins-bad-free \
@@ -358,5 +372,23 @@ fi
 
 echo ">>> Enabling vinput voice input daemon..."
 systemctl --user enable --now vinput-daemon.service 2>/dev/null || echo "vinput-daemon 启用失败，请手动运行: systemctl --user enable --now vinput-daemon.service"
+
+echo ">>> Installing rdict (Rust Youdao Dictionary)..."
+if ! command -v cargo &>/dev/null; then
+    echo ">>> Rust not found, installing via rustup..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+fi
+
+cd ~
+if [ ! -d "rdict" ]; then
+    git clone https://github.com/Guanran928/rdict.git
+fi
+cd rdict
+cargo build --release
+mkdir -p ~/.local/bin
+ln -sf "$PWD/target/release/rdict" ~/.local/bin/rdict
+ln -sf "$PWD/target/release/rdict-telegram" ~/.local/bin/rdict-telegram
+echo ">>> rdict installed successfully! Run 'rdict --help' to use."
 
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
