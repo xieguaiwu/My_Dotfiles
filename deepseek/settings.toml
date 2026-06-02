@@ -1,6 +1,5 @@
 auto_compact = false
 calm_mode = false
-approval_mode = "auto"
 low_motion = false
 fancy_animations = false
 bracketed_paste = true
