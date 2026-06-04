@@ -2,12 +2,12 @@
   "defaultProvider": "opencode-go",
   "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "xhigh",
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "theme": "opencode",
   "collapseChangelog": true,
   "quietStartup": true,
   "enableInstallTelemetry": false,
-  "lastChangelogVersion": "0.78.0",
+  "lastChangelogVersion": "0.78.1",
   "packages": [
     "git:https://github.com/awtotty/pi-opencode.git",
     "npm:pi-mcp-adapter",
@@ -17,12 +17,27 @@
     "git:github.com/MasuRii/pi-session-cleanup",
     "npm:pi-markdown-preview",
     "npm:pi-ask-user",
-    "npm:pi-bar"
+    "npm:pi-bar",
+    "npm:@jerryan/pi-todo-lite",
+    "npm:pi-memory"
   ],
   "bar": {
     "progressModel": "default"
   },
-  "env": {
-    "PUPPETEER_EXECUTABLE_PATH": "/home/xieguiawu/.cache/puppeteer/chrome/linux-149.0.7827.22/chrome-linux64/chrome"
+  "subagents": {
+    "agentOverrides": {
+      "scout": {
+        "disabled": true
+      },
+      "worker": {
+        "disabled": true
+      },
+      "reviewer": {
+        "disabled": true
+      },
+      "planner": {
+        "disabled": true
+      }
+    }
   }
 }

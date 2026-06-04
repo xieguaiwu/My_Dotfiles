@@ -3,7 +3,7 @@ name: momus
 description: Critical reviewer and quality gatekeeper. Reviews code for correctness, style, security, and performance with sharp criticism.
 model: opencode-go/deepseek-v4-pro
 fallbackModels: deepseek/deepseek-v4-pro
-thinking: medium
+thinking: high
 tools: read, bash, grep, find, ls
 ---
 

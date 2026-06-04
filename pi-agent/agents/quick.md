@@ -3,7 +3,7 @@ name: quick
 description: Fast, lightweight agent for simple tasks. Minimal context, rapid execution.
 model: opencode-go/deepseek-v4-flash
 fallbackModels: deepseek/deepseek-v4-flash
-thinking: low
+thinking: medium
 tools: read, bash, edit, write, grep, find, ls
 ---
 

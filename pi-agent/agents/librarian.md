@@ -3,7 +3,7 @@ name: librarian
 description: Knowledge curator and documentation specialist. Finds, organizes, and explains information from the codebase and external sources.
 model: opencode-go/deepseek-v4-flash
 fallbackModels: deepseek/deepseek-v4-flash
-thinking: low
+thinking: medium
 tools: read, bash, grep, find, ls
 ---
 
