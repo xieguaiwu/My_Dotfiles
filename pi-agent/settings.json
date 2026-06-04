@@ -1,0 +1,28 @@
+{
+  "defaultProvider": "opencode-go",
+  "defaultModel": "deepseek-v4-flash",
+  "defaultThinkingLevel": "xhigh",
+  "hideThinkingBlock": false,
+  "theme": "opencode",
+  "collapseChangelog": true,
+  "quietStartup": true,
+  "enableInstallTelemetry": false,
+  "lastChangelogVersion": "0.78.0",
+  "packages": [
+    "git:https://github.com/awtotty/pi-opencode.git",
+    "npm:pi-mcp-adapter",
+    "npm:pi-web-access",
+    "npm:pi-subagents",
+    "npm:pi-intercom",
+    "git:github.com/MasuRii/pi-session-cleanup",
+    "npm:pi-markdown-preview",
+    "npm:pi-ask-user",
+    "npm:pi-bar"
+  ],
+  "bar": {
+    "progressModel": "default"
+  },
+  "env": {
+    "PUPPETEER_EXECUTABLE_PATH": "/home/xieguiawu/.cache/puppeteer/chrome/linux-149.0.7827.22/chrome-linux64/chrome"
+  }
+}

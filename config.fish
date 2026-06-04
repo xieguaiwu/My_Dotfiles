@@ -2,17 +2,20 @@ if not status is-interactive
     return
 end
 
+# API keys (for OpenCode + pi-agent) — replace with your own keys
+set -gx OPENCODE_API_KEY "<your-opencode-api-key>"
+set -gx DEEPSEEK_API_KEY "<your-deepseek-api-key>"
+set -gx NVIDIA_API_KEY "<your-nvidia-api-key>"
+set -gx MODELSCOPE_API_KEY "<your-modelscope-api-key>"
+
 tirith init
-starship init fish | source
+/usr/bin/starship init fish --print-full-init | source
 
 if not contains /usr/local/bin $PATH
     set -gx PATH /usr/local/bin $PATH
 end
 if not contains $HOME/.local/bin $PATH
     set -gx PATH $HOME/.local/bin $PATH
-end
-if not contains $HOME/.local/julia/bin $PATH
-    set -gx PATH $HOME/.local/julia/bin $PATH
 end
 if not contains $HOME/.cargo/bin $PATH
     set -gx PATH $HOME/.cargo/bin $PATH
@@ -115,7 +118,7 @@ set -gx HTTP_PROXY http://127.0.0.1:7897
 set -gx HTTPS_PROXY http://127.0.0.1:7897
 set -gx http_proxy http://127.0.0.1:7897
 set -gx https_proxy http://127.0.0.1:7897
-set -gx PUPPETEER_EXECUTABLE_PATH /home/xieguiawu/.cache/puppeteer/chrome-headless-shell/linux-131.0.6778.204/chrome-headless-shell
+set -gx PUPPETEER_EXECUTABLE_PATH /home/xieguiawu/.cache/puppeteer/chrome/linux-149.0.7827.22/chrome-linux64/chrome
 set -gx GOTOOLCHAIN auto
 set -gx GOPATH $HOME/go
 set -gx GOPROXY https://goproxy.cn,direct
@@ -124,3 +127,17 @@ if not contains $GOPATH/bin $PATH
 end
 
 set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin /home/xieguiawu/.ghcup/bin $PATH # ghcup-env
+
+# ===== Pi Coding Agent =====
+# Quick pi one-shot: pi "question"
+function piq
+    pi -p $argv
+end
+# Quick pi with resume
+function pir
+    pi --resume $argv
+end
+# Quick pi with continue
+function pic
+    pi --continue $argv
+end

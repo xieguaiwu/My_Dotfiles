@@ -23,7 +23,8 @@
     "opencode-worktree",
     "opencode-pty",
     "opencode-browser",
-    "opencode-wakatime"
+    "opencode-wakatime",
+    "opencode-websearch-cited"
   ],
   "provider": {
     "modelscope": {
@@ -55,15 +56,14 @@
           "context": 128000,
           "reasoning": true
         },
-        "z-ai/glm4.7": {
-          "context": 128000,
-          "reasoning": true
-        },
         "moonshotai/kimi-k2-instruct": {
+          "context": 256000
+        },
+        "moonshotai/kimi-k2.5": {
           "context": 256000,
           "attachment": true
         },
-        "moonshotai/kimi-k2.5": {
+        "moonshotai/kimi-k2.6": {
           "context": 256000,
           "attachment": true
         },
@@ -72,6 +72,10 @@
           "attachment": true
         },
         "deepseek-ai/deepseek-v4-pro": {
+          "context": 1000000,
+          "reasoning": true
+        },
+        "deepseek-ai/deepseek-v4-flash": {
           "context": 1000000,
           "reasoning": true
         },
@@ -117,6 +121,10 @@
         },
         "qwen3.6-plus": {
           "context": 260000,
+          "attachment": true
+        },
+        "qwen3.5-plus": {
+          "context": 1000000,
           "attachment": true
         }
       },
@@ -165,19 +173,11 @@
           "context": 128000,
           "reasoning": true
         },
-        "deepseek-v3-2": {
-          "context": 128000,
-          "reasoning": true
-        },
         "kimi-k2-turbo": {
           "context": 256000,
           "attachment": true
         },
         "kimi-k2.6": {
-          "context": 256000,
-          "attachment": true
-        },
-        "kimi-k2-5": {
           "context": 256000,
           "attachment": true
         },
@@ -201,9 +201,8 @@
     "sequential-thinking": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
+        "node",
+        "/home/xieguiawu/.npm-global/lib/node_modules/@modelcontextprotocol/server-sequential-thinking/dist/index.js"
       ]
     }
   }

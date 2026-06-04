@@ -1,0 +1,146 @@
+{
+  "providers": {
+    "opencode-go": {
+      "modelOverrides": {
+        "deepseek-v4-pro": {
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "medium",
+            "high": "max",
+            "xhigh": "max"
+          }
+        },
+        "deepseek-v4-flash": {
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "medium",
+            "high": "max",
+            "xhigh": "max"
+          }
+        }
+      }
+    },
+    "deepseek": {
+      "baseUrl": "https://api.deepseek.com",
+      "api": "openai-completions",
+      "apiKey": "$DEEPSEEK_API_KEY",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": true,
+        "maxTokensField": "max_tokens"
+      },
+      "models": [
+        {
+          "id": "deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "compat": { "thinkingFormat": "deepseek" },
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "medium",
+            "high": "max",
+            "xhigh": "max"
+          }
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash",
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "compat": { "thinkingFormat": "deepseek" },
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "medium",
+            "high": "max",
+            "xhigh": "max"
+          }
+        }
+      ]
+    },
+    "nvidia": {
+      "baseUrl": "https://integrate.api.nvidia.com/v1",
+      "api": "openai-completions",
+      "apiKey": "$NVIDIA_API_KEY",
+      "models": [
+        {
+          "id": "z-ai/glm-5.1",
+          "name": "GLM 5.1 (NVIDIA)",
+          "reasoning": true,
+          "contextWindow": 203000
+        },
+        {
+          "id": "z-ai/glm-5",
+          "name": "GLM 5 (NVIDIA)",
+          "reasoning": true,
+          "contextWindow": 128000
+        },
+        {
+          "id": "moonshotai/kimi-k2-instruct",
+          "name": "Kimi K2 Instruct (NVIDIA)",
+          "contextWindow": 256000
+        },
+        {
+          "id": "moonshotai/kimi-k2.5",
+          "name": "Kimi K2.5 (NVIDIA)",
+          "input": ["text", "image"],
+          "contextWindow": 256000
+        },
+        {
+          "id": "moonshotai/kimi-k2.6",
+          "name": "Kimi K2.6 (NVIDIA)",
+          "input": ["text", "image"],
+          "contextWindow": 256000
+        },
+        {
+          "id": "qwen/qwen3.5-397b-a17b",
+          "name": "Qwen 3.5 397B (NVIDIA)",
+          "input": ["text", "image"],
+          "contextWindow": 260000
+        },
+        {
+          "id": "deepseek-ai/deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro (NVIDIA)",
+          "reasoning": true,
+          "contextWindow": 1000000
+        },
+        {
+          "id": "deepseek-ai/deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash (NVIDIA)",
+          "reasoning": true,
+          "contextWindow": 1000000
+        },
+        {
+          "id": "meta/llama-4-maverick-17b-128e-instruct",
+          "name": "Llama 4 Maverick (NVIDIA)",
+          "input": ["text", "image"],
+          "contextWindow": 1000000
+        }
+      ]
+    },
+    "modelscope": {
+      "baseUrl": "https://api-inference.modelscope.cn/v1",
+      "api": "openai-completions",
+      "apiKey": "$MODELSCOPE_API_KEY",
+      "models": [
+        {
+          "id": "ZhipuAI/GLM-5",
+          "name": "GLM 5 (ModelScope)",
+          "reasoning": true,
+          "contextWindow": 128000
+        },
+        {
+          "id": "ZhipuAI/GLM-4.7-Flash",
+          "name": "GLM 4.7 Flash (ModelScope)",
+          "contextWindow": 128000
+        }
+      ]
+    }
+  }
+}
