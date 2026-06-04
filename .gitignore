@@ -1,0 +1,15 @@
+# Secrets / tokens
+pi-agent/auth.json
+url.txt
+
+# Large binaries (not configs)
+*.apkg
+*.colpkg
+
+# macOS artifacts
+.DS_Store
+
+# Editor temp files
+*.swp
+*.swo
+*~

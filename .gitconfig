@@ -1,0 +1,22 @@
+[http]
+	proxy = http://127.0.0.1:7897
+[https]
+	proxy = http://127.0.0.1:7897
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[user]
+	email = xieguaiwu@users.noreply.github.com
+	name = xieguaiwu
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[core]
+	excludesFile = /home/xieguiawu/.config/git/ignore
+[safe]
+	directory = *
