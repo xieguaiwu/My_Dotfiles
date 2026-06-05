@@ -85,14 +85,14 @@ function pushSidebar(ctx: ExtensionContext, pi: ExtensionAPI) {
   const barW = 8;
   const filled = Math.round((pct / 100) * barW);
   // Brighter: full block + warning/error threshold highlights
-  const ctxTone = pct > 90 ? "error" : pct > 70 ? "warning" : "thinkingMedium";
+  const ctxTone = pct > 90 ? "error" : pct > 70 ? "warning" : "success";
   const bar = t.fg(ctxTone, "█".repeat(filled)) +
     t.fg("dim", "░".repeat(Math.max(0, barW - filled)));
   const ctxPct = pct > 90
     ? t.fg("error", ` ${Math.round(pct)}%`)
     : pct > 70
       ? t.fg("warning", ` ${Math.round(pct)}%`)
-      : t.fg("muted", ` ${Math.round(pct)}%`);
+      : t.fg("success", ` ${Math.round(pct)}%`);
 
   // ── Thinking level with vibrant color ──
   const thinkDisplay = thinkLv === "xhigh"
