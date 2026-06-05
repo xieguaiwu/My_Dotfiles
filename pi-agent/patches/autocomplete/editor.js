@@ -1764,6 +1764,8 @@ export class Editor {
         let firstPrefixIndex = -1;
         for (let i = 0; i < items.length; i++) {
             const value = items[i].value;
+            if (!value)
+                continue;
             if (value === prefix || value === normalizedPrefix) {
                 return i; // Exact match always wins
             }
@@ -1874,8 +1876,9 @@ export class Editor {
             // For slash command exact match, don't cancel autocomplete so
             // argument completions can appear on the next keystroke.
             if (suggestions.prefix.startsWith("/") && !suggestions.prefix.includes(" ")) {
-                // Keep autocomplete alive for argument completion
+                // Reset state to allow re-trigger; clear list to avoid stale reference
                 this.autocompleteState = null;
+                this.autocompleteList = undefined;
             } else {
                 this.cancelAutocomplete();
             }

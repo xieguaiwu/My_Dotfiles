@@ -1,7 +1,7 @@
 /**
  * quick-keys — opencode 风格快捷键扩展
  *
- * Alt+T → 循环切换思考模式 (off → medium → max → off → ...)
+ * Alt+T → 循环切换思考模式 (off → medium → high → xhigh(max) → off → ...)
  * /think → 手动设置思考级别
  *
  * 完全遵循 opencode 键位体系 + pi ExtensionAPI。
@@ -9,22 +9,22 @@
 
 import type { ExtensionAPI, ThinkingLevel } from "@mariozechner/pi-coding-agent";
 
-const THINKING_CYCLE: ThinkingLevel[] = ["off", "medium", "high"];
+const THINKING_CYCLE: ThinkingLevel[] = ["off", "medium", "high", "xhigh"];
 
 const LEVEL_LABELS: Record<string, string> = {
   off: "OFF",
   medium: "medium",
-  high: "max",
+  high: "high",
   xhigh: "max",
-  low: "low (unsupported on DeepSeek)",
-  minimal: "minimal (unsupported on DeepSeek)",
+  low: "low",
+  minimal: "minimal",
 };
 
 function nextThinking(current: ThinkingLevel): ThinkingLevel {
   const idx = THINKING_CYCLE.indexOf(current);
-  // xhigh / low / minimal 等不在循环中的值 → 从 medium 开始
-  if (idx === -1) return THINKING_CYCLE[1]; // medium
-  // 到达 high(max) 后 → 回到 off 而不是跳过
+  // Levels outside the cycle (low, minimal) → start from off for safe reset
+  if (idx === -1) return THINKING_CYCLE[0];
+  // Wrap around at end of cycle
   if (idx >= THINKING_CYCLE.length - 1) return THINKING_CYCLE[0];
   return THINKING_CYCLE[idx + 1];
 }
@@ -33,12 +33,14 @@ export default function (pi: ExtensionAPI) {
   // ── Alt+T: 循环切换思考模式（ctrl+t 被 pi 内置占用）──
 
   pi.registerShortcut("alt+t", {
-    description: "Toggle thinking level: off → medium → max → off",
+    description: "Toggle thinking level: off → medium → high → max → off",
     handler: async (ctx) => {
       const current = pi.getThinkingLevel?.() ?? "off";
       const next = nextThinking(current);
       pi.setThinkingLevel?.(next);
-      ctx.ui.notify(`💭 Thinking: ${LEVEL_LABELS[next] ?? next}`, "info");
+      // Read back effective level (may differ from requested due to clamping)
+      const effective = pi.getThinkingLevel?.() ?? next;
+      ctx.ui.notify(`💭 Thinking: ${LEVEL_LABELS[effective] ?? effective}`, "info");
     },
   });
 
@@ -54,7 +56,9 @@ export default function (pi: ExtensionAPI) {
         return;
       }
       pi.setThinkingLevel?.(level as ThinkingLevel);
-      const label = LEVEL_LABELS[level] ?? level;
+      // Read back effective level (may differ from requested due to clamping)
+      const effective = pi.getThinkingLevel?.() ?? level;
+      const label = LEVEL_LABELS[effective] ?? effective;
       ctx.ui.notify(`💭 Thinking: ${label}`, "info");
 
       // 对 DeepSeek 不支持的值给出额外警告
