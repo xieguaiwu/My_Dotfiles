@@ -85,7 +85,7 @@ function pushSidebar(ctx: ExtensionContext, pi: ExtensionAPI) {
   const barW = 8;
   const filled = Math.round((pct / 100) * barW);
   // Brighter: full block + warning/error threshold highlights
-  const ctxTone = pct > 90 ? "error" : pct > 70 ? "warning" : "cyan";
+  const ctxTone = pct > 90 ? "error" : pct > 70 ? "warning" : "thinkingMedium";
   const bar = t.fg(ctxTone, "█".repeat(filled)) +
     t.fg("dim", "░".repeat(Math.max(0, barW - filled)));
   const ctxPct = pct > 90
@@ -98,7 +98,7 @@ function pushSidebar(ctx: ExtensionContext, pi: ExtensionAPI) {
   const thinkDisplay = thinkLv === "xhigh"
     ? t.fg("accent", thinkLv)     // purple for max thinking
     : thinkLv === "high"
-      ? t.fg("cyan", thinkLv)      // cyan for high
+      ? t.fg("thinkingMedium", thinkLv)      // cyan for high
       : t.fg("muted", thinkLv);    // muted for others
 
   // ── Token usage ──
