@@ -5,18 +5,24 @@ import { collectUsage, buildCoreFooterSections, renderCoreFooterLine, renderExte
 
 // Pixel light block: one bright pixel sweeps left↔right across dim blocks
 const PIXEL_N = 7;
-const _buildPixelFrames = (): string[] => {
-  const dim = "░";
+const _buildPixelFrames = (theme: any, pixelColor: string): string[] => {
+  const dimChar = "░";
+  const brightChar = "█";
+  const dimStyle = (s: string) => theme.fg("dim", s);
+  const brightStyle = (s: string) => theme.fg(pixelColor, s);
   const out: string[] = [];
   for (let pos = 0; pos < PIXEL_N; pos++) {
-    out.push(new Array(PIXEL_N).fill(dim).map((_, i) => (i === pos ? "█" : dim)).join(""));
+    const chars = new Array(PIXEL_N).fill(dimChar);
+    chars[pos] = brightChar;
+    out.push(chars.map((c, i) => (i === pos ? brightStyle(c) : dimStyle(c))).join(""));
   }
   for (let pos = PIXEL_N - 2; pos >= 1; pos--) {
-    out.push(new Array(PIXEL_N).fill(dim).map((_, i) => (i === pos ? "█" : dim)).join(""));
+    const chars = new Array(PIXEL_N).fill(dimChar);
+    chars[pos] = brightChar;
+    out.push(chars.map((c, i) => (i === pos ? brightStyle(c) : dimStyle(c))).join(""));
   }
   return out;
 };
-export const WORKING_INDICATOR_FRAMES = _buildPixelFrames() as readonly string[];
 
 let workingIndicatorTimer: ReturnType<typeof setInterval> | undefined;
 let lastTokenTime = 0;
@@ -58,8 +64,8 @@ export function setupCustomUI(pi: ExtensionAPI, ctx: ExtensionContext): void {
     const activeThemeTone = tone === 'green' ? 'cyan' : tone === 'yellow' ? 'secondary' : 'accent';
     try {
       ctx.ui.setWorkingIndicator({
-        frames: WORKING_INDICATOR_FRAMES.map((frame) => ctx.ui.theme.fg(activeThemeTone, frame)),
-        intervalMs: 120,
+        frames: _buildPixelFrames(ctx.ui.theme, activeThemeTone),
+        intervalMs: 80,
       });
     } catch {
       // ctx may be stale after session replacement or reload — silently ignore
