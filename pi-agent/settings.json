@@ -1,6 +1,6 @@
 {
-  "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-pro",
+  "defaultProvider": "opencode-go",
+  "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "xhigh",
   "hideThinkingBlock": false,
   "theme": "opencode",
@@ -19,7 +19,8 @@
     "npm:pi-ask-user",
     "npm:pi-bar",
     "npm:@jerryan/pi-todo-lite",
-    "npm:pi-memory"
+    "npm:pi-memory",
+    "npm:@rokiy/pi-ui"
   ],
   "bar": {
     "progressModel": "default"
