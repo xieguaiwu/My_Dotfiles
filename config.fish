@@ -141,3 +141,11 @@ end
 function pic
     pi --continue $argv
 end
+# Safe update: runs pi update then automatically reapplies local patches
+function piu
+    echo "→ Running pi update..."
+    command pi update $argv
+    echo ""
+    echo "→ Reapplying local patches..."
+    bash ~/.pi/patches/reapply.sh
+end
