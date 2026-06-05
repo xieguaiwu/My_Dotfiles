@@ -6,13 +6,23 @@ import path from "node:path";
 export default function (pi: ExtensionAPI) {
   let ctx: ExtensionContext | undefined;
 
+  // ── Push sidebar on any data change ──
+  const refresh = () => { if (ctx) pushSidebar(ctx, pi); };
+
   pi.on("session_start", async (_event, context) => {
     ctx = context;
-    pushSidebar(context, pi);
+    refresh();
+  });
+  pi.on("session_shutdown", async () => {
+    ctx?.ui.setWidget("pixel-sidebar", undefined);
+    ctx = undefined;
   });
 
-  pi.on("agent_start", async () => { if (ctx) pushSidebar(ctx, pi); });
-  pi.on("agent_end", async () => { if (ctx) pushSidebar(ctx, pi); });
+  // Refresh on relevant events
+  pi.on("agent_start", refresh);
+  pi.on("agent_end", refresh);
+  pi.on("thinking_level_select", refresh);
+  pi.on("model_select", refresh);
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -46,10 +56,6 @@ function getGitBranch(cwd: string): string | null {
   }
 }
 
-function getThinkingLevel(pi: ExtensionAPI): string {
-  return (pi as any).getThinkingLevel?.() || "—";
-}
-
 function getModelLabel(ctx: ExtensionContext): string {
   if (!ctx.model) return "—";
   return [ctx.model.provider, ctx.model.id].filter(Boolean).join("/");
@@ -65,40 +71,55 @@ function getContextPct(ctx: ExtensionContext): number {
   return 0;
 }
 
-// ── Sidebar (string-array widget, no factory callback) ──────────
+// ── Sidebar widget ──────────────────────────────────────────────
 
 function pushSidebar(ctx: ExtensionContext, pi: ExtensionAPI) {
   const usage = collectUsage(ctx);
   const pct = getContextPct(ctx);
   const model = getModelLabel(ctx);
-  const thinkLv = getThinkingLevel(pi);
+  const thinkLv = pi.getThinkingLevel() || "—";
   const branch = getGitBranch(ctx.cwd || ".");
   const t = ctx.ui.theme;
 
-  // Context bar
+  // ── Context bar with vibrant coloring ──
   const barW = 8;
   const filled = Math.round((pct / 100) * barW);
-  const ctxColor = pct > 90 ? "error" : pct > 70 ? "warning" : "success";
-  const bar = t.fg(ctxColor, "█".repeat(filled)) +
+  // Brighter: full block + warning/error threshold highlights
+  const ctxTone = pct > 90 ? "error" : pct > 70 ? "warning" : "cyan";
+  const bar = t.fg(ctxTone, "█".repeat(filled)) +
     t.fg("dim", "░".repeat(Math.max(0, barW - filled)));
+  const ctxPct = pct > 90
+    ? t.fg("error", ` ${Math.round(pct)}%`)
+    : pct > 70
+      ? t.fg("warning", ` ${Math.round(pct)}%`)
+      : t.fg("muted", ` ${Math.round(pct)}%`);
 
-  // Cost
-  const costStr = usage.cost > 0 ? `$${usage.cost.toFixed(4)}` : "—";
+  // ── Thinking level with vibrant color ──
+  const thinkDisplay = thinkLv === "xhigh"
+    ? t.fg("accent", thinkLv)     // purple for max thinking
+    : thinkLv === "high"
+      ? t.fg("cyan", thinkLv)      // cyan for high
+      : t.fg("muted", thinkLv);    // muted for others
+
+  // ── Token usage ──
   const tokens = `↑${fmtTokens(usage.input)} ↓${fmtTokens(usage.output)}`;
 
-  // Build rows — each is a plain string with embedded ANSI colors
+  // ── Cost ──
+  const costStr = usage.cost > 0 ? t.fg("warning", `$${usage.cost.toFixed(4)}`) : t.fg("muted", "—");
+
+  // ── Build rows ──
   const row1 = [
     t.fg("accent", " Model"),
-    t.fg("dim", " "), model,
+    t.fg("dim", " "), t.fg("text", model),
     t.fg("dim", "  │"),
     t.fg("accent", " Think"),
-    t.fg("dim", " "), t.fg("muted", thinkLv),
+    t.fg("dim", " "), thinkDisplay,
   ].join("");
 
   const row2 = [
     t.fg("accent", " Ctx"),
     t.fg("dim", " "), bar,
-    t.fg("muted", ` ${Math.round(pct)}%`),
+    ctxPct,
     t.fg("dim", "  │"),
     t.fg("accent", " Tokens"),
     t.fg("dim", " "), t.fg("muted", tokens),
@@ -106,7 +127,7 @@ function pushSidebar(ctx: ExtensionContext, pi: ExtensionAPI) {
 
   const row3 = [
     t.fg("accent", " Cost"),
-    t.fg("dim", " "), t.fg("muted", costStr),
+    t.fg("dim", " "), costStr,
     t.fg("dim", "  │"),
     t.fg("accent", " Git"),
     t.fg("dim", " "), t.fg("muted", branch || "—"),
