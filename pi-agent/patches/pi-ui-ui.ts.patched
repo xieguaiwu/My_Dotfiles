@@ -61,7 +61,7 @@ export function setupCustomUI(pi: ExtensionAPI, ctx: ExtensionContext): void {
 
   const applyWorkingIndicator = (tone: 'green' | 'yellow' | 'red') => {
     // Cool-tone mapping: green→cyan, yellow→secondary(blue), red→accent(purple)
-    const activeThemeTone = tone === 'green' ? 'cyan' : tone === 'yellow' ? 'secondary' : 'accent';
+    const activeThemeTone = tone === 'green' ? 'thinkingMedium' : tone === 'yellow' ? 'secondary' : 'accent';
     try {
       ctx.ui.setWorkingIndicator({
         frames: _buildPixelFrames(ctx.ui.theme, activeThemeTone),
