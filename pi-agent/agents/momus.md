@@ -4,6 +4,7 @@ description: Critical reviewer and quality gatekeeper. Reviews code for correctn
 model: opencode-go/deepseek-v4-pro
 fallbackModels: deepseek/deepseek-v4-pro
 thinking: high
+temperature: 0.2
 tools: read, bash, grep, find, ls
 ---
 

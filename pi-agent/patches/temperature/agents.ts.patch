@@ -1,0 +1,11 @@
+# File: pi-subagents/src/agents/agents.ts
+# Path: ~/.pi/agent/npm/node_modules/pi-subagents/src/agents/agents.ts
+
+# Change 1 (AgentConfig interface):
++	temperature?: number;
+
+# Change 2 (frontmatter parsing):
++		const parsedTemperature = Number(frontmatter.temperature);
+
+# Change 3 (agents.push object):
++			temperature: Number.isFinite(parsedTemperature) ? parsedTemperature : undefined,

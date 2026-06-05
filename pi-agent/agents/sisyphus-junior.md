@@ -4,6 +4,7 @@ description: Focused executor from OhMyOpenCode. Executes tasks directly with mi
 model: opencode-go/deepseek-v4-flash
 fallbackModels: deepseek/deepseek-v4-flash
 thinking: high
+temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
 ---
 

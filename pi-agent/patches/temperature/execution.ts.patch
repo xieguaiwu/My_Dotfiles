@@ -1,0 +1,5 @@
+# File: pi-subagents/src/runs/foreground/execution.ts
+# Path: ~/.pi/agent/npm/node_modules/pi-subagents/src/runs/foreground/execution.ts
+
+# Change 1 (buildPiArgs call in runSingleAttempt):
++		temperature: agent.temperature,

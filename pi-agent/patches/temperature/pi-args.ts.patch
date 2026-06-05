@@ -1,0 +1,10 @@
+# File: pi-subagents/src/runs/shared/pi-args.ts
+# Path: ~/.pi/agent/npm/node_modules/pi-subagents/src/runs/shared/pi-args.ts
+
+# Change 1 (BuildPiArgsInput interface):
++	temperature?: number;
+
+# Change 2 (buildPiArgs env section):
++	if (input.temperature !== undefined) {
++		env.PI_TEMPERATURE = String(input.temperature);
++	}

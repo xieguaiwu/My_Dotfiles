@@ -4,6 +4,7 @@ description: Fast, lightweight agent for simple tasks. Minimal context, rapid ex
 model: opencode-go/deepseek-v4-flash
 fallbackModels: deepseek/deepseek-v4-flash
 thinking: medium
+temperature: 0.2
 tools: read, bash, edit, write, grep, find, ls
 ---
 

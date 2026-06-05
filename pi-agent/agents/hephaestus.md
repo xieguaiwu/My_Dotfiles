@@ -4,6 +4,7 @@ description: Master builder. Crafts robust implementations from plans, writes cl
 model: opencode-go/deepseek-v4-pro
 fallbackModels: deepseek/deepseek-v4-pro
 thinking: high
+temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
 ---
 

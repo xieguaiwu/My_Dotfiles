@@ -4,6 +4,7 @@ description: Vision-capable agent for UI/UX analysis, design review, screenshot 
 model: nvidia/meta/llama-4-maverick-17b-128e-instruct
 fallbackModels: nvidia/qwen/qwen3.5-397b-a17b, nvidia/moonshotai/kimi-k2-instruct
 thinking: low
+temperature: 0.4
 tools: read, bash, ls
 ---
 
