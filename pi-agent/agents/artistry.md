@@ -4,6 +4,7 @@ description: Creative specialist. Generates creative content, design concepts, a
 model: opencode-go/deepseek-v4-pro
 fallbackModels: deepseek/deepseek-v4-pro
 thinking: high
+temperature: 0.7
 tools: read, bash, edit, write
 ---
 

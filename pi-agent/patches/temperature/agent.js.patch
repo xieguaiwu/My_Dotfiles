@@ -1,0 +1,8 @@
+# File: pi-agent-core/dist/agent.js
+# Path: ~/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-agent-core/dist/agent.js
+
+# Change 1 (constructor, after "this.toolExecution = ..."):
++        this._temperature = process.env.PI_TEMPERATURE ? parseFloat(process.env.PI_TEMPERATURE) : undefined;
+
+# Change 2 (createLoopConfig return object):
++            temperature: this._temperature,

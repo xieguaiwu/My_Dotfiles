@@ -4,6 +4,7 @@ description: General-purpose lightweight agent. Handles moderate tasks with effi
 model: opencode-go/deepseek-v4-flash
 fallbackModels: deepseek/deepseek-v4-flash
 thinking: medium
+temperature: 0.2
 tools: read, bash, edit, write, grep, find, ls
 ---
 

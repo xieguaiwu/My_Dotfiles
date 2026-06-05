@@ -4,6 +4,7 @@ description: Information gathering specialist. Collects, organizes, and synthesi
 model: nvidia/meta/llama-4-maverick-17b-128e-instruct
 fallbackModels: nvidia/qwen/qwen3.5-397b-a17b
 thinking: low
+temperature: 0.2
 tools: read, bash, grep, find, ls
 ---
 

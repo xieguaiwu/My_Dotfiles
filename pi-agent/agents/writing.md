@@ -4,6 +4,7 @@ description: Writing specialist. Creates clear, engaging prose for documentation
 model: opencode-go/deepseek-v4-flash
 fallbackModels: deepseek/deepseek-v4-flash
 thinking: medium
+temperature: 0.5
 tools: read, bash, edit, write, grep
 ---
 

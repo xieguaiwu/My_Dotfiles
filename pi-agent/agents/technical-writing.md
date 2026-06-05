@@ -4,6 +4,7 @@ description: Technical documentation specialist. Creates precise, accurate techn
 model: opencode-go/deepseek-v4-flash
 fallbackModels: deepseek/deepseek-v4-flash
 thinking: medium
+temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
 ---
 

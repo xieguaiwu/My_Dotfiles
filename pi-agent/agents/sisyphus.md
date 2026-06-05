@@ -4,6 +4,7 @@ description: Senior orchestrator agent. Detects user intent, delegates to specia
 model: opencode-go/deepseek-v4-flash
 fallbackModels: deepseek/deepseek-v4-flash
 thinking: high
+temperature: 0.4
 tools: read, bash, edit, write, grep, find, ls
 ---
 
