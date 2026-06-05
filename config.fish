@@ -145,6 +145,11 @@ end
 function piu
     echo "→ Running pi update..."
     command pi update $argv
+    set -l pi_exit $status
+    if test $pi_exit -ne 0
+        echo "⚠️  pi update failed (exit $pi_exit) — skipping reapply"
+        return $pi_exit
+    end
     echo ""
     echo "→ Reapplying local patches..."
     bash ~/.pi/patches/reapply.sh
