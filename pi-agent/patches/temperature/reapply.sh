@@ -12,7 +12,7 @@ echo "=== Checking pi-agent temperature patches ==="
 
 check_line() {
     local file="$1" pattern="$2" desc="$3"
-    if grep -qF "$pattern" "$file" 2>/dev/null; then
+    if grep -qF -e "$pattern" "$file" 2>/dev/null; then
         echo "  ✅ $desc"
     else
         echo "  ❌ MISSING: $desc — needs reapply"
@@ -34,6 +34,7 @@ check_line "$AGENTS_TS" "temperature: Number.isFinite(parsedTemperature)" "tempe
 echo "--- pi-args.ts ---"
 check_line "$PI_ARGS_TS" "temperature?: number" "BuildPiArgsInput.temperature" || FAIL=1
 check_line "$PI_ARGS_TS" "PI_TEMPERATURE" "PI_TEMPERATURE env set" || FAIL=1
+check_line "$PI_ARGS_TS" "--max-old-space-size=512" "NODE_OPTIONS heap limit" || FAIL=1
 
 echo "--- execution.ts ---"
 check_line "$EXECUTION_TS" "temperature: agent.temperature" "agent.temperature pass-through" || FAIL=1
