@@ -1,8 +1,8 @@
 ---
 name: unspecified-low
 description: General-purpose lightweight agent. Handles moderate tasks with efficiency and moderate reasoning.
-model: opencode-go/deepseek-v4-flash
-fallbackModels: deepseek/deepseek-v4-flash
+model: deepseek/deepseek-v4-flash
+fallbackModels: opencode-go/deepseek-v4-flash
 thinking: medium
 temperature: 0.2
 tools: read, bash, edit, write, grep, find, ls

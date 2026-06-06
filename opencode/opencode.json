@@ -23,8 +23,7 @@
     "opencode-worktree",
     "opencode-pty",
     "opencode-browser",
-    "opencode-wakatime",
-    "opencode-websearch-cited"
+    "opencode-wakatime"
   ],
   "provider": {
     "modelscope": {
@@ -41,7 +40,7 @@
       },
       "options": {
         "baseURL": "https://api-inference.modelscope.cn/v1",
-        "apiKey": "shit"
+        "apiKey": "{file:~/.config/opencode/secrets/modelscope}"
       }
     },
     "nvidia": {
@@ -86,7 +85,7 @@
       },
       "options": {
         "baseURL": "https://integrate.api.nvidia.com/v1",
-        "apiKey": "shit"
+        "apiKey": "{file:~/.config/opencode/secrets/nvidia}"
       }
     },
     "opencode-go": {
@@ -122,15 +121,11 @@
         "qwen3.6-plus": {
           "context": 260000,
           "attachment": true
-        },
-        "qwen3.5-plus": {
-          "context": 1000000,
-          "attachment": true
         }
       },
       "options": {
         "baseURL": "https://opencode.ai/zen/go/v1",
-        "apiKey": "shit"
+        "apiKey": "{file:~/.config/opencode/secrets/opencode-go}"
       }
     },
     "deepseek": {
@@ -154,7 +149,7 @@
       },
       "options": {
         "baseURL": "https://api.deepseek.com",
-        "apiKey": "shit"
+        "apiKey": "{file:~/.config/opencode/secrets/deepseek}"
       }
     },
     "jdcloud": {
@@ -187,7 +182,7 @@
       },
       "options": {
         "baseURL": "https://modelservice.jdcloud.com/v1",
-        "apiKey": "shit"
+        "apiKey": "YOUR_JDCLOUD_API_KEY"
       }
     }
   },

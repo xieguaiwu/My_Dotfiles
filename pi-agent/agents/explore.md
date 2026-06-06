@@ -1,8 +1,8 @@
 ---
 name: explore
 description: Fast codebase explorer. Searches code, traces dependencies, finds patterns, and maps project structure rapidly.
-model: opencode-go/deepseek-v4-flash
-fallbackModels: deepseek/deepseek-v4-flash
+model: deepseek/deepseek-v4-flash
+fallbackModels: opencode-go/deepseek-v4-flash
 thinking: medium
 temperature: 0.1
 tools: read, bash, grep, find, ls
