@@ -60,6 +60,8 @@
     // === 需要视觉能力的 agent - Maverick 主（稳定可靠），Qwen3.5-397B 备用（视觉更强但免费 API 过载频繁）===
 
     // 多模态视觉分析 - 专职处理图像、截图、图表等视觉内容
+    // Llama 4 Maverick 主模型：1M 上下文，稳定可靠，免费 tier 拥塞少
+    // Qwen3.5-397B fallback：视觉推理更强 (MMMU 85.0) 但免费 API 经常 DEGRADED/超时，备用
     "multimodal-looker": {
       "model": "nvidia/meta/llama-4-maverick-17b-128e-instruct",
       "fallback_models": ["nvidia/qwen/qwen3.5-397b-a17b", "nvidia/moonshotai/kimi-k2.5"],
@@ -68,6 +70,7 @@
     },
 
     // 前端测试 - 需要分析界面截图、UI渲染结果+生成测试代码
+    // Maverick 主模型：1M 上下文稳定可靠；Qwen3.5 视觉更强但免费 API 过载频繁，做 fallback
     "frontend-tester": {
       "model": "nvidia/meta/llama-4-maverick-17b-128e-instruct",
       "fallback_models": ["nvidia/qwen/qwen3.5-397b-a17b"],
@@ -75,6 +78,7 @@
     },
 
     // 信息收集 - 需要处理图像、图表、截图等视觉信息
+    // Maverick 主模型：稳定可靠，1M 上下文；Qwen3.5 视觉更强但免费 API 过载频繁，做 fallback
     "information-collector": {
       "model": "nvidia/meta/llama-4-maverick-17b-128e-instruct",
       "fallback_models": ["nvidia/qwen/qwen3.5-397b-a17b"],
