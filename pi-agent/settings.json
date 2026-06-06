@@ -19,8 +19,7 @@
     "npm:pi-ask-user",
     "npm:pi-bar",
     "npm:@jerryan/pi-todo-lite",
-    "npm:pi-memory",
-    "npm:@rokiy/pi-ui"
+    "npm:pi-memory"
   ],
   "bar": {
     "progressModel": "default"

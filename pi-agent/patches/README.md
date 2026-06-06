@@ -45,9 +45,6 @@ Files:
 - `@earendil-works/pi-coding-agent/dist/modes/interactive/components/footer.js`
   - `render()`: shows `~N tokens` instead of `?/0` when contextWindow unknown
 
-### 4. pi-ui Theme (2026-06-05)
-- `@rokiy/pi-ui/dist/ui.js` → `pi-ui-ui.ts.patched`
-
 ## Reapply manually
 ```bash
 bash ~/.pi/patches/reapply.sh
