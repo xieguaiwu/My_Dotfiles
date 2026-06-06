@@ -1,0 +1,25 @@
+--- a/dist/components/editor.js
++++ b/dist/components/editor.js
+@@ -1756,14 +1756,22 @@
+     getBestAutocompleteMatchIndex(items, prefix) {
+         if (!prefix)
+             return -1;
++        // For slash commands, strip leading "/" from prefix so it can match
++        // item values (which don't include the slash).
++        const normalizedPrefix = prefix.startsWith("/") && !prefix.includes(" ")
++            ? prefix.slice(1)
++            : prefix;
+         let firstPrefixIndex = -1;
+         for (let i = 0; i < items.length; i++) {
+             const value = items[i].value;
+-            if (value === prefix) {
++            if (value === prefix || value === normalizedPrefix) {
+                 return i; // Exact match always wins
+             }
+-            if (firstPrefixIndex === -1 && value.startsWith(prefix)) {
++            if (firstPrefixIndex === -1 && (value.startsWith(prefix) || value.startsWith(normalizedPrefix))) {
+                 firstPrefixIndex = i;
+             }
+         }
+         return firstPrefixIndex;
+     }

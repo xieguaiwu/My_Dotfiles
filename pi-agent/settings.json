@@ -1,5 +1,5 @@
 {
-  "defaultProvider": "opencode-go",
+  "defaultProvider": "deepseek",
   "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "xhigh",
   "hideThinkingBlock": false,
