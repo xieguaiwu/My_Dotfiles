@@ -288,25 +288,60 @@ librarian 返回：
 
 ### 6.5. 转换为 DOCX
 
-质量检查通过后，使用 pandoc 将包含中文翻译的 Markdown 文件转换为 DOCX 格式。
+质量检查通过后，将 Markdown 转换为 **DOCX** 格式以方便审阅和批注。
 
-1. **确保 pandoc 可用**：如环境未安装 pandoc，先通过包管理器安装：
-   - Ubuntu/Debian: `apt install pandoc`
-   - macOS: `brew install pandoc`
-   - Windows: `winget install pandoc` 或从 https://pandoc.org 下载
-2. **执行转换**：使用 pandoc 将 `.md` 文件转换为 `.docx` 文件
-   ```
-   pandoc "{markdown文件路径}.md" -o "{输出docx路径}.docx"
-   ```
-   - 输入文件为步骤 5 输出的翻译完成的 Markdown 文件
-   - 输出文件命名建议与输入文件同名，仅扩展名不同（如 `AI中译论文名.docx`）
-   - 输出至与 Markdown 文件相同的目录
-3. **格式验证**（可选）：确认生成的 DOCX 文件：
-   - 中文显示正常，无乱码
-   - 章节标题层级正确保留
-   - 数学公式与表格布局基本正确
+理由：DOCX 便于协作批注、修订和格式微调；Pandoc 对 Markdown → DOCX 转换成熟稳定；LaTeX 数学公式通过 `--webtex` 或原生 OMML 渲染。
 
-> **注意**：pandoc 对复杂 LaTeX 公式的 docx 转换可能不完全保留格式，必要时保持 `.md` 输出作为补充。
+#### 6.5.1. 环境依赖
+
+```bash
+# 必须可用
+pandoc --version          # ≥ 3.0
+```
+
+#### 6.5.2. 一键转换命令
+
+```bash
+# 基本转换（无自定义样式）
+pandoc "AI中译论文名.md" -o "AI中译论文名.docx"
+
+# 带参考样式模板（推荐——保留自定义字体/样式）
+pandoc "AI中译论文名.md" \
+  --reference-doc=template.docx \
+  -o "AI中译论文名.docx"
+```
+
+- 输入文件为步骤 5 输出的翻译完成的 Markdown 文件
+- 输出文件命名与输入文件同名，仅扩展名为 `.docx`（如 `AI中译论文名.docx`）
+- 输出至与 Markdown 文件相同的目录
+- `--reference-doc=template.docx` 可选：提供一个已有的 DOCX 作为样式模板，Pandoc 会继承其中的字体、字号、页边距等设置。首次使用时创建：
+  ```bash
+  pandoc -o template.docx --print-default-data-file reference.docx
+  # 在 Word 中打开 template.docx，修改样式后保存即可
+  ```
+
+#### 6.5.3. 数学公式处理
+
+| 场景 | 方案 |
+|------|------|
+| 简单公式 | Pandoc 自动转换为 Word OMML（原生对象，可编辑） |
+| 复杂 LaTeX 公式 | `pandoc --mathml` 或 `--webtex` 渲染后嵌入 |
+| 含中文的公式环境 | 默认支持，无需额外设置 |
+
+#### 6.5.4. 验证 DOCX 输出
+
+```bash
+# 检查文件大小和完整性
+ls -lh AI中译论文名.docx
+
+# 解压检查内容（DOCX 本质是 ZIP）
+unzip -l AI中译论文名.docx | head -30
+```
+
+| 路线 | 步骤 | 协作编辑 | 数学公式 | 文件大小 |
+|------|:----:|:--------:|:--------:|:--------:|
+| MD → PDF (XeLaTeX) | 1 步 | ❌ 需额外工具 | ✅ 原生 | 小 |
+| **MD → DOCX** | **1 步** | **✅ Word/Office 原生** | **✅ OMML** | **中** |
 
 ### 5.1 Markdown 格式规范（严格）
 
@@ -436,3 +471,4 @@ DOCX 文件名：AI中译{目录名}.docx
 8. **审查规避的伦理边界**: 审查规避策略仅在原文内容不违反法律法规的前提下使用。目标是在内容安全机制误拦截学术内容时维持翻译的完整性，而非帮助传播违法信息。译文必须忠实于原文，不得以"规避审查"为由主动篡改、美化或歪曲原文含义。
 9. **Git 安全网 + 文件写入安全**: 本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write` 输出译文前，必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：先用 `glob` 或 `read` 确认目标文件是否已存在；若文件已存在，告知用户并确认是否覆盖。避免覆写已有翻译文件。
 10. **思维链保护**: 本 skill 要求 AI 助手在翻译涉及敏感内容的论文时，**从思维链阶段即开始使用占位符**，而非仅对最终输出进行替换。这是与通用审查规避策略的关键区别。AI 助手必须在推理过程的每一步都使用占位符或非洲语言替代词，不得在思维链中留下任何敏感词痕迹。最终输出前须执行全局还原，将占位符/替代词恢复为准确的中文学术译名。
+11. **BibTeX 引用键命名规范**（当翻译涉及 `.bib` 文件时）：所有 BibTeX key 必须遵循 `{全小写人名}{年份}[消歧后缀]` 格式，即第一作者姓氏全小写 + 4位年份，同年同姓冲突时追加单小写字母 (`a`, `b`, `c`...) 消歧。禁止使用描述性后缀（如 `chen2025limits`）。详见 `bib_key_naming.md`。
