@@ -1,0 +1,172 @@
+allow_shell = true
+api_key = "sk-ba9e2fd0f19640ed873b71481d35e93a"
+approval_policy = "auto"
+default_text_model = "deepseek-v4-pro"
+reasoning_effort = "auto"
+sandbox_mode = "workspace-write"
+
+[projects."/home/xieguiawu"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/.config/fish"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/.config/yazi"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/.local/bin"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/.local/share/openttd/save"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/AP_CSA-main/hw/AP_FRQ/0509FRQs"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/BOOKS/学术/哲学、伦理学、逻辑学、与文学、文学美学理论、社会学、宗教学等/欧陆/韦伯"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/BOOKS/学术/哲学、伦理学、逻辑学、与文学、文学美学理论、社会学、宗教学等/英美/Peter Blau"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/BOOKS/学术/政治、政治哲学、国际政治、地缘政治学、政治地理学"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/BOOKS/学术/数理/格洛腾迪克"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Desktop/Debunk/erdos386"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Desktop/ML/Burgerkrieg"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Desktop/ML/Glaubenskrieg"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Desktop/ML/Hoffnung"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Desktop/ML/Teddy"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Desktop/ML/stock_data"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Desktop/ML/stock_data/stock_market_analysis"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Desktop/c++/Newton"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Desktop/go-projects/Today"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Desktop/go-projects/bl"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Documents/Obsidian Vault"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Documents/Obsidian Vault/Biology"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Documents/Obsidian Vault/Math/Graph_Theory"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/German_0518"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/German_0520"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/German_0601"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/German_0603"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/On Democratic Backsliding"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/The Behavior of Stock-Market Prices"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/The Chinese Advantage in Emergency Law"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/opencode"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/read_later"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/read_later/anthropics_papers"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/read_later/ilya_papers"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Downloads/read_later/量化投资与机器学习/股票预测"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/Tangaria"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/USACO"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/USACO/pointer_problems"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/prompt_boilerplates"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/rdict"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/works/记录"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/works/阐述"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/works/阐述/Glaubenskrieg论文"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/works/阐述/Glaubenskrieg论文/figures"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/works/阐述/Locke论文"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/works/阐述/关于LLM的语言习得与乔姆斯基理论/arxiv版"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/works/阐述/关于LLM的语言习得与乔姆斯基理论/latex_minds_and_machines_source"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/works/阐述/关于LLM的语言习得与乔姆斯基理论/minds and machines版"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/高一/德语/BNTA/German_0520"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/高一/英语/Literature/Lit_practice_0525"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/高一/英语/雅思2/composition_B/report0515"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/高一/英语/雅思2/composition_C"]
+trust_level = "trusted"
+
+[projects."/home/xieguiawu/高一/语文/composition"]
+trust_level = "trusted"
+
+[snapshots]
+enabled = true
+max_age_days = 1
