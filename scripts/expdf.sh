@@ -7,6 +7,14 @@ if [ $# -ne 4 ]; then
     exit 1
 fi
 
+# 检查 qpdf 是否安装
+if ! command -v qpdf &>/dev/null; then
+    echo "错误: 未找到 qpdf 命令，请先安装 qpdf"
+    echo "例如: sudo apt install qpdf   # Debian/Ubuntu"
+    echo "      sudo dnf install qpdf   # Fedora"
+    exit 1
+fi
+
 WHICHFILE=$1
 FROM=$2
 ENDINGPAGE=$3
@@ -24,6 +32,12 @@ if ! [[ "$FROM" =~ ^[0-9]+$ ]] || ! [[ "$ENDINGPAGE" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
+# 验证起始页不大于结束页
+if [ "$FROM" -gt "$ENDINGPAGE" ]; then
+    echo "错误: 起始页 ($FROM) 不能大于结束页 ($ENDINGPAGE)"
+    exit 1
+fi
+
 # 检查输出文件名是否包含 .pdf 扩展名
 if [[ "$OUTPUTNAME" != *.pdf ]]; then
     echo "警告: 输出文件名不包含 .pdf 扩展名，已自动添加"
@@ -31,7 +45,7 @@ if [[ "$OUTPUTNAME" != *.pdf ]]; then
 fi
 
 echo "正在从 '$WHICHFILE' 提取第 $FROM 到 $ENDINGPAGE 页到 '$OUTPUTNAME' ..."
-qpdf "$WHICHFILE" --pages . $FROM-$ENDINGPAGE -- "$OUTPUTNAME" 2>/dev/null
+qpdf "$WHICHFILE" --pages . "$FROM-$ENDINGPAGE" -- "$OUTPUTNAME"
 
 if [ $? -eq 0 ]; then
     echo "成功: PDF 页面提取完成，输出文件: $OUTPUTNAME"
