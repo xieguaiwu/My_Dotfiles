@@ -7,7 +7,7 @@
   "collapseChangelog": true,
   "quietStartup": true,
   "enableInstallTelemetry": false,
-  "lastChangelogVersion": "0.78.1",
+  "lastChangelogVersion": "0.79.1",
   "packages": [
     "git:https://github.com/awtotty/pi-opencode.git",
     "npm:pi-mcp-adapter",
