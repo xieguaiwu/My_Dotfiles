@@ -3,7 +3,7 @@ name: hephaestus
 description: Master builder. Crafts robust implementations from plans, writes clean code, and handles the full build-test cycle.
 model: deepseek/deepseek-v4-pro
 fallbackModels: opencode-go/deepseek-v4-pro
-thinking: high
+thinking: xhigh
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
 ---
