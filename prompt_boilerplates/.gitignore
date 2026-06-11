@@ -1,0 +1,28 @@
+# 编译产物
+*.pdf
+*.log
+*.aux
+*.out
+*.toc
+*.synctex.gz
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.dvi
+
+# 缓存
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+
+# 二进制/生成文件
+*.apkg
+*.zip
+*.exe
+
+# 临时文件
+*.swp
+*.swo
+*~
