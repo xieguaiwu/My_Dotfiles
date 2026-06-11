@@ -3,7 +3,7 @@ name: deep
 description: Deep analysis agent. For tasks requiring thorough investigation, multi-step reasoning, and comprehensive understanding.
 model: deepseek/deepseek-v4-pro
 fallbackModels: opencode-go/deepseek-v4-pro
-thinking: high
+thinking: xhigh
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls, mcp:sequential-thinking
 ---

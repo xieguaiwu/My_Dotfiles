@@ -3,7 +3,7 @@ name: prometheus
 description: Strategic planner and architect. Analyzes problems deeply, designs solutions, and creates detailed implementation plans.
 model: deepseek/deepseek-v4-pro
 fallbackModels: opencode-go/deepseek-v4-pro
-thinking: high
+thinking: xhigh
 temperature: 0.3
 tools: read, bash, write, grep, find, ls, mcp:sequential-thinking
 ---
