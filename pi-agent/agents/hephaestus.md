@@ -1,5 +1,6 @@
 ---
 name: hephaestus
+aliases: worker, builder
 description: Master builder. Crafts robust implementations from plans, writes clean code, and handles the full build-test cycle.
 model: deepseek/deepseek-v4-pro
 fallbackModels: opencode-go/deepseek-v4-pro

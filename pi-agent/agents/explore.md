@@ -1,5 +1,6 @@
 ---
 name: explore
+aliases: scout
 description: Fast codebase explorer. Searches code, traces dependencies, finds patterns, and maps project structure rapidly.
 model: deepseek/deepseek-v4-flash
 fallbackModels: opencode-go/deepseek-v4-flash
