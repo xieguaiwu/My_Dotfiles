@@ -1,5 +1,6 @@
 ---
 name: prometheus
+aliases: planner
 description: Strategic planner and architect. Analyzes problems deeply, designs solutions, and creates detailed implementation plans.
 model: deepseek/deepseek-v4-pro
 fallbackModels: opencode-go/deepseek-v4-pro
