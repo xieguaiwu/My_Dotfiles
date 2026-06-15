@@ -34,8 +34,10 @@ subagent { tasks: [
 subagent { chain: [
   { agent: "agent-a", task: "first step for {task}" },
   { agent: "agent-b", task: "next step based on {previous}" }
-]}
+], clarify: false }
 ```
+
+> Always pass `clarify: false` to skip the interactive TUI. See rule #8 in Cross-Agent Guidelines.
 
 ## When to Delegate vs. Direct
 - **Direct**: Single-file edits, simple questions, known-syntax answers
