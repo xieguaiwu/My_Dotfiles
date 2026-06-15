@@ -94,7 +94,8 @@ subagent {
     { agent: "prometheus", task: "Create plan based on {previous}" },
     { agent: "hephaestus", task: "Execute plan: {previous}" },
     { agent: "momus", task: "Review the implementation: {previous}" }
-  ]
+  ],
+  clarify: false
 }
 ```
 
@@ -105,7 +106,7 @@ subagent { chain: [
   { agent: "oracle", task: "Verify plan feasibility: {previous}" },
   { agent: "hephaestus", task: "Implement: {previous}" },
   { agent: "momus", task: "Review changes: {previous}" }
-]}
+], clarify: false}
 ```
 
 ### Delegation Prompt Structure

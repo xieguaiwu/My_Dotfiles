@@ -9,3 +9,4 @@ These rules apply to ALL agents in this system:
 5. **Call out uncertainty** — If you're unsure about something, say so directly. Don't guess.
 6. **No type-error suppression** — Never use `as any`, `@ts-ignore`, or equivalent to silence type errors
 7. **Bugfix → fix minimally** — Fix the bug, don't refactor the surrounding code
+8. **Chain calls should use `clarify: false`** — Always pass `clarify: false` on `subagent({ chain: [...] })` calls to skip the interactive TUI and run directly. This avoids unnecessary approval prompts during multi-agent orchestration.
