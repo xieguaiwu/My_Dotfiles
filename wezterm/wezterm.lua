@@ -9,31 +9,48 @@ wezterm.on("gui-startup", function(cmd) -- set startup Window position
     window:gui_window():set_position(1000, 1000)
 end)
 
--- 低电量自动切换纯黑背景
+-- 低电量自动切换纯黑背景（优化：缓存电池信息，减少 sysfs 读取频率）
+local last_battery_check = 0
+local cached_low_battery = false
+
 wezterm.on("update-right-status", function(window, pane)
+    -- 每 10 次调用（约 10 秒）才读一次电池，避免频繁读 sysfs
+    last_battery_check = last_battery_check + 1
+    if last_battery_check < 10 then
+        -- 如果之前已触发低电量模式且仍处于放电状态，维持
+        if cached_low_battery then
+            -- 每 10 秒仍然检查一次
+            return
+        end
+        return
+    end
+    last_battery_check = 0
+
     local battery_info = wezterm.battery_info()
     if not battery_info or #battery_info == 0 then
-        return  -- 无电池信息（台式机等）
+        return
     end
 
     local battery = battery_info[1]
-    local charge = battery.state_of_charge  -- 0.0 ~ 1.0
-    local state = battery.state  -- "Charging", "Discharging", "Empty", "Full", "Unknown"
+    local charge = battery.state_of_charge
+    local state = battery.state
 
-    local LOW_THRESHOLD = 0.15  -- 15% 电量阈值
-    if charge <= LOW_THRESHOLD and state == "Discharging" then
-        window:set_config_overrides({
-            colors = {
-                background = "#000000",
-                tab_bar = {
+    local is_low = charge <= 0.15 and state == "Discharging"
+    if is_low ~= cached_low_battery then
+        cached_low_battery = is_low
+        if is_low then
+            window:set_config_overrides({
+                colors = {
                     background = "#000000",
+                    tab_bar = {
+                        background = "#000000",
+                    },
                 },
-            },
-            window_background_opacity = 1.0,
-        })
-    else
-        -- 恢复默认配置
-        window:set_config_overrides({})
+                window_background_opacity = 1.0,
+            })
+        else
+            window:set_config_overrides({})
+        end
     end
 end)
 
@@ -42,7 +59,7 @@ local config = {
     -- 也可以选 "SteadyBar" （竖条但不闪烁）
     -- 其它可选项有：Block, BlinkingBlock, SteadyBlock, Underline, SteadyUnderline, BlinkingUnderline
     force_reverse_video_cursor = true,
-    check_for_updates = true,
+    check_for_updates = false,
     font_size = 16,
     -- font = wezterm.font("JetBrains MonoNL Font Mono", { weight = "Regular" }),
     -- font = wezterm.font("Hack Nerd Font", { weight = "Regular" }),
