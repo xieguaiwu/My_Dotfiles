@@ -124,6 +124,37 @@
         }
       ]
     },
+    "volcengine": {
+      "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
+      "api": "openai-completions",
+      "apiKey": "$VOLCENGINE_API_KEY",
+      "models": [
+        {
+          "id": "doubao-seed-2-0-pro-260215",
+          "name": "Doubao Seed 2.0 Pro",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 256000,
+          "maxTokens": 128000
+        },
+        {
+          "id": "doubao-seed-2-0-lite-260428",
+          "name": "Doubao Seed 2.0 Lite",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 256000,
+          "maxTokens": 128000
+        },
+        {
+          "id": "doubao-seed-1-6-vision-250815",
+          "name": "Doubao Seed 1.6 Vision",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 256000,
+          "maxTokens": 32000
+        }
+      ]
+    },
     "modelscope": {
       "baseUrl": "https://api-inference.modelscope.cn/v1",
       "api": "openai-completions",
