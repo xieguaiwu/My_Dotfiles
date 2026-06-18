@@ -45,6 +45,10 @@ interface RalphState {
   oracleFeedback: string;
   /** @since 2.0 — 当前审查尝试次数 */
   reviewAttempt: number;
+  /** @since 2.1 — 创建该循环的 session ID，防止跨 session 穿行 */
+  sessionId?: string;
+  /** @since 2.1 — 创建该循环的工作目录，用于 session 隔离校验 */
+  cwd?: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────
@@ -171,12 +175,40 @@ function wasLastUserMessageFromRalph(branch: readonly any[]): boolean {
   return false;
 }
 
+// ─── Session 隔离校验 ─────────────────────────────────────────────
+
+function getSessionId(ctx: ExtensionContext): string {
+  try {
+    return ctx.sessionManager.getSessionId() ?? "";
+  } catch { return ""; }
+}
+
+/** 检查 ralph state 是否属于当前 session，若不属则自动清除 */
+function claimOrClearState(ctx: ExtensionContext): RalphState | null {
+  const state = loadState();
+  if (!state || !state.active) return null;
+
+  // 无 sessionId 的旧状态 → 视为孤儿，清除
+  if (!state.sessionId) {
+    clearState();
+    return null;
+  }
+
+  // sessionId 不匹配 → 其他 session 的 loop，不清除（保留给原 session），忽略
+  const currentSessionId = getSessionId(ctx);
+  if (state.sessionId !== currentSessionId) {
+    return null;
+  }
+
+  return state;
+}
+
 // ─── Loop: Turn End Hook ──────────────────────────────────────────
 
 function setupLoopHook(pi: ExtensionAPI): void {
   pi.on("turn_end", (_event, ctx) => {
-    const state = loadState();
-    if (!state || !state.active) return;
+    const state = claimOrClearState(ctx);
+    if (!state) return;
 
     // 只有 ralph 自己触发的轮次才自动继续（避免劫持用户手动输入）
     if (state.iterations > 0) {
@@ -318,8 +350,9 @@ function makeState(
   promise: string | null,
   max: number,
   ultrawork: boolean,
+  ctx?: ExtensionContext,
 ): RalphState {
-  return {
+  const state: RalphState = {
     active: true,
     prompt,
     completionPromise: promise,
@@ -332,6 +365,12 @@ function makeState(
     oracleFeedback: "",
     reviewAttempt: 0,
   };
+  // 记录 session 凭证，防止跨 session 穿行
+  if (ctx) {
+    try { state.sessionId = ctx.sessionManager.getSessionId() ?? undefined; } catch {}
+    try { state.cwd = ctx.cwd ?? undefined; } catch {}
+  }
+  return state;
 }
 
 // ─── Extension Entry ──────────────────────────────────────────────
@@ -350,7 +389,7 @@ export default function (pi: ExtensionAPI) {
       }
 
       const { prompt, promise, max } = parseArgs(args);
-      const state = makeState(prompt, promise, max, false);
+      const state = makeState(prompt, promise, max, false, ctx);
       saveState(state);
 
       const promiseNote = promise ? `promise: "${promise}"` : "no completion promise";
@@ -383,7 +422,7 @@ Task: ${prompt}`;
       }
 
       const { prompt, promise, max } = parseArgs(args);
-      const state = makeState(prompt, promise, max, true);
+      const state = makeState(prompt, promise, max, true, ctx);
       saveState(state);
 
       const promiseNote = promise ? `promise: "${promise}"` : "no completion promise";
@@ -411,8 +450,8 @@ ${state.completionPromise ? `\nWhen COMPLETELY done, output: <promise>${state.co
   pi.registerCommand("ralph-status", {
     description: "Show current Ralph loop status",
     handler: async (_args, ctx) => {
-      const state = loadState();
-      if (!state || !state.active) {
+      const state = claimOrClearState(ctx);
+      if (!state) {
         ctx.ui.notify("No active Ralph loop", "info");
         return;
       }
@@ -431,8 +470,8 @@ ${state.completionPromise ? `\nWhen COMPLETELY done, output: <promise>${state.co
   pi.registerCommand("cancel-ralph", {
     description: "Cancel the active Ralph loop",
     handler: async (_args, ctx) => {
-      const state = loadState();
-      if (!state?.active) {
+      const state = claimOrClearState(ctx);
+      if (!state) {
         ctx.ui.notify("No active Ralph loop to cancel", "info");
         return;
       }
@@ -449,8 +488,8 @@ ${state.completionPromise ? `\nWhen COMPLETELY done, output: <promise>${state.co
   pi.registerShortcut("alt+r", {
     description: "Show Ralph loop status",
     handler: async (ctx) => {
-      const state = loadState();
-      if (!state?.active) {
+      const state = claimOrClearState(ctx);
+      if (!state) {
         ctx.ui.notify("No active Ralph loop", "info");
         return;
       }

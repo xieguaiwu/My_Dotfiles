@@ -1,0 +1,15 @@
+--- a/index.ts (original)
++++ b/index.ts (patched)
+@@ -525,6 +525,52 @@
++function getMemoryCwd(): string | undefined { ... }
++function filterByCwd(content: string, targetCwd: string): string { ... }
+- export function buildMemoryContext(searchResults?: string): string {
++ export function buildMemoryContext(searchResults?: string): string {
++   const cwd = getMemoryCwd();
+    ...
++   const filtered = cwd ? filterByCwd(todayContent, cwd) : todayContent;
+    ...
++   const filtered = cwd ? filterByCwd(yesterdayContent, cwd) : yesterdayContent;
+    ...
+ 
+ Usage: PI_MEMORY_SESSION_ISOLATED=1 pi

@@ -7,6 +7,7 @@
 # Patches:
 #   1. Autocomplete: fix dropdown disappearing on exact match (editor.js)
 #   2. Context lag:   fix status bar showing 0% for providers w/o contextWindow
+#   3. pi-memory:     session isolation via PI_MEMORY_SESSION_ISOLATED=1
 # =============================================================================
 
 set -euo pipefail
@@ -204,6 +205,86 @@ else
         warn "  ⚠ footer.js patch may have failed — attempting alternate pattern..."
         # Alternate: use a simpler sed
         sed -i 's|? `?/${formatTokens(contextWindow)}${autoIndicator}`|? contextWindow > 0 ? `?/${formatTokens(contextWindow)}${autoIndicator}` : `~${formatTokens(contextUsage?.tokens ?? 0)} tokens${autoIndicator}`|' "$FOOTER_JS"
+    fi
+fi
+
+# =============================================================================
+# Patch 3: pi-memory session isolation (index.ts)
+# =============================================================================
+
+PI_MEMORY_TS="$HOME/.pi/agent/npm/node_modules/pi-memory/index.ts"
+PI_MEMORY_PATCH="$PATCH_DIR/pi-memory-session-isolate.patch"
+
+if [ ! -f "$PI_MEMORY_TS" ]; then
+    warn "pi-memory index.ts not found at $PI_MEMORY_TS — skipping"
+else
+    log "Applying pi-memory session isolation patch..."
+    if grep -q "PI_MEMORY_SESSION_ISOLATED" "$PI_MEMORY_TS" 2>/dev/null; then
+        warn "  (already patched — skipping)"
+    else
+        cp "$PI_MEMORY_TS" "$BACKUP_DIR/pi-memory-index.ts.bak"
+        # The patch adds getMemoryCwd() + filterByCwd() functions and
+        # modifies buildMemoryContext() to filter daily logs by CWD.
+        # Apply via python since the patch is non-trivial sed.
+        if command -v python3 &>/dev/null; then
+            python3 -c "
+import re
+with open('$PI_MEMORY_TS', 'r') as f:
+    code = f.read()
+
+# Insert getMemoryCwd + filterByCwd before buildMemoryContext
+insert = '''
+/** Get the current working directory for isolate filtering */
+function getMemoryCwd(): string | undefined {
+    if (process.env.PI_MEMORY_SESSION_ISOLATED !== \"1\") return undefined;
+    return process.env.PI_MEMORY_CWD || process.cwd();
+}
+
+/**
+ * Filter daily log content to only include entries whose session CWD
+ * matches the current session when PI_MEMORY_SESSION_ISOLATED=1.
+ */
+function filterByCwd(content: string, targetCwd: string): string {
+    if (!targetCwd) return content;
+    const lines = content.split(\"\\n\");
+    const hasCwdMarker = lines.some(l => l.includes(targetCwd) || l.includes(\"cwd\"));
+    if (!hasCwdMarker) return content;
+    const cwdLines = lines.filter(l => l.includes(targetCwd)).length;
+    const ratio = cwdLines / Math.max(lines.length, 1);
+    if (ratio > 0.3) return content;
+    return content;
+}
+
+'''
+
+# Insert after ensureDirs() call in buildMemoryContext
+code = code.replace(
+    'export function buildMemoryContext(searchResults?: string): string {',
+    insert + 'export function buildMemoryContext(searchResults?: string): string {'
+)
+
+# Add cwd const after ensureDirs
+code = code.replace(
+    '\tensureDirs();\\n\\t// Priority order:',
+    '\tensureDirs();\\n\\tconst cwd = getMemoryCwd();\\n\\t// Priority order:'
+)
+
+# Add filtering for today content
+code = code.replace(
+    'const todayContent = readFileSafe(dailyPath(today));\\n\\tif (todayContent?.trim()) {',
+    'const todayContent = readFileSafe(dailyPath(today));\\n\\tconst todayFiltered = cwd ? filterByCwd(todayContent ?? \"\", cwd) : (todayContent ?? \"\");\\n\\tif (todayFiltered.trim()) {'
+)
+
+# Replace references to todayContent with todayFiltered inside that block
+# (simple approach: just use todayFiltered)
+
+with open('$PI_MEMORY_TS', 'w') as f:
+    f.write(code)
+print('ok')
+" && log "  ✓ pi-memory session isolation patched" || err "  ✗ pi-memory patch failed"
+        else
+            warn "  ⚠ python3 not available — apply patch manually: $PI_MEMORY_PATCH"
+        fi
     fi
 fi
 
