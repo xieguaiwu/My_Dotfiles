@@ -7,6 +7,7 @@ set -gx OPENCODE_API_KEY "<your-opencode-api-key>"
 set -gx DEEPSEEK_API_KEY "<your-deepseek-api-key>"
 set -gx NVIDIA_API_KEY "<your-nvidia-api-key>"
 set -gx MODELSCOPE_API_KEY "<your-modelscope-api-key>"
+set -gx VOLCENGINE_API_KEY "<your-volcengine-api-key>"
 
 tirith init
 /usr/bin/starship init fish --print-full-init | source
@@ -28,6 +29,9 @@ end
 set -gx EDITOR nvim
 set -gx VISUAL nvim
 set -gx DOOMWADPATH /home/xieguiawu/doom
+
+# Node.js 内存上限 3GB — 防止 pi agent OOM 崩溃
+set -gx NODE_OPTIONS "--max-old-space-size=3072"
 
 # ==== 常用别名 ====
 alias ll='ls -lh'
@@ -154,3 +158,7 @@ function piu
     echo "→ Reapplying local patches..."
     bash ~/.pi/patches/reapply.sh
 end
+
+# bun
+set --export BUN_INSTALL "$HOME/.bun"
+set --export PATH $BUN_INSTALL/bin $PATH

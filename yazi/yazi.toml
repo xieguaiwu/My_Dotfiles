@@ -1,7 +1,3 @@
-# A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
-# If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
-"$schema" = "https://yazi-rs.github.io/schemas/yazi.json"
-
 [mgr]
 linemode = "size_and_mtime"
 ratio = [1, 3, 2]
@@ -22,32 +18,32 @@ ueberzug_scale = 1
 
 [opener]
 edit = [
-  { run = 'nvim "$@"', block = true, for = "macos" },
-  { run = 'nvim "$@"', block = true, for = "unix" },
-  { run = 'code "%*"', orphan = true, for = "windows" },
+  { run = 'nvim %s', block = true, for = "macos" },
+  { run = 'nvim %s', block = true, for = "unix" },
+  { run = 'code %s', orphan = true, for = "windows" },
 ]
 extract = [
-  { run = 'unar "$1"', desc = "Extract here", for = "unix" },
-  { run = 'unar "%1"', desc = "Extract here", for = "windows" },
+  { run = 'unar %s1', desc = "Extract here", for = "unix" },
+  { run = 'unar %s1', desc = "Extract here", for = "windows" },
 ]
 open = [
-  { run = 'xdg-open "$@"', desc = "Open", for = "linux" },
-  { run = 'open "$@"', desc = "Open", for = "macos" },
-  { run = 'start "" "%1"', orphan = true, desc = "Open", for = "windows" },
+  { run = 'xdg-open %s', desc = "Open", for = "linux" },
+  { run = 'open %s', desc = "Open", for = "macos" },
+  { run = 'start "" %s1', orphan = true, desc = "Open", for = "windows" },
 ]
 play = [
-  { run = 'mpv --vo=libmpv --geometry=50% --no-border --focus-on=open --mute=yes "$@"', orphan = true, for = "unix" },
-  { run = 'mpv "%1"', orphan = true, for = "windows" },
-  { run = '''mediainfo "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show media info", for = "unix" },
+  { run = 'mpv --vo=libmpv --geometry=50% --no-border --focus-on=open --mute=yes %s', orphan = true, for = "unix" },
+  { run = 'mpv %s1', orphan = true, for = "windows" },
+  { run = '''mediainfo %s1; echo "Press enter to exit"; read''', block = true, desc = "Show media info", for = "unix" },
 ]
 reveal = [
-  { run = 'open -R "$1"', desc = "Reveal", for = "macos" },
-  { run = 'explorer /select, "%1"', orphan = true, desc = "Reveal", for = "windows" },
-  { run = '''exiftool "$1"; echo "Press enter to exit"; read''', block = true, desc = "Show EXIF", for = "unix" },
+  { run = 'open -R %s1', desc = "Reveal", for = "macos" },
+  { run = 'explorer /select, %s1', orphan = true, desc = "Reveal", for = "windows" },
+  { run = '''exiftool %s1; echo "Press enter to exit"; read''', block = true, desc = "Show EXIF", for = "unix" },
 ]
-rootbrowse = [{ run = 'rootbrowse "$1"', orphan = true, for = "unix" }]
-root = [{ run = '~/dotfiles/scripts/run_root_macro.sh "$1"', for = "unix", desc = "root -l" }]
-sioyek = [{ run = 'sioyek "$1"', orphan = true, for = "unix" }]
+rootbrowse = [{ run = 'rootbrowse %s1', orphan = true, for = "unix" }]
+root = [{ run = '~/dotfiles/scripts/run_root_macro.sh %s1', for = "unix", desc = "root -l" }]
+sioyek = [{ run = 'sioyek %s1', orphan = true, for = "unix" }]
 
 [open]
 prepend_rules = [
@@ -55,10 +51,10 @@ prepend_rules = [
     "sioyek",
     "reveal",
   ] },
-  { name = "*.root", use = [
+  { url = "*.root", use = [
     "rootbrowse",
   ] },
-  { name = "*.C", use = [
+  { url = "*.C", use = [
     "root",
   ] },
 ]
@@ -67,19 +63,22 @@ prepend_rules = [
 bizarre_retry = 5
 image_alloc = 536870912  # 512MB
 image_bound = [0, 0]
-macro_workers = 25
-micro_workers = 10
+file_workers = 10
+plugin_workers = 10
+fetch_workers = 5
+preload_workers = 10
+process_workers = 5
 suppress_preload = false
 
 [plugin]
 prepend_preloaders = [
-  { name = "${HOME}/patricorgi/SSHFS/**", run = "noop" },
-  { name = "/Volumes/**", run = "noop" },
+  { url = "${HOME}/patricorgi/SSHFS/**", run = "noop" },
+  { url = "/Volumes/**", run = "noop" },
   { mime = 'application/pdf', run = "noop" },
 ]
-prepend_previewers = [{ name = "${HOME}/patricorgi/SSHFS/**", run = "noop" }]
+prepend_previewers = [{ url = "${HOME}/patricorgi/SSHFS/**", run = "noop" }]
 previewers = [
-  { name = "*/", run = "folder", sync = true },
+  { url = "*/", run = "folder" },
   # Code
   { mime = "text/*", run = "code" },
   { mime = "*/xml", run = "code" },
@@ -88,7 +87,7 @@ previewers = [
   # JSON
   { mime = "application/json", run = "json" },
   # Image
-  { mime = "image/vnd.djvu", run = "noop" },
+  { mime = "image/djvu", run = "noop" },
   { mime = "image/*", run = "image" },
   # Video
   { mime = "video/*", run = "video" },

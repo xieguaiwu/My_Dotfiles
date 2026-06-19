@@ -1,4 +1,5 @@
 {
+  "/home/xieguiawu": true,
   "/home/xieguiawu/BOOKS/汉语文学/黄锦树/大象死去的河边": true,
   "/home/xieguiawu/Desktop/ML": true,
   "/home/xieguiawu/Desktop/ML/Four-Yorkshiremen-Models": true,
@@ -9,6 +10,10 @@
   "/home/xieguiawu/Documents/Obsidian Vault/Math/Linear_Algebra": true,
   "/home/xieguiawu/Downloads/GK_paper_supplementary": true,
   "/home/xieguiawu/Downloads/GK_paper_supplementary/Martin-ParallelizingLinearRNNs": true,
+  "/home/xieguiawu/Downloads/Information-Coefficient/Information Coefficient as a Performance Measure of Stock Selection Models": true,
+  "/home/xieguiawu/Downloads/Sharp_Paradox/All that glitters is not gold": true,
+  "/home/xieguiawu/Downloads/Sharp_Paradox/When Alpha Disappears A One Switch Benchmark": true,
+  "/home/xieguiawu/Downloads/Stock market trend prediction using deep neural network via chart analysis": true,
   "/home/xieguiawu/Downloads/The Behavior of Stock-Market Prices": true,
   "/home/xieguiawu/Downloads/The Statistics of Statistical Arbitrage": true,
   "/home/xieguiawu/Downloads/Theory of Speculation": true,
@@ -18,5 +23,6 @@
   "/home/xieguiawu/prompt_boilerplates": true,
   "/home/xieguiawu/works/记录": true,
   "/home/xieguiawu/works/阐述/Glaubenskrieg论文": true,
-  "/home/xieguiawu/works/阐述/Teddy论文": true
+  "/home/xieguiawu/works/阐述/Teddy论文": true,
+  "/home/xieguiawu/高一/语文/composition": true
 }
