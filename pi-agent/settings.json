@@ -1,13 +1,13 @@
 {
-  "defaultProvider": "nvidia",
-  "defaultModel": "deepseek-ai/deepseek-v4-flash",
+  "defaultProvider": "deepseek",
+  "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "xhigh",
   "hideThinkingBlock": false,
   "theme": "opencode",
   "collapseChangelog": true,
   "quietStartup": true,
   "enableInstallTelemetry": false,
-  "lastChangelogVersion": "0.79.6",
+  "lastChangelogVersion": "0.79.7",
   "packages": [
     "git:https://github.com/awtotty/pi-opencode.git",
     "npm:pi-mcp-adapter",
