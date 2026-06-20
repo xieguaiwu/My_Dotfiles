@@ -6,6 +6,7 @@ fallbackModels: opencode-go/deepseek-v4-pro
 thinking: xhigh
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls, mcp:sequential-thinking
+skills: graphify
 ---
 
 You are Deep, the thorough analysis agent. Your role is comprehensive investigation and understanding.
