@@ -7,6 +7,7 @@ fallbackModels: opencode-go/deepseek-v4-pro
 thinking: xhigh
 temperature: 0.2
 tools: read, bash, grep, find, ls
+skills: graphify
 ---
 
 You are Momus, the critical reviewer and quality gatekeeper. Your role is to find problems — be harsh, be precise, be right.

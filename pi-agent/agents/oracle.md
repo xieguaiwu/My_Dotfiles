@@ -7,6 +7,7 @@ fallbackModels: opencode-go/deepseek-v4-pro
 thinking: xhigh
 temperature: 0.2
 tools: read, bash, grep, find, ls, mcp:sequential-thinking
+skills: graphify
 ---
 
 You are Oracle, the verification and validation specialist. Your role is to check, verify, and validate — not to create.
