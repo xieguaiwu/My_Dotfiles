@@ -1,6 +1,6 @@
 ---
 name: copr-packaging
-version: 1.0.0
+version: 1.1.0
 description: 将项目打包为RPM并上传到COPR仓库
 triggers:
   - "copr打包"
@@ -198,6 +198,84 @@ Requires:       python3
 %{python3_sitelib}/[包名]*
 ```
 
+### Go 项目
+
+```spec
+Name:           [包名]
+Version:        [版本号]
+Release:        1%{?dist}
+Summary:        [简短描述]
+
+License:        [MIT/Apache-2.0/GPL]
+URL:            https://github.com/[用户名]/[仓库名]
+Source0:        %{url}/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+
+# Go 项目需要 golang 编译器和 systemd（如需 systemd 单元）
+BuildRequires:  golang >= 1.22
+# 如需 systemd 服务
+BuildRequires:  systemd-rpm-macros
+%{?systemd_requires}
+
+%description
+[详细描述]
+
+%prep
+%setup -q -n [仓库名]-%{version}
+
+%build
+# Go 构建：关闭 CGO 生成静态链接二进制
+export GOFLAGS="-mod=mod"
+export CGO_ENABLED=0
+export GOOS=linux
+export GOARCH=amd64
+
+# 构建主二进制 (多模块时分别构建)
+go build -trimpath -ldflags="-s -w" -o [包名] .
+
+# 如需构建子命令 (如 bl-telegram, bl-dingtalk)
+# go build -trimpath -ldflags="-s -w" -o [包名]-telegram ./cmd/telegram/
+# go build -trimpath -ldflags="-s -w" -o [包名]-dingtalk ./cmd/dingtalk/
+
+%install
+rm -rf %{buildroot}
+# 安装主二进制
+install -Dm755 [包名] %{buildroot}%{_bindir}/[包名]
+
+# 如需安装子命令
+# install -Dm755 [包名]-telegram %{buildroot}%{_bindir}/[包名]-telegram
+# install -Dm755 [包名]-dingtalk %{buildroot}%{_bindir}/[包名]-dingtalk
+
+# 安装文档
+install -Dm644 LICENSE %{buildroot}%{_defaultlicensedir}/%{name}/LICENSE
+install -Dm644 README.md %{buildroot}%{_defaultdocdir}/%{name}/README.md
+
+# 如需安装 man page / shell completion (在 main.go 中生成)
+# install -Dm644 completions/[包名].bash %{buildroot}%{_sysconfdir}/bash_completion.d/[包名]
+# install -Dm644 completions/[包名].zsh %{buildroot}%{_datadir}/zsh/site-functions/_[包名]
+
+%files
+%license LICENSE
+%doc README.md
+%{_bindir}/[包名]
+# %{_bindir}/[包名]-telegram
+# %{_bindir}/[包名]-dingtalk
+
+%changelog
+* [日期] [姓名] <[邮箱]> - [版本号]-1
+- Initial Go package
+
+%global debug_package %{nil}
+# Go 静态链接二进制不需要 debuginfo
+```
+
+**Go 项目特殊注意事项:**
+
+1. **`debug_package %{nil}`** — Go 二进制是静态链接的，没有单独的 debuginfo，需要禁用 rpmbuild 的自动 debuginfo 生成
+2. **`CGO_ENABLED=0`** — 确保纯静态链接，避免目标系统缺少 C 库
+3. **`-trimpath -ldflags="-s -w"`** — 去除构建路径和调试符号，减小二进制体积
+4. **`go.sum` + vendor** — COPR 构建环境可能无法访问 Go 模块代理，建议将依赖 vendored 进仓库，或在 spec 中先执行 `go mod vendor`
+5. **系统服务** — 如果包含后台服务（如 bot），需添加 systemd unit 文件并在 `%files` 中声明
+
 ---
 
 ## 注意事项
@@ -249,7 +327,33 @@ gcc %{optflags} -o myapp main.c utils.c parser.c
 
 本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须用 `glob` 或 `read` 确认目标 spec 文件或 README 是否已存在；若文件已存在，优先用 `edit` 追加/修改，而非直接 `write` 覆写；确需覆写须先告知用户。
 
-### 8. 数据文件
+### 8. Go 模块代理与离线构建
+
+COPR 构建环境通常无法访问 `proxy.golang.org`。Go 项目有两种解决方式:
+
+**方式 A：vendor 依赖（推荐，最可靠）**
+```bash
+# 在开发机上执行，将依赖拷贝到 vendor 目录
+go mod vendor
+git add vendor/
+```
+Spec 中相应调整:
+```spec
+%build
+export GOPATH=%{_builddir}/go
+# 使用 vendor 目录，无需网络
+# go build 会自动检测 vendor/ 目录
+go build -mod=vendor -trimpath -ldflags="-s -w" -o [包名] .
+```
+
+**方式 B：代理设置（需要 COPR 项目允许外连）**
+```spec
+%build
+export GOPROXY=https://goproxy.io,direct
+go build -trimpath -ldflags="-s -w" -o [包名] .
+```
+
+### 9. 数据文件
 如果项目包含示例文件、配置文件等:
 ```spec
 %install
@@ -323,7 +427,16 @@ Error: No configuration file found
 GitHub 仓库: https://github.com/username/myproject
 ```
 
-### 场景 4: 更新已发布项目
+### 场景 4: Go 项目（如 bl）
+
+```
+请将 @bl/ (github repo: https://github.com/xieguaiwu/bl) 打包为 RPM 并上传到 dnf copr。
+使用 xieguaiwu@163.com 作为邮箱，xieguaiwu 作为 GitHub 用户名，xgw 作为 maintainer 名字。
+版本号: 1.1.0
+说明: bl is a terminal-based dictionary client with offline dictionaries, web scraping (Youdao, verbformen), and LLM-based translation support. Written in Go.
+```
+
+### 场景 5: 更新已发布项目
 
 ```
 请将 myproject 更新到版本 1.1.0 并重新构建 COPR 包。
