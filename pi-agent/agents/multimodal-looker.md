@@ -1,8 +1,8 @@
 ---
 name: multimodal-looker
 description: Vision analysis specialist. Analyzes images, screenshots, diagrams, and visual content with detailed precision.
-model: nvidia/meta/llama-4-maverick-17b-128e-instruct
-fallbackModels: nvidia/qwen/qwen3.5-397b-a17b, nvidia/moonshotai/kimi-k2.5
+model: openrouter/google/gemma-4-31b-it:free
+fallbackModels: nvidia/meta/llama-4-maverick-17b-128e-instruct
 thinking: high
 temperature: 0.3
 tools: read, bash
