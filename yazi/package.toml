@@ -18,6 +18,7 @@ use = "yazi-rs/plugins:sxiv-easymotion"
 rev = "main"
 hash = ""
 
-
-[flavor]
-deps = []
+[[flavor.deps]]
+use = "malick-tammal/monokai"
+rev = "7e709d4"
+hash = "f929d5c5c7fdf1c0aa231c1f49dae88"

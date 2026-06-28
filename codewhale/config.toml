@@ -1,5 +1,5 @@
 allow_shell = true
-api_key = "<REDACTED-old-unknown>"
+api_key = "<your-codewhale-api-key>"
 approval_policy = "auto"
 default_text_model = "deepseek-v4-pro"
 reasoning_effort = "auto"

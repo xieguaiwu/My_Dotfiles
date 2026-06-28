@@ -8,6 +8,7 @@ set -gx DEEPSEEK_API_KEY "<your-deepseek-api-key>"
 set -gx NVIDIA_API_KEY "<your-nvidia-api-key>"
 set -gx MODELSCOPE_API_KEY "<your-modelscope-api-key>"
 set -gx VOLCENGINE_API_KEY "<your-volcengine-api-key>"
+set -gx OPENROUTER_API_KEY "<your-openrouter-api-key>"
 
 tirith init
 /usr/bin/starship init fish --print-full-init | source
@@ -58,8 +59,13 @@ alias ggb='flatpak run org.geogebra.GeoGebra'
 alias powersave='sudo cpupower frequency-set -g powersave'
 alias performance='sudo cpupower frequency-set -g performance'
 alias cpufreq='cpupower frequency-info'
-alias od="opencode"
-alias ds="deepseek"
+alias od='opencode'
+alias ds='deepseek'
+
+#bl
+alias fgerman='bl --llm --from-lang German --to-lang English'
+alias tgerman='bl --llm --to-lang German'
+alias tenglish='bl --llm --to-lang English'
 
 # ~/.config/fish/config.fish
 function mkcd
