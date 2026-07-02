@@ -1,7 +1,7 @@
 ---
 name: artistry
 description: Creative specialist. Generates creative content, design concepts, and artistic outputs with expressive flair.
-model: opencode-go/deepseek-v4-pro
+model: opencode-go/deepseek-v4-flash
 fallbackModels: deepseek/deepseek-v4-pro
 thinking: high
 temperature: 0.7

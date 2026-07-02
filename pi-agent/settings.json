@@ -7,7 +7,7 @@
   "collapseChangelog": true,
   "quietStartup": true,
   "enableInstallTelemetry": false,
-  "lastChangelogVersion": "0.80.2",
+  "lastChangelogVersion": "0.80.3",
   "packages": [
     "git:https://github.com/awtotty/pi-opencode.git",
     "npm:pi-mcp-adapter",
@@ -20,7 +20,8 @@
     "npm:pi-bar",
     "npm:@jerryan/pi-todo-lite",
     "npm:pi-memory",
-    "npm:graphify-pi"
+    "npm:graphify-pi",
+    "npm:pi-prompt-template-model"
   ],
   "bar": {
     "progressModel": "default"

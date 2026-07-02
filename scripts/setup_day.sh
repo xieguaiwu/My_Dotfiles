@@ -43,7 +43,7 @@ echo ">>> 更新系统软件包..."
 if [ "$DISTRO" = "fedora" ]; then
     sudo dnf upgrade --refresh -y
     sudo dnf install -y curl git npm wget gawk node yacc fastfetch pinta wireguard-tools vlc parole glow timg qalculate
-    sudo dnf install -y clash-verge flatpak shotcut eyeD3 exiftool qpdf chromium cava openssh-server alien gnome-keyring
+    sudo dnf install -y clash-verge flatpak shotcut eyeD3 exiftool qpdf chromium cava cmus openssh-server alien gnome-keyring
     sudo dnf install -y fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk xorg-x11-font-utils cabextract
     sudo dnf install -y lld
     # Voice input for fcitx5 (local sherpa-onnx + cloud ASR, LLM post-processing)
@@ -54,14 +54,14 @@ elif [ "$DISTRO" = "kali" ]; then
     sudo apt update
     sudo apt upgrade -y
     sudo apt install -y curl git npm wget gawk nodejs fastfetch wireguard steghide vlc parole timg qalculate
-    sudo apt install -y flatpak eyed3 qpdf cava fcitx5 fcitx5-chinese-addons fcitx5-pinyin glow
+    sudo apt install -y flatpak eyed3 qpdf cava cmus fcitx5 fcitx5-chinese-addons fcitx5-pinyin glow
     sudo apt install -y lld
 else
     # 标准 Debian
     sudo apt update
     sudo apt upgrade -y
     sudo apt install -y curl git npm wget gawk nodejs fastfetch wireguard steghide vlc parole timg qalculate
-    sudo apt install -y flatpak eyed3 qpdf cava fcitx5 fcitx5-chinese-addons fcitx5-pinyin glow
+    sudo apt install -y flatpak eyed3 qpdf cava cmus fcitx5 fcitx5-chinese-addons fcitx5-pinyin glow
     sudo apt install -y lld
 fi
 
