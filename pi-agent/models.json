@@ -36,8 +36,8 @@
             "minimal": null,
             "low": null,
             "medium": "medium",
-            "high": "max",
-            "xhigh": "max"
+            "high": "high",
+            "xhigh": "xhigh"
           }
         }
       }

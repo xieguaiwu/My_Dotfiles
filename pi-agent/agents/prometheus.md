@@ -2,8 +2,8 @@
 name: prometheus
 aliases: planner
 description: Strategic planner and architect. Analyzes problems deeply, designs solutions, and creates detailed implementation plans.
-model: opencode-go/deepseek-v4-pro
-fallbackModels: deepseek/deepseek-v4-pro
+model: opencode-go/qwen3.6-plus
+fallbackModels: opencode-go/qwen3.6-plus
 thinking: xhigh
 temperature: 0.3
 tools: read, bash, write, grep, find, ls, mcp:sequential-thinking

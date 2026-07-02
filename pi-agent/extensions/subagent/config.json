@@ -1,0 +1,9 @@
+{
+  "intercomBridge": {
+    "mode": "always"
+  },
+  "parallel": {
+    "maxTasks": 8,
+    "concurrency": 4
+  }
+}

@@ -1,0 +1,68 @@
+source ~/.config/cmus/monokai.theme
+
+# ==================== 播放模式 ====================
+# 播放列表模式：按加入顺序播
+set play_library=false
+set continue=true
+set continue_album=true
+set repeat=false
+set shuffle=off
+
+# ==================== 音效 ====================
+set replaygain=smart
+set replaygain_preamp=2.0
+
+# ==================== 输出 ====================
+set output_plugin=pulse
+set softvol=true
+
+# ==================== 启动恢复 ====================
+set resume=true
+
+# ==================== 界面 ====================
+set show_playback_position=true
+set show_remaining_time=false
+set progress_bar=line
+set mouse=false
+set show_hidden=true
+set scroll_offset=2
+
+# ==================== 格式字符串 ====================
+set format_current= %a - %l%! - %02n. %t%= %{?y?(%y)} %d
+set format_playlist= %-25a %3n. %t%= %y %d
+set format_trackwin= %02n. %t%= %d
+set format_statusline= %{status} %{position} / %{duration} %= %{?repeat?🔁 }%{?shuffle?🔀 }| %{volume}%%
+
+# ==================== 树视图 ====================
+set tree_width_percent=33
+set smart_artist_sort=true
+set show_all_tracks=true
+
+# ==================== 排序 ====================
+set lib_sort=artist album discnumber tracknumber title filename
+set pl_sort=
+
+# ==================== 搜索 ====================
+set wrap_search=true
+set search_resets_position=true
+
+# ==================== 快捷键（新增实用绑定） ====================
+bind -f common w push live-filter
+bind -f common W push live-filter
+bind -f common n seek +30
+bind -f common N seek -30
+bind -f common 0 prev-view
+# 显示当前选中文件路径
+bind -f common I echo {}
+
+# ==================== 过滤器（自定义） ====================
+fset recent=date>=2024
+fset favorite=play_count>=10
+fset instrumental=genre="*Classical*"|genre="*Instrumental*"
+fset short=duration<120
+
+# ==================== 集成 ====================
+set mpris=true
+
+# ==================== 初始音量 ====================
+vol 70

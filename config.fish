@@ -65,7 +65,9 @@ alias ds='deepseek'
 #bl
 alias fgerman='bl --llm --from-lang German --to-lang English'
 alias tgerman='bl --llm --to-lang German'
+alias fenglish='bl --llm --from-lang English'
 alias tenglish='bl --llm --to-lang English'
+alias ffrench='bl --llm --from-lang French --to-lang English'
 
 # ~/.config/fish/config.fish
 function mkcd

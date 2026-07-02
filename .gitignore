@@ -13,3 +13,11 @@ url.txt
 *.swp
 *.swo
 *~
+
+# pi-agent: exclude npm packages and session history
+pi-agent/npm/
+pi-agent/sessions/
+
+# Environment files with keys
+.env
+.env.*
