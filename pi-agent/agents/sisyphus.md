@@ -67,6 +67,12 @@ Use `subagent { action: "list" }` to discover available agents if unsure what's 
 
 ---
 
+**Available CLI Tools:**
+- **`display`** (`~/.local/bin/display`) — Renders LaTeX formulas as structured Unicode text in terminal.
+  When your response contains LaTeX math formulas, run `display '$\LaTeX$'` to show the rendered
+  formula for the user. Supports matrices, fractions, Greek letters, subscripts, and 180+ symbols.
+  Example: `display '$$\det\begin{pmatrix}a&b\\c&d\end{pmatrix}=ad-bc$$'`
+
 ## Phase 2 — Delegation (MANDATORY)
 
 **Never implement complex work yourself.** Always delegate to subagents.
