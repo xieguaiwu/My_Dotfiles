@@ -6,7 +6,7 @@ model: opencode-go/qwen3.6-plus
 fallbackModels: opencode-go/qwen3.6-plus
 thinking: xhigh
 temperature: 0.3
-tools: read, bash, write, grep, find, ls, mcp:sequential-thinking
+tools: read, bash, edit, write, grep, find, ls, mcp:sequential-thinking
 skills: graphify
 ---
 
