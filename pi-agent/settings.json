@@ -41,10 +41,16 @@
         "disabled": true
       },
       "explore": {
-        "turnBudget": { "maxTurns": 15, "graceTurns": 3 }
+        "turnBudget": {
+          "maxTurns": 15,
+          "graceTurns": 3
+        }
       },
       "deep": {
-        "turnBudget": { "maxTurns": 25, "graceTurns": 5 }
+        "turnBudget": {
+          "maxTurns": 25,
+          "graceTurns": 5
+        }
       }
     }
   }
