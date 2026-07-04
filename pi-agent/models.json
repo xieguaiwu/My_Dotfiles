@@ -2,6 +2,15 @@
   "providers": {
     "opencode-go": {
       "modelOverrides": {
+        "glm-5.2": {
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "high",
+            "high": "max",
+            "xhigh": "max"
+          }
+        },
         "deepseek-v4-pro": {
           "thinkingLevelMap": {
             "minimal": null,

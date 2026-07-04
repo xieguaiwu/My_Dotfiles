@@ -2,7 +2,7 @@
 name: oracle
 aliases: oracle-builtin
 description: Verification and validation specialist. Checks correctness, catches errors, and ensures quality standards are met.
-model: opencode-go/deepseek-v4-pro
+model: opencode-go/glm-5.2
 fallbackModels: deepseek/deepseek-v4-pro
 thinking: xhigh
 temperature: 0.2

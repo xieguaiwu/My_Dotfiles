@@ -1,6 +1,5 @@
 ---
 description: Ralph Loop 委托模板 — 指定 agent 执行子任务
-model: claude-sonnet-4-20250514
 subagent: true
 inheritContext: true
 ---

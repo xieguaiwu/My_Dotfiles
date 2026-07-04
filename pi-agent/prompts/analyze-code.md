@@ -1,6 +1,5 @@
 ---
 description: 代码分析模板 — 委托给 deep agent
-model: claude-sonnet-4-20250514
 subagent: deep
 skill: prompt-template-authoring
 ---
