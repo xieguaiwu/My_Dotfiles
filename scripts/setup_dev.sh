@@ -183,6 +183,57 @@ else
     sudo apt install -y ltrace yasm strace nasm
 fi
 
+echo ">>> 安装 AI 渗透测试工具..."
+
+# 系统级渗透工具
+if [ "$DISTRO" = "fedora" ]; then
+    sudo dnf install -y nmap hydra john masscan libpcap-devel libusb1-devel || true
+elif [ "$DISTRO" = "kali" ]; then
+    # Kali 自带大部分工具，仅补充
+    sudo apt install -y hydra john libpcap-dev libusb-1.0-0-dev || true
+else
+    sudo apt install -y nmap hydra john masscan libpcap-dev libusb-1.0-0-dev || true
+fi
+
+# bettercap (Go 安装，需要 libpcap)
+if command -v go &>/dev/null; then
+    echo ">>> 编译安装 bettercap (Go)"
+    GOPROXY=direct go install github.com/bettercap/bettercap/v2@latest 2>/dev/null || echo "bettercap 编译失败，请手动安装: go install github.com/bettercap/bettercap/v2@latest"
+fi
+
+# PentestGPT + DeepSeek 支持
+pip3 install hatchling 2>/dev/null || true
+if [ ! -d "$HOME/PentestGPT" ]; then
+    echo ">>> 克隆 PentestGPT..."
+    git clone https://github.com/GreyDGL/PentestGPT.git "$HOME/PentestGPT"
+fi
+pipx install "$HOME/PentestGPT" 2>/dev/null || echo "PentestGPT 已安装或安装失败"
+
+# pentest-ai (ptai)
+pipx install ptai 2>/dev/null || pipx upgrade ptai 2>/dev/null || true
+pipx inject ptai litellm 2>/dev/null || true
+
+# sqlmap
+pipx install sqlmap 2>/dev/null || pipx upgrade sqlmap 2>/dev/null || true
+
+# Go 安全工具（可选）
+if command -v go &>/dev/null; then
+    echo ">>> 安装 Go 安全工具..."
+    GOPROXY=direct go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest 2>/dev/null || true
+    GOPROXY=direct go install github.com/ffuf/ffuf/v2@latest 2>/dev/null || true
+fi
+
+echo ">>> 配置 DeepSeek API (ptai)"
+mkdir -p "$HOME/.config"
+cat >> "$HOME/.bashrc" 2>/dev/null << 'BASHEOF'
+# Pentest AI Toolkit (setup by setup_dev.sh)
+export PENTEST_AI_LLM_PROVIDER=deepseek
+export PENTEST_AI_MODEL=deepseek/deepseek-chat
+BASHEOF
+
+echo ">>> 创建 Pentest 项目目录..."
+mkdir -p "$HOME/pentest-ai/"{tools,config,scripts,targets,reports,lab}
+
 echo ">>> Verifying..."
 python3 --version
 pip3 --version
