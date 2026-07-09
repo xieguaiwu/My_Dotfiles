@@ -196,3 +196,29 @@ end
 # bun
 set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
+
+# ===== Pentest AI Toolkit =====
+# ptai 使用 DeepSeek 作为 LLM 后端（需要 DEEPSEEK_API_KEY）
+# set -gx DEEPSEEK_API_KEY "<your-deepseek-api-key>"
+set -gx PENTEST_AI_LLM_PROVIDER deepseek
+set -gx PENTEST_AI_MODEL deepseek/deepseek-chat
+
+# PentestGPT (legacy) — 交互式会话
+alias pentest-deepseek='pentestgpt-legacy --reasoning-model deepseek-v4-flash --parsing-model deepseek-v4-flash --generation-model deepseek-v4-flash'
+alias pentest-pro='pentestgpt-legacy --reasoning-model deepseek-v4-pro --parsing-model deepseek-v4-pro --generation-model deepseek-v4-pro'
+
+# pentest-ai
+alias ptai-scan='ptai start'
+alias ptai-chain='ptai chain'
+
+# bettercap (Go install path)
+alias bettercap='$HOME/go/bin/bettercap'
+
+# 快速进入工具目录
+alias pentest-lab='cd $HOME/pentest-ai && ls -la'
+
+# 一键扫描 + AI 分析
+alias pentest-scan='$HOME/pentest-ai/scripts/scan-and-report.sh'
+
+# MITM 实验室
+alias pentest-mitm='$HOME/pentest-ai/scripts/mitm-lab.sh'
