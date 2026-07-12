@@ -1,7 +1,7 @@
 ---
 name: ml-training
-version: 1.0.0
-description: 在远程服务器上进行机器学习训练任务的完整方法论——从环境检查、烟雾测试、训练监控到结果验证的全流程
+version: 1.1.0
+description: 在远程服务器上进行机器学习训练任务的完整方法论——从环境检查、烟雾测试、看门狗自动化、训练监控到结果验证的全流程
 triggers:
   - "训练模型"
   - "跑训练"
@@ -10,6 +10,11 @@ triggers:
   - "GPU训练"
   - "启动训练"
   - "模型训练"
+  - "看门狗"
+  - "watchdog"
+  - "自动化训练"
+  - "多领域训练"
+  - "并行训练"
 inputs:
   - name: server
     description: 服务器地址 (user@host:port 或 ssh alias)
@@ -229,6 +234,65 @@ if step % 50 == 0 or step == 0 or (best_score - prev_best) > 0.01:
 
 ---
 
+### Step 7：文档更新（强制）
+
+训练**不是**终点。结果被记录在项目文档中才算一次完整的训练循环。**不更新文档的训练等于没跑**——后续 Agent 无从知晓你的发现。
+
+#### 7.1 必须更新的文档
+
+训练完成后，根据改动范围更新以下文档：
+
+| 文档 | 更新条件 | 更新内容 |
+|:---|:---|---|
+| **CONTEXT_FOR_NEXT_AGENT.md** | **每次训练后** | 最新结果、服务器状态、修复列表、未完成问题 |
+| **实验记录/训练日志** | **每次训练后** | 配置、IC、耗时、最佳公式（追加到表格） |
+| **ASSET_INVENTORY.md** | 新增/删除模块 | 目录变动、数据文件、服务器信息 |
+| **特征文档** | 特征增删改 | 特征名、定义、计算方式 |
+| **证伪文档**（FALSIFICATION_SUMMARY.md） | 结论变更 | 修正过时结论、添加新证伪 |
+
+#### 7.2 文档漂移检测
+
+训练过程中经常发现代码 bug 或文档错误。每次训练后，检查**文档声明 vs 实际代码**的一致性：
+
+```bash
+# 检查特征数是否一致
+DOC_FEATURES=24
+CODE_FEATURES=$(grep -c 'F\[.*,\s*[0-9]' features.py)
+echo "文档声称: $DOC_FEATURES, 代码实际: $CODE_FEATURES"
+
+# 检查 IC 值是否匹配
+cat results/latest.json | python3 -c "import sys,json; d=json.load(sys.stdin); print('实际IC:', d['true_ic']['mean'])"
+```
+
+#### 7.3 常见文档漂移模式
+
+| 模式 | 表现 | 修复 |
+|:---|:---|---|
+| **特征数撒谎** | docstring 写 24，实际 feats.append 只有 22 | 导入生产特征函数，删重复代码 |
+| **IC 值过期** | 文档写着 IC=0.160，服务器 json 是 0.090 | 每次重跑后更新文档 |
+| **结论过度概括** | "所有方向均已证伪"（实际期货有信号） | 区分市场、区分模型精准表述 |
+| **密码过期** | 文档密码无法登录服务器 | 使用前 SSH 验证密码 |
+| **代码声称已修复** | "✅ P0 已修复"但实际还是旧代码 | 修复后 md5sum 验证服务器文件 |
+
+#### 7.4 更新频率
+
+```yaml
+每次单次训练后:
+  - 追加一行到实验记录表（配置、IC、耗时）
+  - 更新 CONTEXT_FOR_NEXT_AGENT.md 的训练状态
+
+每次多次训练/修复后:
+  - 全部重写 CONTEXT_FOR_NEXT_AGENT.md（替换旧结果）
+  - 更新 ASSET_INVENTORY.md（如目录变动）
+  - 更新 FALSIFICATION_SUMMARY.md（如结论变动）
+
+每次架构变更后:
+  - 全部核心文档审查
+  - 运行文档 vs 代码一致性检查
+```
+
+---
+
 ## 常见训练事故模式
 
 ### 模式 A：Step 1 完成后永久沉默
@@ -301,6 +365,521 @@ rsync -avz --partial -e 'ssh -p PORT' server:/large_file.tar.gz .
 # 传输完成后验证
 ssh server "md5sum /large_file.tar.gz" && md5sum large_file.tar.gz
 ```
+
+---
+
+## 训练生命周期完整性检查（新增）
+
+每次训练循环结束后，必须对三个维度进行完整性检查，确保训练闭环没有漏洞：
+
+```
+训练循环完整性:
+  ✅ 环境检查 ← 烟雾测试 ← 训练执行 ← 结果保存
+  ↓                                            ↓
+  ✅ 文档更新 ← 结果验证 ← 跨方法复现 ← 幻觉检测
+  ↓
+  ✅ 下一位 Agent 可以无缝接手
+```
+
+### 维度一：训练数据真实性验证
+
+训练数据中的常见"幻觉"不是 AI 编造——而是代码 bug 静默地制造了虚假信号：
+
+| 虚假信号类型 | 表现 | 检测方法 |
+|:---|---|:---|
+| **特征复制** | `feature[i]` = `feature[j].copy()`，r=1.000 | 特征相关矩阵检查 |
+| **前瞻特征** | 用 `np.roll()` 代替 `shift()`，未来数据回绕到位置 0 | 检查首行是否是最后一个样本 |
+| **泄漏特征** | `basis_proxy` = `sma_20_bias.copy()` 但被称为"基差" | 特征名 vs 定义一致性检查 |
+| **停牌填充** | 停牌日向前填充价格 → 人为制造零收益预测信号 | 检查连续 N 天收益完全相同的股票 |
+| **update-before-fuse** | 融合前用当日收益更新权重 | `grep -n 'update.*fuse\|fuse.*update'` 顺序检查 |
+
+**防火墙：代码定义 vs 文档声明一致性检查**
+
+```bash
+# 检查特征数是否一致
+DOC_FEATURES=24
+CODE_FEATURES=$(grep -c 'feats\.append\|F\[.*,[0-9]' features.py)
+echo "⚠️  文档: $DOC_FEATURES 特征, 代码: $CODE_FEATURES 特征"
+
+# 检查特征相关矩阵是否有 r>0.999 的完美复制
+python3 -c '
+import numpy as np; from scipy.stats import spearmanr
+for i in range(F.shape[-1]):
+    for j in range(i+1, F.shape[-1]):
+        r, _ = spearmanr(F[..., i].ravel(), F[..., j].ravel())
+        if abs(r) > 0.999: print(f"🔥 复制品: feature[{i}] vs [{j}], r={r:.6f}")
+'
+
+# 检查 np.roll 回绕（每行第一个元素 = 最后一个样本）
+for fname, expr in [("momentum_5d", "np.roll(c, 5)"), ("oi_change", "np.roll(oi, 1)")]:
+    first_val = ...  # X[0, feat_idx]
+    last_val  = ...  # X[-1, feat_idx]
+    if abs(first_val - last_val) < 1e-6:
+        print(f"🔥 前瞻污染: {fname} 首行=末行（np.roll 回绕）")
+```
+
+### 维度二：训练结果幻觉检测
+
+训练结果可能被多种因素污染。训练完成后必须逐项检查：
+
+#### 2.1 过拟合间隙检查
+
+```python
+# Quick score vs Full IC 的差距是过拟合的量化指标
+gap = best_quick_score - best_full_ic
+if gap > 0.5 * best_full_ic:
+    print(f"🔥 严重过拟合: quick={best_quick_score:.3f}, full={best_full_ic:.3f}, 退化率={gap/best_quick_score:.1%}")
+elif gap > 0.3 * best_full_ic:
+    print(f"⚠️  中度过拟合: 退化率={gap/best_quick_score:.1%}")
+else:
+    print(f"✅ 泛化良好: 退化率={gap/best_quick_score:.1%}")
+```
+
+**经验阈值**（基于 2026-07-12 期货三版实验）：
+
+| 退化率 | 含义 | 示例 |
+|:---:|---|---|
+| < 35% | 泛化良好 | v2 (500步) 退化率 33% |
+| 35-60% | 中度过拟合，仍可接受 | v1 (200步) 退化率 48% |
+| > 60% | **严重模式坍塌** | v3 (1000步) 退化率 77% |
+
+#### 2.2 模式坍塌检测
+
+当训练步数过长时，策略可能收敛到单一特征家族的等价变体：
+
+```python
+# 检查 top-K 公式是否有数学等价的变体
+def detect_collapse(formulas, ic_threshold=0.0):
+    """检测 top 公式是否被同一特征家族主导。"""
+    # 提取每个公式中出现的特征名
+    feature_sets = {}
+    for f in formulas:
+        features = set(re.findall(r'[a-z_]+\d*[a-z_]*', f.get('formula_str', '')))
+        # 过滤掉算子名
+        features -= {'add', 'sub', 'mul', 'div', 'gate', 'sign', 'neg', 'abs', 'delay1', 'decay', 'jump', 'max3'}
+        key = frozenset(features)
+        if key not in feature_sets:
+            feature_sets[key] = []
+        feature_sets[key].append(f)
+    
+    # 如果 80%+ 的 top 公式共享同一特征集 → 坍塌
+    max_cluster = max(len(v) for v in feature_sets.values())
+    collapse_ratio = max_cluster / len(formulas)
+    if collapse_ratio > 0.6:
+        print(f"🔥 模式坍塌: {collapse_ratio:.0%} 的公式聚焦于同一特征家族")
+        print(f"  主导特征: {list(max(feature_sets, key=lambda k: len(feature_sets[k])))}")
+    return collapse_ratio
+```
+
+**坍塌模式示例**（来自期货 v3 实战）：
+- 20 个 top 公式中 12 个是 `SIGN(close_vs_range)` 的等价变体
+- `SIGN(SIGN(SIGN(x)))` = `SIGN(x)`，但策略用嵌套刷分
+- 检测方法：唯一 IC 签名数 < top_K 的 50%
+
+#### 2.3 GPU 隔离验证
+
+训练后验证确实跑在了正确的 GPU 上：
+
+```bash
+# 验证 GPU 分配正确
+TRAIN_GPU=$(grep 'Device: cuda' train.log | head -1 | grep -oP 'cuda:\\.+')
+PHYSICAL_GPU=$(nvidia-smi --query-gpu=index,memory.used --format=csv,noheader | \
+  awk -v mem=1300 '$2+0 > mem {print $1}' | head -1)
+echo "训练声称: $TRAIN_GPU, 实际显存增加: GPU $PHYSICAL_GPU"
+if [ "$TRAIN_GPU" != "cuda:0" ] || [ "$PHYSICAL_GPU" != "$EXPECTED_GPU" ]; then
+    echo "🔥 GPU 分配异常: 可能用错了卡"
+fi
+```
+
+### 维度三：跨方法结果复现
+
+单一显著性检验（即使是非重叠置换检验）不足以完全排除方法偏差。对关键结论，额外用以下方法交叉验证：
+
+| 方法 | 适用场景 | 与主方法的差异 |
+|:---|---|:---|
+| **不同窗口参数** | 任何 | 改变 `TRAIN_LEN/PURGE_LEN/VAL_LEN`，IC 应保持同号 |
+| **不同模型** | Ridge 基线 | 用 RandomForest 或 Lasso 替代 Ridge |
+| **不同种子** | RL 公式 | 不同随机种子跑 3-5 次，取 IC 中位数而非单次结果 |
+| **真实交易仿真** | 任何信号 | 加交易成本、滑点、最小交易单位，看是否仍盈利 |
+
+```python
+# 跨参数稳定性检查示例
+def cross_validate_stability(X, y, window_configs):
+    """用多种窗口参数验证 IC 是否稳定。"""
+    results = {}
+    for name, config in window_configs.items():
+        ics = run_walkforward(X, y, **config)
+        results[name] = {
+            'mean_ic': np.mean(ics),
+            'win_rate': np.mean([i > 0 for i in ics]),
+            'n_windows': len(ics),
+        }
+        print(f"  {name}: IC={results[name]['mean_ic']:+.4f}, 胜率={results[name]['win_rate']:.0%}")
+    
+    # 检查所有窗口配置的 IC 是否同号
+    signs = set(np.sign([r['mean_ic'] for r in results.values()]))
+    if len(signs) == 1:
+        print(f"✅ 跨参数稳定: 所有配置均 {'正' if 1 in signs else '负'} IC")
+    else:
+        print(f"⚠️  跨参数不一致: IC 符号因窗口配置改变")
+    return results
+```
+
+---
+
+## 扩展：看门狗 (Watchdog) 自动化训练
+
+训练多个领域时，**绝不手动依次启动每个训练**。必须使用看门狗脚本自动化执行整个训练流程。
+
+看门狗提供以下能力：
+- 自动按顺序/并行执行所有训练任务
+- 进程存活监控 + 崩溃自动重试（最多 3 次）
+- 状态持久化到 JSON，随时 `--status` 查看进度
+- 诊断结果自动解析（diag 通过/失败标记）
+- 全部完成后生成跨领域对比摘要
+- SSH 断开后继续运行（`nohup` 后台模式）
+
+### 看门狗架构选择
+
+| 场景 | 推荐 | 说明 |
+|:---|---|:---|
+| 单 GPU 服务器 | `watchdog.py` | 顺序执行，每任务用同一 GPU |
+| 多 GPU 服务器（2×） | `parallel_watchdog.py` | 分批量并行，每批 2 任务各占一卡 |
+| 单任务快速验证 | `run_*.py` 直接跑 | 不用看门狗，跑完即止 |
+| 单 GPU + 6 领域 | `watchdog.py` | 从 1h 到 6h 依次跑 |
+| 2×GPU + 6 领域 | `parallel_watchdog.py` | 分 3 批，每批 2 并行，~2h 跑完 |
+
+**核心原则**：只要 >= 2 个训练任务就必须用看门狗。禁止手动依次启动每个任务。
+
+### 部署流程
+
+#### 1. 在看门狗脚本中定义训练任务
+
+```python
+# 在 watchdog.py / parallel_watchdog.py 的 TASKS 列表中定义
+TASKS = [
+    {
+        "name": "ashare_clean",          # 唯一名称
+        "script": "scripts/run_ashare.py",  # 训练入口脚本
+        # 参数（注意 --output 在 args[-1]）
+        "args": ["--variant", "clean", "--steps", "500", "--batch-size", "256",
+                 "--quick-windows", "5", "--output", "results/ashare_clean"],
+        "timeout": 3600,  # 超时秒数
+    },
+    # ... 更多任务
+]
+```
+
+**parallel_watchdog.py 额外字段**：
+```python
+{
+    "name": "ashare_clean",
+    # ... 同上 ...
+    "gpu": 0,       # 指定 GPU 编号
+}
+```
+
+**任务定义规则**：
+- `name` 唯一且简短（作为状态文件主键）
+- 确保 `--output` 在 `args[-1]`，看门狗据此定位结果文件
+- `timeout` 必须根据任务特点合理设置（保守估计 x 2）
+  - 单资产时序：~30 分钟 → timeout=1800
+  - 多资产截面：~1–2 小时 → timeout=7200
+
+#### 2. 上传到服务器
+
+```bash
+# 看门狗脚本放在项目根目录
+scp watchdog.py user@server:/root/VERSION2.5/
+scp parallel_watchdog.py user@server:/root/VERSION2.5/
+```
+
+#### 3. 启动看门狗
+
+```bash
+# 登录服务器
+ssh user@server
+
+# 检查 GPU 空闲
+nvidia-smi
+
+# 🔴 必须：先跑一次烟雾测试确保训练脚本可用
+# （看门狗不会帮你做烟雾测试——那是前置条件）
+cd /root/VERSION2.5
+CUDA_VISIBLE_DEVICES=0 python3 scripts/run_ashare.py --steps 10 --batch-size 256 \
+  --quick-windows 5 --output /tmp/smoke_ashare
+
+# 如果烟雾测试通过，启动看门狗
+# 单 GPU：
+bash start_watchdog.sh --bg
+
+# 双 GPU 并行：
+bash start_parallel.sh
+# 或手动：
+nohup python3 parallel_watchdog.py > parallel_watchdog.log 2>&1 &
+```
+
+#### 4. 监控进度
+
+```bash
+# 查看实时日志
+tail -f watchdog.log
+
+# 查看结构化进度（推荐）
+bash start_watchdog.sh --status
+# 或
+cat watchdog_status.json | python3 -m json.tool
+
+# 并行版本
+cat parallel_status.json | python3 -m json.tool
+```
+
+#### 5. 停止看门狗
+
+```bash
+bash start_watchdog.sh --kill
+# 或手动
+kill $(cat watchdog.pid)
+```
+
+### 看门狗核心设计模式
+
+#### 模式 W1：状态持久化 + 可恢复性
+
+看门狗用 JSON 文件记录每个任务的状态，即使 SSH 断开或进程崩溃，重新启动后可以知道哪些已完成的（跳过）哪些需要重试：
+
+```python
+status = {
+    "tasks": {
+        "ashare_clean": {
+            "status": "completed",       # completed / failed / timeout / crashed
+            "retries": 1,
+            "elapsed_s": 3420,
+            "completed_at": "2026-07-12T10:30:00",
+            "best_ic": 0.0571,
+            "best_sharpe": 1.234,
+            "n_valid_formulas": 12,
+            "gpu": 0,
+        },
+        "futures_ic0": {
+            "status": "failed",
+            "retries": 3,               # 3 次都失败 → 放弃
+            "gpu": 1,
+        },
+    },
+    "started_at": "2026-07-12T08:00:00",
+    "completed_at": None,               # 还在运行
+    "running": True,
+    "pid": 12345,
+}
+```
+
+**已完成的自动跳过**：
+```python
+if task_status.get("status") == "completed":
+    log(f"  ⏭️  {name} 已完成，跳过")
+    return True
+```
+
+#### 模式 W2：自动重试（最多 3 次）
+
+```python
+MAX_RETRIES = 3
+
+while retries < MAX_RETRIES:
+    try:
+        result = subprocess.run(cmd, timeout=timeout)
+        if success:
+            return True
+    except (subprocess.TimeoutExpired, Exception) as e:
+        log(f"  ⏰/💥 {name} 失败: {e}")
+        retries += 1
+        if retries < MAX_RETRIES:
+            time.sleep(30)  # 冷却后重试
+
+log(f"  ❌ {name} 放弃 ({MAX_RETRIES}次失败)")
+return False
+```
+
+**重试不重置**：
+- 超时 → 等 30s 重试
+- 崩溃 → 等 30s 重试
+- OOM → 等 30s 重试（GPU 显存可能已被其他进程释放）
+- 3 次全失败 → 标记失败，继续下一个任务
+
+#### 模式 W3：诊断结果自动解析
+
+看门狗自动检测每个任务的 `diagnostics.json`，提取测试通过率和判定结论：
+
+```python
+diag_file = Path(output_dir) / "diagnostics.json"
+if diag_file.exists():
+    # 聚合所有 top 公式的测试结果
+    total_passed / total_tests → "3/15 tests passed"
+    verdicts → "REJECT | REJECT | ACCEPT"
+    
+    if total_passed < total_tests:
+        status = "completed_but_failed_diag"  # 训练完成但诊断未通过
+```
+
+状态等级：
+| 状态 | 含义 |
+|:---|---|
+| `completed` | 训练完成 + 所有诊断通过 |
+| `completed_but_failed_diag` | 训练完成但诊断未通过 → 需要人工审查 |
+| `failed` | 训练脚本报错退出 |
+| `timeout` | 超过 timeout 限制 |
+| `crashed` | 异常崩溃（OOM、段错误等） |
+
+#### 模式 W4：跨领域对比摘要
+
+所有任务完成后看门狗自动生成摘要：
+
+```
+════════════════════════════════════════════════════
+  跨领域公式发现 — 最终摘要
+════════════════════════════════════════════════════
+  任务                      Best IC   Sharpe  有效    耗时
+  ──────────────────────────────────────────────────
+  ashare_clean              +0.05710  +1.234  12/20  3420s
+  ashare_full               +0.04380  +0.987   6/20  4560s
+  ashare_margin             +0.03820  +0.876   8/20  3890s
+  futures_ic0               +0.09050  +1.736  14/20  1280s
+  etf_512880                +0.06210  +1.234  10/20   960s
+  etf_510300                +0.05530  +1.102  11/20   920s
+════════════════════════════════════════════════════
+```
+
+摘要也保存为 JSON：`results/cross_domain_summary.json`
+
+### 并行看门狗的特殊考量
+
+#### 分批策略
+
+```python
+# 6 个任务分 3 批，每批 2 个任务在不同 GPU 并行
+batches = [
+    [TASKS[0], TASKS[1]],   # ashare_clean (GPU0) + futures_ic0 (GPU1)
+    [TASKS[2], TASKS[3]],   # ashare_full (GPU0) + etf_512880 (GPU1)
+    [TASKS[4], TASKS[5]],   # ashare_margin (GPU0) + etf_510300 (GPU1)
+]
+```
+
+**分批原则**：
+- 每批均衡 GPU 负载（一个短任务 + 一个长任务不要配一对）
+- 重计算任务（多资产截面）放 GPU0，轻计算（时序）放 GPU1
+- 批间加 10s 冷却，防止显存残留导致 OOM
+
+#### 线程安全
+
+在并行看门狗中，多个线程同时写 `status` 字典和 `save_status()`，必须加锁：
+
+```python
+from threading import Lock
+STATUS_LOCK = Lock()
+
+def save_status(status: dict):
+    with STATUS_LOCK:
+        with open(STATUS_FILE, "w") as f:
+            json.dump(status, f, indent=2)
+```
+
+### Agent 在看门狗训练中的职责
+
+当 Agent 使用看门狗启动训练后，应当：
+
+| 职责 | 具体操作 |
+|:---|---|
+| **检查** | 确认烟雾测试已通过（Agent 必须自己做，看门狗不负责） |
+| **启动** | 在服务器上启动看门狗（后台模式） |
+| **记录 PID** | 在 scratchpad 中记录看门狗 PID 和服务器信息 |
+| **初步监控** | 等待 60-120s 确认看门狗已开始训练（日志有 Step 1/500 输出） |
+| **保存查询命令** | 将 `--status` 和 `tail` 命令写入 scratchpad 供下次 Agent 使用 |
+| **结果处理** | 下次会话中读取 `cross_domain_summary.json` 处理结果 |
+
+```bash
+# Agent 在 scratchpad 中记录的命令模板
+# 查看训练进度:
+ssh user@server "tail -5 /path/watchdog.log"
+# 查看结构化状态:
+ssh user@server "cat /path/watchdog_status.json"
+# 查看 GPU 使用:
+ssh user@server "nvidia-smi --query-gpu=index,memory.used,utilization.gpu --format=csv,noheader"
+```
+
+### 看门狗模式 vs 传统手动训练
+
+| 维度 | 传统手动 | 看门狗自动 |
+|:---|---|:---|
+| 启动 | 一条一条 `ssh` + `nohup` | 一个命令启动全部 |
+| 监控 | 反复 `ssh` + `tail` 检查 | `--status` 查看 JSON 状态 |
+| 重试 | 手动检查失败 + 手动重启 | 自动重试 3 次 |
+| 摘要 | 手动汇总所有结果 | 自动生成 `cross_domain_summary.json` |
+| 诊断 | 需要手动检查 `diagnostics.json` | 自动解析并标记状态 |
+| 可恢复 | 进程崩溃 → 从头重来 | 跳过已完成任务继续 |
+| GPU 利用率 | 大部分 GPU 闲置时间 | 并行看门狗 2×GPU 满载 |
+
+### 常见看门狗失败模式
+
+#### 模式 W-A：看门狗活着但训练进程死了
+
+**表现**：`watchdog_status.json` 显示 running，但 `ps aux` 无训练进程，GPU 显存无变化。
+
+**原因**：训练脚本自身崩溃，看门狗日志最后一行是 `▶️ task_name (尝试 1/3)` 后无后续输出。
+
+**修复**：
+1. `tail -20 watchdog.log` 查看具体错误
+2. 修复 bug 后重新启动看门狗（已完成的任务会跳过）
+
+#### 模式 W-B：GPU OOM 导致反复重试耗尽
+
+**表现**：某任务重试 3 次全部 OOM 崩溃。
+
+**原因**：batch_size 太大、模型太大（d_model 翻倍后显存不够）、或前一个任务残留未清理。
+
+**修复**：
+1. 减小 batch_size（如 256→128）
+2. 批间加更长的冷却（30s+）
+3. 手动 `fuser -v /dev/nvidia*` 杀死残留进程
+
+#### 模式 W-C：看门狗被 SSH 断开杀死
+
+**表现**：SSH 重连后 `cat watchdog_status.json` 显示 running，但 `ps -p PID` 显示 DEAD。
+
+**原因**：启动时用了 `python3 watchdog.py &` 而不是 `nohup python3 ... &`。
+
+**修复**：永远用 `nohup ... &` 或 `bash start_watchdog.sh --bg`。
+
+#### 模式 W-D：看门狗日志大量缓冲
+
+**表现**：看门狗自身日志延迟。
+
+**原因**：重定向到文件时 Python 缓冲 stdout。
+
+**修复**：启动时加 `PYTHONUNBUFFERED=1`：
+```bash
+PYTHONUNBUFFERED=1 nohup python3 watchdog.py > watchdog.log 2>&1 &
+```
+（参考模式 H：Python 输出缓冲的三重陷阱）
+
+### 何时不用看门狗
+
+- **单个训练任务**：直接用 `run_*.py` 跑，不需要看门狗
+- **调试新脚本**：先用 `--steps 10` 烟雾测试，看门狗不参与调试阶段
+- **交互式开发**：Jupyter / 本地测试不需要看门狗
+- **训练 < 5 分钟**：如果总耗时小于 5 分钟，不值得启动看门狗
+
+### 看门狗 checklist（Agent 使用前逐项确认）
+
+- [ ] 烟雾测试已通过（`--steps 10 无 NaN/Inf/overflow`）
+- [ ] 训练脚本路径正确（`script` 在 TASKS 中存在）
+- [ ] `args[-1]` 是 `--output` 路径（看门狗据此定位结果）
+- [ ] `timeout` 合理（保守估计 × 2）
+- [ ] 目标 GPU 空闲（`nvidia-smi` 确认）
+- [ ] 磁盘空间充足（`df -h` > 10GB）
+- [ ] 启动模式正确（单 GPU→`watchdog.py`；2×GPU→`parallel_watchdog.py`）
+- [ ] 后台运行（`nohup` 或 `--bg`）
+- [ ] PID 已记录到 scratchpad + 查询命令已保存
 
 ---
 
