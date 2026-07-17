@@ -3,13 +3,15 @@ if not status is-interactive
 end
 
 # API keys (for OpenCode + pi-agent) — replace with your own keys
-#set -gx OPENCODE_API_KEY "<your-old-opencode-api-key>"
-set -gx OPENCODE_API_KEY "<your-opencode-api-key>"
-set -gx DEEPSEEK_API_KEY "<your-deepseek-api-key>"
-set -gx NVIDIA_API_KEY "<your-nvidia-api-key>"
-set -gx MODELSCOPE_API_KEY "<your-modelscope-api-key>"
-set -gx VOLCENGINE_API_KEY "<your-volcengine-api-key>"
-set -gx OPENROUTER_API_KEY "<your-openrouter-api-key>"
+#xieguiawu: set -gx OPENCODE_API_KEY "<your-openai-key>"
+set -gx OPENCODE_API_KEY "<your-openai-key>"
+set -gx DEEPSEEK_API_KEY "<your-openai-key>"
+set -gx NVIDIA_API_KEY "<your-nvidia-key>"
+set -gx MODELSCOPE_API_KEY "ms-872a809b-c60c-4d3e-b9d8-568c7cf5776e"
+set -gx VOLCENGINE_API_KEY "<your-volcengine-key>"
+set -gx OPENROUTER_API_KEY "<your-openrouter-key>"
+set -gx ZHIPUAI_API_KEY "<your-zhipu-key>"
+set -gx KIMI_API_KEY "<your-openai-key>"
 
 tirith init
 /usr/bin/starship init fish --print-full-init | source
@@ -65,9 +67,10 @@ alias ds='deepseek'
 
 #bl — 词典翻译 & 语法解析
 alias fgerman='bl --llm --from-lang German --to-lang English'
-alias tgerman='bl --llm --to-lang German'
+alias tgerman='bl --llm --pick --to-lang German'
 alias fenglish='bl --llm --from-lang English'
-alias tenglish='bl --llm --to-lang English'
+alias tenglish='bl --llm --pick --to-lang English'
+alias tfrench='bl --llm --pick --to-lang French'
 alias ffrench='bl --llm --from-lang French --to-lang English'
 
 # Parse 变体: 在别名后加 -p 即进入语法解析模式
@@ -91,7 +94,7 @@ function tenglish?
     if string match -qr '\s' -- $argv[1]
         bl --llm --parse --to-lang English $argv
     else
-        bl --llm --to-lang English $argv
+        bl --llm --pick --to-lang English $argv
     end
 end
 
@@ -197,17 +200,20 @@ end
 set --export BUN_INSTALL "$HOME/.bun"
 set --export PATH $BUN_INSTALL/bin $PATH
 
-# ===== Pentest AI Toolkit =====
-# ptai 使用 DeepSeek 作为 LLM 后端（需要 DEEPSEEK_API_KEY）
-# set -gx DEEPSEEK_API_KEY "<your-deepseek-api-key>"
-set -gx PENTEST_AI_LLM_PROVIDER deepseek
-set -gx PENTEST_AI_MODEL deepseek/deepseek-chat
+# Steam proxy wrapper — from terminal
 
-# PentestGPT (legacy) — 交互式会话
+# ===== Pentest AI Toolkit =====
+# ptai 使用 DeepSeek 作为 LLM 后端
+set -gx PENTEST_AI_LLM_PROVIDER deepseek
+set -gx PENTEST_AI_MODEL deepseek-chat
+
+# PentestGPT (legacy) — 交互式会话，启动后在提示符下描述目标
+# 例: "对 192.168.1.50 进行全端口扫描和漏洞发现"
 alias pentest-deepseek='pentestgpt-legacy --reasoning-model deepseek-v4-flash --parsing-model deepseek-v4-flash --generation-model deepseek-v4-flash'
 alias pentest-pro='pentestgpt-legacy --reasoning-model deepseek-v4-pro --parsing-model deepseek-v4-pro --generation-model deepseek-v4-pro'
 
-# pentest-ai
+# pentest-ai — 直接指定目标（推荐用于快速扫描）
+# 用法: ptai-scan 192.168.1.50
 alias ptai-scan='ptai start'
 alias ptai-chain='ptai chain'
 
