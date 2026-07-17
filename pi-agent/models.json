@@ -40,7 +40,10 @@
         },
         "qwen3.6-plus": {
           "reasoning": true,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "thinkingLevelMap": {
             "minimal": null,
             "low": null,
@@ -67,7 +70,9 @@
           "reasoning": true,
           "contextWindow": 1000000,
           "maxTokens": 384000,
-          "compat": { "thinkingFormat": "deepseek" },
+          "compat": {
+            "thinkingFormat": "deepseek"
+          },
           "thinkingLevelMap": {
             "minimal": null,
             "low": null,
@@ -82,7 +87,9 @@
           "reasoning": true,
           "contextWindow": 1000000,
           "maxTokens": 384000,
-          "compat": { "thinkingFormat": "deepseek" },
+          "compat": {
+            "thinkingFormat": "deepseek"
+          },
           "thinkingLevelMap": {
             "minimal": null,
             "low": null,
@@ -109,7 +116,10 @@
           "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
           "name": "Nemotron 3 Nano Omni 30B (NVIDIA)",
           "reasoning": true,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 256000,
           "maxTokens": 32768
         },
@@ -127,13 +137,19 @@
         {
           "id": "moonshotai/kimi-k2.6",
           "name": "Kimi K2.6 (NVIDIA)",
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 256000
         },
         {
           "id": "qwen/qwen3.5-397b-a17b",
           "name": "Qwen 3.5 397B (NVIDIA)",
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 260000
         },
         {
@@ -151,7 +167,10 @@
         {
           "id": "meta/llama-4-maverick-17b-128e-instruct",
           "name": "Llama 4 Maverick (NVIDIA)",
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 1000000
         }
       ]
@@ -160,28 +179,55 @@
       "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
       "api": "openai-completions",
       "apiKey": "$VOLCENGINE_API_KEY",
+      "compat": {
+        "supportsReasoningEffort": true,
+        "maxTokensField": "max_tokens"
+      },
       "models": [
         {
           "id": "doubao-seed-2-0-pro-260215",
           "name": "Doubao Seed 2.0 Pro",
           "reasoning": true,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 256000,
-          "maxTokens": 128000
+          "maxTokens": 128000,
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "high"
+          }
         },
         {
           "id": "doubao-seed-2-0-lite-260428",
           "name": "Doubao Seed 2.0 Lite",
           "reasoning": true,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 256000,
-          "maxTokens": 128000
+          "maxTokens": 128000,
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "high"
+          }
         },
         {
           "id": "doubao-seed-1-6-vision-250815",
           "name": "Doubao Seed 1.6 Vision",
           "reasoning": true,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 256000,
           "maxTokens": 32000
         }
@@ -212,6 +258,7 @@
       "compat": {
         "supportsDeveloperRole": false,
         "supportsReasoningEffort": true,
+        "thinkingFormat": "openrouter",
         "maxTokensField": "max_tokens"
       },
       "models": [
@@ -234,7 +281,9 @@
           "id": "qwen/qwen3-coder:free",
           "name": "Qwen3 Coder 480B A35B (free)",
           "contextWindow": 1048576,
-          "input": ["text"]
+          "input": [
+            "text"
+          ]
         },
         {
           "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
@@ -252,19 +301,28 @@
           "name": "Nemotron 3 Nano Omni 30B Reasoning (free)",
           "contextWindow": 256000,
           "reasoning": true,
-          "input": ["text", "image"]
+          "input": [
+            "text",
+            "image"
+          ]
         },
         {
           "id": "google/gemma-4-26b-a4b-it:free",
           "name": "Gemma 4 26B A4B (free)",
           "contextWindow": 262144,
-          "input": ["text", "image"]
+          "input": [
+            "text",
+            "image"
+          ]
         },
         {
           "id": "google/gemma-4-31b-it:free",
           "name": "Gemma 4 31B (free)",
           "contextWindow": 262144,
-          "input": ["text", "image"]
+          "input": [
+            "text",
+            "image"
+          ]
         },
         {
           "id": "openai/gpt-oss-120b:free",
@@ -315,7 +373,10 @@
           "id": "nvidia/nemotron-nano-12b-v2-vl:free",
           "name": "Nemotron Nano 12B V2 VL (free, vision+video)",
           "contextWindow": 128000,
-          "input": ["text", "image"]
+          "input": [
+            "text",
+            "image"
+          ]
         },
         {
           "id": "nvidia/nemotron-nano-9b-v2:free",
@@ -326,7 +387,10 @@
           "id": "google/lyria-3-clip-preview",
           "name": "Lyria 3 Clip Preview (free, vision, 1M ctx)",
           "contextWindow": 1048576,
-          "input": ["text", "image"]
+          "input": [
+            "text",
+            "image"
+          ]
         },
         {
           "id": "openai/gpt-oss-20b:free",
@@ -345,8 +409,135 @@
         },
         {
           "id": "qwen/qwen-2.5-coder-32b-instruct",
-          "name": "Qwen2.5 Coder 32B Instruct (paid, ~$0.20/M tokens) ⚠️" ,
+          "name": "Qwen2.5 Coder 32B Instruct (paid, ~$0.20/M tokens) ⚠️",
           "contextWindow": 131072
+        }
+      ]
+    },
+    "zhipu": {
+      "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
+      "api": "openai-completions",
+      "apiKey": "$ZHIPUAI_API_KEY",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": true,
+        "maxTokensField": "max_tokens"
+      },
+      "models": [
+        {
+          "id": "glm-5.2",
+          "name": "GLM 5.2",
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 131072,
+          "compat": {
+            "thinkingFormat": "deepseek"
+          },
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "high",
+            "high": "max",
+            "xhigh": "max"
+          }
+        },
+        {
+          "id": "glm-5.1",
+          "name": "GLM 5.1",
+          "reasoning": true,
+          "contextWindow": 200000,
+          "maxTokens": 131072,
+          "compat": {
+            "thinkingFormat": "deepseek"
+          },
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "high",
+            "high": "max",
+            "xhigh": "max"
+          }
+        }
+      ]
+    },
+    "kimi": {
+      "baseUrl": "https://api.moonshot.cn/v1",
+      "api": "openai-completions",
+      "apiKey": "$KIMI_API_KEY",
+      "compat": {
+        "supportsDeveloperRole": false
+      },
+      "models": [
+        {
+          "id": "kimi-k3",
+          "name": "Kimi K3",
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 1048576,
+          "input": ["text", "image"],
+          "compat": {
+            "thinkingFormat": "deepseek",
+            "supportsReasoningEffort": true,
+            "maxTokensField": "max_completion_tokens"
+          },
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": null,
+            "high": "max",
+            "xhigh": "max"
+          }
+        },
+        {
+          "id": "kimi-k2.7-code",
+          "name": "Kimi K2.7 Code",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 262144,
+          "input": ["text", "image"],
+          "compat": {
+            "thinkingFormat": "deepseek",
+            "supportsReasoningEffort": false,
+            "maxTokensField": "max_tokens"
+          }
+        },
+        {
+          "id": "kimi-k2.7-code-highspeed",
+          "name": "Kimi K2.7 Code Highspeed",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 262144,
+          "compat": {
+            "thinkingFormat": "deepseek",
+            "supportsReasoningEffort": false,
+            "maxTokensField": "max_tokens"
+          }
+        },
+        {
+          "id": "kimi-k2.6",
+          "name": "Kimi K2.6",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536,
+          "input": ["text", "image"],
+          "compat": {
+            "thinkingFormat": "deepseek",
+            "supportsReasoningEffort": false,
+            "maxTokensField": "max_tokens"
+          }
+        },
+        {
+          "id": "kimi-k2.5",
+          "name": "Kimi K2.5",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536,
+          "input": ["text", "image"],
+          "compat": {
+            "thinkingFormat": "deepseek",
+            "supportsReasoningEffort": false,
+            "maxTokensField": "max_tokens"
+          }
         }
       ]
     }
