@@ -72,6 +72,7 @@ alias fenglish='bl --llm --from-lang English'
 alias tenglish='bl --llm --pick --to-lang English'
 alias tfrench='bl --llm --pick --to-lang French'
 alias ffrench='bl --llm --from-lang French --to-lang English'
+alias fchinese='bl --cn'
 
 # Parse 变体: 在别名后加 -p 即进入语法解析模式
 # 例: fgerman-p "Der Mann geht nach Hause."
