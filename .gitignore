@@ -21,3 +21,11 @@ pi-agent/sessions/
 # Environment files with keys
 .env
 .env.*
+
+# Cache / log / database files (not config)
+*.log
+*.dat
+*.mb
+*.db
+fcitx/clipboard/
+fcitx/log/
