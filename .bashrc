@@ -48,3 +48,9 @@ unset __conda_setup
 
 export PATH="$HOME/.npm-global/bin:$PATH"
 export PATH="$HOME/.local/julia/bin:$PATH"
+
+# Pentest AI Toolkit 别名
+alias pentest-deepseek='pentestgpt-legacy --reasoning-model deepseek-v4-flash --parsing-model deepseek-v4-flash --generation-model deepseek-v4-flash'
+alias ptai-scan='ptai scan'
+alias bettercap='~/go/bin/bettercap'
+alias pentest-lab='cd ~/pentest-ai && ls -la'

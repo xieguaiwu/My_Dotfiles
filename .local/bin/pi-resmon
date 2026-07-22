@@ -1,0 +1,348 @@
+#!/bin/sh
+# pi-resmon v1.0.0 — Lightweight resource monitor for pi-agent orchestration
+#
+# Reads /proc and optional nvidia-smi, computes a risk score,
+# and recommends subagent delegation strategy.
+#
+# Usage:
+#   pi-resmon                           human-readable summary
+#   pi-resmon --recommend               structured K=V for orchestrator
+#   pi-resmon --recommend --class heavy class-aware recommendation
+#   pi-resmon --show-thresholds         print decision thresholds
+#   pi-resmon -v                        version
+#
+# Exit code: 0=ok, 1=error
+
+set -eu
+
+# Detect logical cores (default 4 if detection fails)
+NPROC=$(nproc 2>/dev/null || grep -c ^processor /proc/cpuinfo 2>/dev/null || echo 4)
+
+# ==============================================
+# Argument parsing
+# ==============================================
+ACTION="summary"
+AGENT_CLASS="medium"
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --recommend) ACTION="recommend" ;;
+        --class)
+            shift
+            case "$1" in
+                light|medium|heavy) AGENT_CLASS="$1" ;;
+                *) echo "pi-resmon: unknown agent class '$1' (use light|medium|heavy)" >&2; exit 1 ;;
+            esac
+            ;;
+        --show-thresholds) ACTION="thresholds" ;;
+        -v|--version) echo "pi-resmon v1.0.0"; exit 0 ;;
+        -h|--help)
+            sed -n '/^# Usage:/,/^$/p' "$0" | sed 's/^# *//; /^$/d'
+            exit 0 ;;
+        *) echo "pi-resmon: unknown option '$1' (try -h)" >&2; exit 1 ;;
+    esac
+    shift
+done
+
+# ==============================================
+# DATA COLLECTION
+# ==============================================
+
+# --- CPU Load (1m, 5m, 15m from /proc/loadavg) ---
+read LOAD1 LOAD5 LOAD15 RUNNING TOTAL_PROC < /proc/loadavg 2>/dev/null
+LOAD1=${LOAD1:-0}; LOAD5=${LOAD5:-0}; LOAD15=${LOAD15:-0}
+
+# Load ratio: 5-min average normalized by logical cores
+LOAD_RATIO=$(echo "scale=3; $LOAD5 / $NPROC" | bc -l 2>/dev/null || echo "0")
+# Ensure leading zero for display consistency
+case "$LOAD_RATIO" in .*) LOAD_RATIO="0$LOAD_RATIO" ;; esac
+
+# Spike detection: 1-min load significantly exceeds 5-min trend
+SPIKE=0
+if [ "$(echo "$LOAD1 > 2 * $LOAD5" | bc -l 2>/dev/null)" = "1" ] && \
+   [ "$(echo "$LOAD5 > 0.5" | bc -l 2>/dev/null)" = "1" ]; then
+    SPIKE=1
+fi
+
+# --- PSI (Pressure Stall Information, kernel ≥4.20) ---
+PSI_CPU=$(awk '/some avg10/ {gsub(/avg10=/,"",$2); print $2}' /proc/pressure/cpu 2>/dev/null || echo "0.00")
+PSI_MEM=$(awk '/some avg10/ {gsub(/avg10=/,"",$2); print $2}' /proc/pressure/memory 2>/dev/null || echo "0.00")
+PSI_IO=$(awk '/some avg10/ {gsub(/avg10=/,"",$2); print $2}' /proc/pressure/io 2>/dev/null || echo "0.00")
+
+# --- Memory from /proc/meminfo ---
+MEM_TOTAL=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
+MEM_AVAIL=$(awk '/MemAvailable/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
+MEM_TOTAL_MB=$((MEM_TOTAL / 1024))
+MEM_AVAIL_MB=$((MEM_AVAIL / 1024))
+
+# --- cgroup v2 memory limits (container/dotfiles awareness) ---
+MEM_CGROUP_LIMIT="inf"
+if [ -f /sys/fs/cgroup/memory.max ]; then
+    read -r CGROUP_MAX < /sys/fs/cgroup/memory.max 2>/dev/null || CGROUP_MAX="max"
+    if [ "$CGROUP_MAX" != "max" ] && [ -n "$CGROUP_MAX" ] && [ "$CGROUP_MAX" -gt 0 ] 2>/dev/null; then
+        read -r CGROUP_CUR < /sys/fs/cgroup/memory.current 2>/dev/null || CGROUP_CUR=0
+        CGROUP_AVAIL=$((CGROUP_MAX - CGROUP_CUR))
+        CGROUP_AVAIL_MB=$((CGROUP_AVAIL / 1048576))
+        if [ "$CGROUP_AVAIL_MB" -lt "$MEM_AVAIL_MB" ]; then
+            MEM_AVAIL_MB=$CGROUP_AVAIL_MB
+            MEM_CGROUP_LIMIT="set"
+        fi
+    fi
+fi
+
+# --- Swap ---
+SWAP_TOTAL=$(awk '/SwapTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
+SWAP_FREE=$(awk '/SwapFree/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
+
+SWAP_TYPE="none"
+SWAP_PCT="0"
+if [ "$SWAP_TOTAL" -gt 0 ] 2>/dev/null; then
+    if grep -q '/dev/zram' /proc/swaps 2>/dev/null; then
+        SWAP_TYPE="zram"
+    else
+        SWAP_TYPE="disk"
+    fi
+    SWAP_USED=$((SWAP_TOTAL - SWAP_FREE))
+    [ "$SWAP_USED" -lt 0 ] && SWAP_USED=0
+    SWAP_PCT=$(echo "scale=1; $SWAP_USED * 100 / $SWAP_TOTAL" | bc 2>/dev/null || echo "0")
+    case "$SWAP_PCT" in .*) SWAP_PCT="0$SWAP_PCT" ;; esac
+fi
+
+# --- Disk usage (working directory partition) ---
+DISK_PCT=$(df . --output=pcent 2>/dev/null | tail -1 | tr -d ' %')
+DISK_PCT=${DISK_PCT:-0}
+
+# --- GPU (optional, via nvidia-smi) ---
+GPU_AVAIL="no"
+GPU_MEM_FREE_PCT="0"
+GPU_UTIL="0"
+if command -v nvidia-smi >/dev/null 2>&1; then
+    GPU_LINE=$(nvidia-smi --query-gpu=memory.total,memory.used,utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1)
+    if [ -n "$GPU_LINE" ]; then
+        GPU_MEM_TOTAL=$(echo "$GPU_LINE" | awk -F', ' '{print $1}')
+        GPU_MEM_USED=$(echo "$GPU_LINE" | awk -F', ' '{print $2}')
+        GPU_UTIL=$(echo "$GPU_LINE" | awk -F', ' '{print $3}')
+        if [ "$GPU_MEM_TOTAL" -gt 0 ] 2>/dev/null; then
+            GPU_AVAIL="yes"
+            GPU_MEM_FREE_PCT=$(echo "scale=1; ($GPU_MEM_TOTAL - $GPU_MEM_USED) * 100 / $GPU_MEM_TOTAL" | bc 2>/dev/null || echo "0")
+        fi
+    fi
+fi
+
+# --- Self RSS (pi-agent / node processes this session may spawn) ---
+SELF_RSS_MB=0
+for _pid in $(pgrep -x 'pi|node' 2>/dev/null); do
+    _rss_val=$(ps -o rss= -p "$_pid" 2>/dev/null || echo 0)
+    SELF_RSS_MB=$((SELF_RSS_MB + _rss_val / 1024))
+done
+
+# ==============================================
+# TIER CLASSIFICATION
+# Each tier: 0=LOW  1=MODERATE  2=HIGH  3=CRITICAL
+# ==============================================
+
+# --- Load tier (5-min avg / nproc) ---
+if [ "$(echo "$LOAD_RATIO < 0.7" | bc -l)" = "1" ]; then load_tier=0
+elif [ "$(echo "$LOAD_RATIO < 1.5" | bc -l)" = "1" ]; then load_tier=1
+elif [ "$(echo "$LOAD_RATIO < 2.5" | bc -l)" = "1" ]; then load_tier=2
+else load_tier=3; fi
+
+# --- Memory tier (MemAvailable MB) ---
+if   [ "$MEM_AVAIL_MB" -ge 4096 ]; then mem_tier=0
+elif [ "$MEM_AVAIL_MB" -ge 2048 ]; then mem_tier=1
+elif [ "$MEM_AVAIL_MB" -ge 1024 ]; then mem_tier=2
+else mem_tier=3; fi
+
+# --- PSI CPU tier ---
+if   [ "$(echo "$PSI_CPU < 5" | bc -l)" = "1" ]; then psi_cpu_tier=0
+elif [ "$(echo "$PSI_CPU < 20" | bc -l)" = "1" ]; then psi_cpu_tier=1
+elif [ "$(echo "$PSI_CPU < 40" | bc -l)" = "1" ]; then psi_cpu_tier=2
+else psi_cpu_tier=3; fi
+
+# --- PSI Memory tier ---
+if   [ "$(echo "$PSI_MEM < 1" | bc -l)" = "1" ]; then psi_mem_tier=0
+elif [ "$(echo "$PSI_MEM < 5" | bc -l)" = "1" ]; then psi_mem_tier=1
+elif [ "$(echo "$PSI_MEM < 15" | bc -l)" = "1" ]; then psi_mem_tier=2
+else psi_mem_tier=3; fi
+
+# --- Swap tier (type-dependent) ---
+swap_tier=0
+case "$SWAP_TYPE" in
+    zram)
+        # zram is compressed memory, not disk thrashing — much more lenient
+        if   [ "$(echo "$SWAP_PCT < 70" | bc -l)" = "1" ]; then swap_tier=0
+        elif [ "$(echo "$SWAP_PCT < 90" | bc -l)" = "1" ]; then swap_tier=1
+        else swap_tier=2; fi  # zram never reaches tier 3
+        ;;
+    disk)
+        # Real disk swap — system is likely overcommitted
+        if   [ "$(echo "$SWAP_PCT < 5" | bc -l)" = "1" ]; then swap_tier=0
+        elif [ "$(echo "$SWAP_PCT < 20" | bc -l)" = "1" ]; then swap_tier=1
+        elif [ "$(echo "$SWAP_PCT < 50" | bc -l)" = "1" ]; then swap_tier=2
+        else swap_tier=3; fi
+        ;;
+esac
+
+# --- GPU tier (only if nvidia-smi available) ---
+gpu_tier=0
+if [ "$GPU_AVAIL" = "yes" ]; then
+    if   [ "$(echo "$GPU_MEM_FREE_PCT >= 50" | bc -l)" = "1" ]; then gpu_tier=0
+    elif [ "$(echo "$GPU_MEM_FREE_PCT >= 30" | bc -l)" = "1" ]; then gpu_tier=1
+    elif [ "$(echo "$GPU_MEM_FREE_PCT >= 10" | bc -l)" = "1" ]; then gpu_tier=2
+    else gpu_tier=3; fi
+fi
+
+# ==============================================
+# RISK AGGREGATION
+# ==============================================
+
+# Base risk = max of all primary indicators
+risk_num=$load_tier
+[ "$mem_tier" -gt "$risk_num" ] && risk_num=$mem_tier
+[ "$psi_mem_tier" -gt "$risk_num" ] && risk_num=$psi_mem_tier
+[ "$psi_cpu_tier" -gt "$risk_num" ] && risk_num=$psi_cpu_tier
+[ "$swap_tier" -gt "$risk_num" ] && risk_num=$swap_tier
+[ "$gpu_tier" -gt "$risk_num" ] && risk_num=$gpu_tier
+
+# Agent class modifier: heavy agents tighten restrictions
+if [ "$AGENT_CLASS" = "heavy" ] && [ "$risk_num" -ge 1 ]; then
+    risk_num=$((risk_num + 1))
+    [ "$risk_num" -gt 3 ] && risk_num=3
+fi
+
+# ==============================================
+# RISK → STRATEGY MAPPING
+# ==============================================
+case $risk_num in
+    0)
+        RISK_LABEL="LOW"
+        ACTION_STR="free_parallel"
+        MAX_PARALLEL=4
+        MAXTURNS_FACTOR="1.0"
+        TIMEOUT_FACTOR="1.0"
+        WEIGHT_AGENTS="all"
+        ;;
+    1)
+        RISK_LABEL="MODERATE"
+        ACTION_STR="restricted_parallel"
+        MAX_PARALLEL=2
+        MAXTURNS_FACTOR="0.8"
+        TIMEOUT_FACTOR="1.2"
+        WEIGHT_AGENTS="light+medium"
+        ;;
+    2)
+        RISK_LABEL="HIGH"
+        ACTION_STR="serialize_only"
+        MAX_PARALLEL=1
+        MAXTURNS_FACTOR="0.6"
+        TIMEOUT_FACTOR="1.5"
+        WEIGHT_AGENTS="light_only"
+        ;;
+    3)
+        RISK_LABEL="CRITICAL"
+        ACTION_STR="defer_or_direct"
+        MAX_PARALLEL=1
+        MAXTURNS_FACTOR="0.4"
+        TIMEOUT_FACTOR="2.0"
+        WEIGHT_AGENTS="none"
+        ;;
+esac
+
+# ==============================================
+# WARNINGS
+# ==============================================
+WARNINGS=""
+if [ "$DISK_PCT" -gt 90 ] 2>/dev/null; then
+    WARNINGS="${WARNINGS} disk_usage=${DISK_PCT}%"
+fi
+if [ "$SPIKE" = "1" ]; then
+    WARNINGS="${WARNINGS} load_spike_1m=${LOAD1}"
+fi
+# Trim leading space
+WARNINGS="${WARNINGS# }"
+
+# ==============================================
+# OUTPUT
+# ==============================================
+
+_print_recommend() {
+    printf "RISK=%s LOAD_RATIO=%s MEM_AVAIL_MB=%d MEM_TOTAL_MB=%d MEM_CGROUP_LIMIT=%s SWAP_PCT=%s SWAP_TYPE=%s PSI_CPU=%s PSI_MEM=%s PSI_IO=%s GPU_AVAIL=%s DISK_PCT=%d SELF_RSS_MB=%d\n" \
+        "$RISK_LABEL" "$LOAD_RATIO" "$MEM_AVAIL_MB" "$MEM_TOTAL_MB" "$MEM_CGROUP_LIMIT" "$SWAP_PCT" "$SWAP_TYPE" "$PSI_CPU" "$PSI_MEM" "$PSI_IO" "$GPU_AVAIL" "$DISK_PCT" "$SELF_RSS_MB"
+    printf "ACTION=%s MAX_PARALLEL=%d SUGGESTED_MAXTURNS_FACTOR=%s SUGGESTED_TIMEOUTMS_FACTOR=%s WEIGHT_AGENTS=%s\n" \
+        "$ACTION_STR" "$MAX_PARALLEL" "$MAXTURNS_FACTOR" "$TIMEOUT_FACTOR" "$WEIGHT_AGENTS"
+    if [ -n "$WARNINGS" ]; then
+        printf "WARNINGS=%s\n" "$WARNINGS"
+    fi
+}
+
+_print_summary() {
+    printf "pi-resmon: CPU:%.2f(5m)/%dc | Mem:%dMB avail/%dMB total | Swap:%s%%(%s) | PSI cpu:%s%% mem:%s%% io:%s%% | GPU:%s | Disk:%d%% | Self:%dMB | Risk:%s\n" \
+        "$LOAD_RATIO" "$NPROC" "$MEM_AVAIL_MB" "$MEM_TOTAL_MB" "$SWAP_PCT" "$SWAP_TYPE" "$PSI_CPU" "$PSI_MEM" "$PSI_IO" "$GPU_AVAIL" "$DISK_PCT" "$SELF_RSS_MB" "$RISK_LABEL"
+    if [ -n "$WARNINGS" ]; then
+        printf "  Warnings:%s\n" "$WARNINGS"
+    fi
+}
+
+_print_thresholds() {
+    cat <<'THRESHOLDS'
+=== pi-resmon v1.0.0 — Decision Thresholds ===
+
+Load Ratio (5-min load / nproc logical cores):
+  LOW      < 0.7
+  MODERATE 0.7 – 1.5
+  HIGH     1.5 – 2.5
+  CRITICAL > 2.5
+
+Memory (MemAvailable, cgroup-aware):
+  LOW      >= 4 GB
+  MODERATE 2 GB – 4 GB
+  HIGH     1 GB – 2 GB
+  CRITICAL < 1 GB
+
+PSI CPU (some avg10 %):
+  LOW      < 5%
+  MODERATE 5% – 20%
+  HIGH     20% – 40%
+  CRITICAL > 40%
+
+PSI Memory (some avg10 %):
+  LOW      < 1%
+  MODERATE 1% – 5%
+  HIGH     5% – 15%
+  CRITICAL > 15%
+
+Swap (type-dependent):
+  zram: LOW <70% | MODERATE 70-90% | HIGH >90%  (compressed RAM, not thrashing)
+  disk: LOW <5% | MODERATE 5-20% | HIGH 20-50% | CRITICAL >50%
+
+GPU (if nvidia-smi available, by free memory %):
+  LOW      free >= 50%
+  MODERATE free 30-50%
+  HIGH     free 10-30%
+  CRITICAL free < 10%
+
+Agent Class Modifier:
+  heavy => risk +1 (max 3) when base risk >= MODERATE
+  light / medium => no adjustment
+
+Aggregation:
+  risk = max(load, mem, psi_mem, psi_cpu, swap, gpu)
+
+Strategy:
+  LOW       → free_parallel       max 4, all agent classes
+  MODERATE  → restricted_parallel max 2, light+medium only
+  HIGH      → serialize_only      max 1, light agents only
+  CRITICAL  → defer_or_direct     max 1, handle directly, no subagents
+
+Adjustments (apply to turnBudget.maxTurns & timeoutMs):
+  LOW        maxTurns ×1.0  timeoutMs ×1.0
+  MODERATE   maxTurns ×0.8  timeoutMs ×1.2
+  HIGH       maxTurns ×0.6  timeoutMs ×1.5
+  CRITICAL   maxTurns ×0.4  timeoutMs ×2.0
+THRESHOLDS
+}
+
+case "$ACTION" in
+    recommend) _print_recommend ;;
+    summary)   _print_summary ;;
+    thresholds) _print_thresholds ;;
+esac
