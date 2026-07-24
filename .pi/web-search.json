@@ -1,5 +1,6 @@
 {
-  "provider": "exa",
+  "provider": "auto",
+  "braveApiKey": "",
   "workflow": "auto-summary",
   "allowBrowserCookies": false
 }

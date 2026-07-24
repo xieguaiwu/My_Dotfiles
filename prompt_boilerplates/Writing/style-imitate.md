@@ -154,6 +154,63 @@ ls ~/works/阐述/*.md
 - [ ] 不需要的"性/化/度/力"字尾已清除
 - [ ] 读起来不像AI写的
 
+### Step 6：风格多样性注入（英文论文专属）
+
+对于英文论文，仅清除AI痕迹和模仿基本风格是不够的。还需要主动**注入**用户已发表论文中的独特句式，增加风格多样性，使文本看起来更像人类写作。
+
+**原理**：AI写作的一个隐蔽标志是句式单一性——即使清除了标记词，句子结构仍然趋于均匀（主语+谓语+宾语，长度相近，开头模式重复）。人类作者的句式分布更不均匀，会自然使用倒装、关系从句嵌套、修辞性设问等结构。主动注入这些结构可以打破AI的句式均匀性。
+
+#### 6.1 从用户样本中提取的独特句式
+
+以下句式在用户的已发表论文（Locke论文、The Entanglement of Norm、LLMs and Language Acquisition）中高频出现，但在AI默认输出中几乎为零。在英文论文中应适当注入：
+
+| 句式 | 示例（来自用户已发表作品） | 注入密度 |
+|------|---------------------------|---------|
+| ``, whose`` 关系从句 | "...whose very existence itself warrants examination considering that..." | 每2000词2-3处 |
+| 条件倒装 ``Had/Were + 主语`` | "Had Napoleon's expansion been unbounded, Metternich could not have..." | 每2000词1-2处 |
+| ``Indeed,`` 句首 | "Indeed, long before Schmitt came to his laughable peak of power..." | 每2000词1-2处 |
+| ``One might argue`` / 让步结构 | "One might argue that January 6th demonstrates institutional resilience..." | 每篇1-2处 |
+| ``It is needful to`` | "It is needful to first recognize the duality of democracy..." | 每篇1处 |
+| 修辞性设问 | "how could we defend the embers of democratic ideals?" | 每篇1处 |
+
+#### 6.2 "人类标记"的保留原则
+
+**以下表达在常规AI痕迹清除中被视为"标记词"而删除，但在用户的实际写作中确实使用。当语言=en且任务为学术论文时，应选择性保留：**
+
+| 表达 | 常规处理 | 用户论文中的使用 | 英文学术论文中的处理 |
+|------|---------|----------------|---------------------|
+| ``To begin with`` | 删除 | Locke论文、Entanglement使用 | 保留（每篇1-2处） |
+| ``In short`` | 删除 | Locke论文使用 | 保留（每篇1-2处） |
+| ``Furthermore`` | 删除 | 用户论文使用 | 保留（每篇2-3处） |
+| ``Notably`` | 删除 | 用户论文使用 | 保留（每篇1处） |
+| ``Stepping forward`` | 删除 | 用户论文使用 | 保留（每篇1处） |
+| ``A natural question arises`` | 删除 | 用户论文使用 | 保留（每篇1处） |
+| ``at the beginning...additionally`` | 改为first/second | 用户论文使用 | 保留（每篇1处） |
+| ``in actual...in actual`` 重复 | 删除 | 用户论文使用 | 保留（每篇1处） |
+| ``major breakthrough`` | 降级为distinctive feature | 用户论文使用 | 保留 |
+| ``practice realm`` | 删除为filler | 用户论文使用 | 保留 |
+| ``we simply call`` | 改为We call | 用户论文使用 | 保留 |
+
+**判断标准**：如果用户在已发表作品中使用了某表达，则该表达是用户的"自然风格"而非"AI痕迹"。保留这些表达反而使文本更不像AI生成的——因为AI默认会避免它们。
+
+#### 6.3 隐喻与意象注入
+
+用户的英文写作频繁使用具体意象支撑抽象论证。在学术论文中适当注入领域相关的隐喻：
+
+- **金融/工程隐喻**："scaffold of validation"、"mirage in the desert of low-SNR finance"、"a toll, not an investment"
+- **自然/物理隐喻**："the fog of propaganda"、"embers of democratic ideals"、"with the precision of a seismograph"
+- **建筑/结构隐喻**："the scaffold of validation"、"the bedrock of statistical rigor"
+
+每2000词注入1-2个隐喻，嵌入论证流中，不单独成段。
+
+#### 6.4 注入规则
+
+1. **手术式插入**：不重写整段，只在自然位置添加短语、修改句首、插入关系从句
+2. **上下文适配**：注入的内容必须与周围论证自然衔接，不能生硬
+3. **不删除现有内容**：只增不删（除非是Step 3要求清除的AI标记）
+4. **不改变数字/公式/引用**：风格注入不影响实质内容
+5. **注入后编译验证**：确保LaTeX编译无错误
+
 ### 可选：输出风格画像
 
 如果任务要求长期按此风格写作，可将风格画像输出到文件：
