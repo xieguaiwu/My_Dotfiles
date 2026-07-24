@@ -136,7 +136,7 @@ check "$PI_CODING_DIR/dist/core/sdk.js" \
 echo ""
 echo "--- pi-agent-core 编译文件（1） ---"
 check "$AGENT_CORE_DIR/dist/agent.js" \
-  "Agent 构造函数接受 temperature" "this.temperature = options.temperature"
+  "Agent 构造函数接受 temperature" "this.temperature"
 check "$AGENT_CORE_DIR/dist/agent.js" \
   "Agent createLoopConfig 返回 temperature" "temperature: this.temperature"
 
@@ -318,8 +318,8 @@ fi
 
 ```bash
 FILE="$AGENT_CORE_DIR/dist/agent.js"
-if ! grep -q "this.temperature = options.temperature" "$FILE"; then
-  sed -i '/this.toolExecution =/a\\tthis.temperature = options.temperature;' "$FILE"
+if ! grep -q "this.temperature" "$FILE" | grep -v "createLoopConfig" | head -1 > /dev/null 2>&1; then
+  sed -i '/this.toolExecution =/a\\tthis.temperature = runtimeOptions.temperature;' "$FILE"
   sed -i '/reasoning: this.reasoning,/a\\ttemperature: this.temperature,' "$FILE"
   echo "✅ agent.js: Agent 类接受 + 传递 temperature"
 fi
@@ -342,7 +342,7 @@ echo -n "KNOWN_FIELDS:        "; grep -q '"temperature"' "$NPM_DIR/src/agents/ag
 echo -n "PI_SUBAGENT env var: "; grep -q "PI_SUBAGENT_TEMPERATURE" "$NPM_DIR/src/runs/shared/pi-args.ts" && echo "✅" || echo "❌"
 echo -n "CLI --temperature:   "; grep -q -e "result.temperature" "$PI_CODING_DIR/dist/cli/args.js" && echo "✅" || echo "❌"
 echo -n "SDK env var read:    "; grep -q "PI_SUBAGENT_TEMPERATURE" "$PI_CODING_DIR/dist/core/sdk.js" && echo "✅" || echo "❌"
-echo -n "Agent accept temp:   "; grep -q "this.temperature = options.temperature" "$AGENT_CORE_DIR/dist/agent.js" && echo "✅" || echo "❌"
+echo -n "Agent accept temp:   "; grep -q "this.temperature" "$AGENT_CORE_DIR/dist/agent.js" && echo "✅" || echo "❌"
 echo -n "Agent createLoop:    "; grep -q "temperature: this.temperature" "$AGENT_CORE_DIR/dist/agent.js" && echo "✅" || echo "❌"
 ```
 
