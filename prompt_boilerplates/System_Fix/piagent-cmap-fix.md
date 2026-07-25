@@ -70,7 +70,7 @@ pdfjs-dist/build/pdf.mjs (line 9417-9433)
 |------|------|------|
 | unpdf ESM | `~/.pi/agent/npm/node_modules/unpdf/dist/index.mjs` | **需要修复的目标** |
 | unpdf CJS | `~/.pi/agent/npm/node_modules/unpdf/dist/index.cjs` | 参考实现（已正确） |
-| 补丁文件 | `~/.pi/agent/npm/patches/unpdf+1.6.2.patch` | 修复持久化 |
+| 补丁文件 | `~/.pi/agent/npm/patches/unpdf+1.8.0.patch` | 修复持久化（⚠️ 需重新生成） |
 | pdfjs-dist | `~/.pi/agent/npm/node_modules/pdfjs-dist/build/pdf.mjs` | 下游消费者 |
 
 ## 执行流程
@@ -89,7 +89,8 @@ node -e "console.log(require('$PATCH_DIR/node_modules/unpdf/package.json').versi
 
 echo "=== 关键文件 ==="
 ls -la "$PATCH_DIR/node_modules/unpdf/dist/index.mjs"
-ls -la "$PATCH_DIR/patches/unpdf+1.6.2.patch" 2>/dev/null || echo "(补丁文件不存在)"
+# 补丁文件可能不存在（npm update 后需重新生成）
+ls -la "$PATCH_DIR/patches/unpdf+*.patch" 2>/dev/null || echo "(补丁文件不存在)"
 ```
 
 #### 1.2 检查当前 CMap URL 是 file:// URL 还是纯路径
@@ -107,7 +108,7 @@ grep -n "cMapUrl\|standardFontDataUrl" ~/.pi/agent/npm/node_modules/unpdf/dist/i
 #### 1.3 检查补丁是否包含 fileURLToPath 转换
 
 ```bash
-grep -c "fileURLToPath" ~/.pi/agent/npm/patches/unpdf+1.6.2.patch 2>/dev/null && \
+grep -c "fileURLToPath" ~/.pi/agent/npm/patches/unpdf+1.8.0.patch 2>/dev/null && \
   echo "✅ 补丁已包含 fileURLToPath 转换" || \
   echo "❌ 补丁缺少 fileURLToPath 转换"
 ```
@@ -169,7 +170,7 @@ grep '"type"' ~/.pi/agent/npm/node_modules/pi-web-access/package.json | head -1
     }
 ```
 
-使用 `edit_file` 工具精确替换。
+使用 `edit` 工具精确替换。
 
 #### 2.2 重新生成补丁文件
 
@@ -177,7 +178,9 @@ grep '"type"' ~/.pi/agent/npm/node_modules/pi-web-access/package.json | head -1
 cd ~/.pi/agent/npm && npx patch-package unpdf --patch-dir patches
 ```
 
-这会将修改持久化为 `patches/unpdf+1.6.2.patch`，供后续 `npm install` 自动重打。
+这会将修改持久化为 `patches/unpdf+$(node -e "console.log(require('./node_modules/unpdf/package.json').version)").patch`，供后续 `npm install` 自动重打。
+
+> **注意**：npm update 后 unpdf 版本可能升级，需从诊断步骤重新生成补丁。
 
 #### 2.3 验证修复
 
@@ -223,7 +226,7 @@ Pi-agent 扩展的 `package.json` 包含 postinstall 脚本：
 
 2. **"Unknown type 1 charstring command" 警告**：此警告来自 PDF.js 的 Type 1 字体解析器，与 CMap 加载无关。CMap 加载失败可能导致字体回退到 Type 1 解析路径，间接触发此警告。修复 CMap 后此警告通常会减少，但若 PDF 本身包含非标准 Type 1 指令，仍可能出现残留警告——这是正常的，不影响文本提取。
 
-3. **版本兼容性**：本修复适用于 `unpdf@1.6.2` + `pdfjs-dist@5.6.205` 组合。如果 Pi-agent 升级了这些依赖，补丁可能需要调整 line offset。此时应检查新版本的 `getDocumentProxy` 函数是否已内置此修复，若未内置则重新生成补丁。
+3. **版本兼容性**：本修复适用于 `unpdf@1.8.0` + `pdfjs-dist@5.7.284` 组合。如果 Pi-agent 升级了这些依赖，补丁可能需要调整 line offset。此时应检查新版本的 `getDocumentProxy` 函数是否已内置此修复，若未内置则重新生成补丁。
 
 4. **替代修复方案**：也可以修改 `pdfjs-dist` 的 `node_utils_fetchData` 函数，在 `fs.readFile` 前添加 `fileURLToPath` 转换。但修改 unpdf 更简单、更局部化，且不会影响其他 pdfjs-dist 消费者。
 

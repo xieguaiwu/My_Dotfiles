@@ -23,8 +23,8 @@ tools:
   - bash
   - glob
   - grep
-  - task
-  - todowrite
+  - subagent
+  - todo_create
 ---
 
 # OpenCode 健康检查

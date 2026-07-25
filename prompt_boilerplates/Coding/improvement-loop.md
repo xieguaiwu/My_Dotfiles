@@ -1,7 +1,7 @@
 ---
 name: iterative-improvement-loop
-version: 1.0.0
-description: 对代码库执行"修改→审查→修复→审查"的迭代改进循环，直至审查通过
+version: 1.1.0
+description: 对代码库执行"修改→审查→修复→审查"的迭代改进循环，直至审查通过。基于 pi-agent 工具系统，使用 subagent 进行审查和修复。
 triggers:
   - "改进循环"
   - "迭代优化"
@@ -27,25 +27,16 @@ inputs:
     required: false
     default: ""
 tools:
-  - read_file
-  - list_dir
-  - grep_files
-  - file_search
-  - write_file
-  - edit_file
-  - apply_patch
-  - exec_shell
-  - task_shell_start
-  - task_shell_wait
-  - agent_spawn
-  - agent_result
-  - agent_wait
-  - agent_cancel
-  - agent_send_input
-  - checklist_write
-  - checklist_update
-  - update_plan
-  - diagnostics
+  - read
+  - bash
+  - write
+  - edit
+  - grep
+  - find
+  - subagent
+  - todo_create
+  - todo_update
+  - todo_list
 ---
 
 # 迭代改进循环 (Iterative Improvement Loop)
@@ -94,7 +85,7 @@ tools:
 2. 记录当前 git commit hash（如有 git 仓库），用于后续对比
 3. 获取 `max_iterations` 和 `review_focus` 参数
 4. 设置迭代计数器 `iteration = 0`
-5. 通过 `checklist_write` 创建可视化进度追踪
+5. 通过 `todo_create` 创建可视化进度追踪
 
 ### 阶段 1：执行修改（由用户触发或自主完成）
 
@@ -113,12 +104,13 @@ git add -A && git commit -m "iter-improve-loop: iteration {n} modifications"
 
 #### 2.1 启动审查 subagent
 
-使用 `agent_spawn` 创建一个审查 subagent，`fork_context: true` 以继承上下文。
+使用 `subagent` 工具启动同步审查（pi-agent 的 subagent 是同步的，返回结果直接可用）。推荐使用 Momus（批判性审查 agent）。
 
-**Subagent 任务描述**：
-
-```
-你是一个代码审查 subagent。请对 {target_path} 下的代码进行审查。
+```python
+review_result = subagent({
+  agent: 'momus',
+  task: '''
+对 {target_path} 下的代码进行审查。
 
 审查重点（{review_focus}）：
 
@@ -150,12 +142,15 @@ git add -A && git commit -m "iter-improve-loop: iteration {n} modifications"
   - [问题描述]
   - [建议修改方向]
 
-请使用 read_file、list_dir、grep_files 等工具阅读代码。
+请使用 read、bash、grep、find 等工具阅读代码。
+  ''',
+  timeoutMs: 120000
+})
 ```
 
 #### 2.2 获取审查结果
 
-通过 `agent_wait` 等待 subagent 完成，然后调用 `agent_result` 获取完整结果。
+pi-agent 的 `subagent` 是同步的——调用后直接返回结果，无需 `agent_wait` / `agent_result`（这些工具在 pi-agent 中不存在）。
 
 #### 2.3 判断是否通过
 
@@ -166,7 +161,7 @@ git add -A && git commit -m "iter-improve-loop: iteration {n} modifications"
 
 | 情形 | 处理 |
 |------|------|
-| subagent 超时或失败 | 重新启动一次，仍失败则标记结果不可靠并询问用户 |
+| subagent 超时或失败 | 增加 `timeoutMs` 重试一次（如 `timeoutMs: 180000`），仍失败则标记结果不可靠并询问用户 |
 | 问题过多（>20 条） | 仅选取 critical + major 级别的处理，剩下的留到下一轮 |
 | `iteration >= max_iterations` | 强制退出循环，输出已完成内容和剩余问题 |
 
@@ -187,10 +182,13 @@ git add -A && git commit -m "iter-improve-loop: iteration {n} modifications"
 
 #### 3.2 启动修复 subagent
 
-对每个批次，启动一个修改 subagent：
+对每个批次，使用 `subagent` 启动修复（推荐使用 Hephaestus，专注于实现和修复）：
 
-```
-你是一个代码修改 subagent。请根据以下问题列表修复 {target_path} 的代码。
+```python
+subagent({
+  agent: 'hephaestus',
+  task: '''
+请根据以下问题列表修复 {target_path} 的代码。
 
 问题列表：
 [{问题1}]
@@ -198,24 +196,27 @@ git add -A && git commit -m "iter-improve-loop: iteration {n} modifications"
 ...
 
 要求：
-1. 每个修改请使用 read_file 先确认代码上下文，再用 edit_file 或 apply_patch 修改
+1. 每个修改请使用 read 先确认代码上下文，再用 edit 修改
 2. 修改前用 git 快照：git add -A && git commit -m "..."
 3. 修改后用 git commit 记录变更
 4. 不要修改与问题无关的代码
 5. 如果一个问题需要多个文件联动修改，请一次性完成
+  ''',
+  timeoutMs: 180000
+})
 ```
 
 #### 3.3 验证修复
 
 修复完成后，快速验证：
-- 修改的文件是否存在语法错误（通过 `exec_shell` 运行编译器/检查工具）
-- 问题文件中描述的变更是否确实被执行（抽查 read_file）
+- 修改的文件是否存在语法错误（通过 `bash` 运行编译器/检查工具）
+- 问题文件中描述的变更是否确实被执行（抽查 `read`）
 
 如有语法错误，在同一 subagent 内修复。
 
 ### 阶段 4：循环
 
-`iteration += 1`，回到阶段 2。
+`iteration += 1`，回到阶段 2。注意：pi-agent 的 `subagent` 是同步的，循环由编排器（orchestrator）代码驱动——每次调用返回后检查结果，决定是继续修复还是结束。
 
 ### 阶段 5：完成
 
@@ -282,10 +283,10 @@ REVIEW_PASSED: true — 架构合理、无关键问题、代码质量达标
 
 ### Subagent 管理
 
-1. **超时处理**：审查 subagent 设置合理超时（建议 120 秒），超时则重新启动一次
-2. **上下文隔离**：每个 subagent 使用 `fork_context: true` 继承主上下文
-3. **结果验证**：修改 subagent 返回后，抽查 1-2 个修改点确认变更真正落地
-4. **不要并行**：审查和修复是串行的——下一轮必须等上一轮审查结果出来后再决定
+1. **超时处理**：通过 `subagent({ timeoutMs: ... })` 设置超时。审查用 `timeoutMs: 120000`（2 分钟），修复用 `timeoutMs: 180000`（3 分钟）。超时后增加超时时间重试一次
+2. **上下文隔离**：pi-agent 使用 `context` 参数控制上下文。`context: 'fork'` 继承当前会话上下文，`context: 'fresh'` 使用干净上下文。审查 subagent 建议用 `context: 'fork'`
+3. **结果验证**：修复 subagent 返回后，抽查 1-2 个修改点确认变更真正落地
+4. **不要并行**：审查和修复是串行的——下一轮必须等上一轮审查结果出来后再决定。pi-agent 的 subagent 默认同步执行，天然满足这一约束
 
 ### Git 安全网
 
@@ -309,3 +310,10 @@ REVIEW_PASSED: true — 架构合理、无关键问题、代码质量达标
 2. **发现问题时**：列出问题并简要说明每个问题的风险，让用户了解循环在做什么
 3. **强制退出时**：解释为什么退出（达到迭代上限 / 问题不减反增 / 顽固问题），给用户后续建议
 4. **用户可随时中断**：一旦用户介入给出新指令，停止当前循环按新指令执行
+
+---
+
+## 相关技能
+
+- **ML 训练自优化闭环**：`~/prompt_boilerplates/Coding/ml-training.md` §11 提供了类似但专门针对机器学习训练场景的优化循环变体
+- **Git 安全网**：本技能依赖的 git 快照规范见 `git_safety_net.md`
