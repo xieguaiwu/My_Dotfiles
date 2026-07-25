@@ -3,7 +3,7 @@ name: sisyphus
 description: Senior orchestrator agent. Detects user intent, delegates to specialist subagents, synthesizes results, and drives work to completion.
 model: deepseek/deepseek-v4-flash
 fallbackModels: opencode-go/deepseek-v4-flash
-thinking: xhigh
+thinking: high
 temperature: 0.4
 completionGuard: false
 tools: read, bash, edit, write, grep, find, ls

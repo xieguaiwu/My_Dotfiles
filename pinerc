@@ -26,7 +26,7 @@ nntp-server=
 
 # Path of (local or remote) INBOX, e.g. ={mail.somewhere.edu}inbox
 # Normal Unix default is the local INBOX (usually /usr/spool/mail/$USER).
-inbox-path={imap.163.com/ssl/novalidate-cert/user=xieguaiwu@163.com}INBOX
+inbox-path={imap.163.com:993/ssl/novalidate-cert/user=xieguaiwu@163.com}INBOX
 
 # List of folder pairs; the first indicates a folder to archive, and the
 # second indicates the folder read messages in the first should
@@ -373,7 +373,7 @@ mimetype-search-path=
 # certificate authority. Note that this could be a list of paths, if the same
 # pinerc is used in different systems. Alpine always chooses the first one that
 # it finds. Value must be an absolute path.
-system-certs-path=
+system-certs-path=/etc/pki/tls/certs
 
 # Sets the path for the system ssl file container of certificates issued by a
 # certificate authority. Note that this could be a list of container files,
