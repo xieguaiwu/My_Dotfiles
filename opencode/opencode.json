@@ -114,12 +114,29 @@
           "context": 128000,
           "reasoning": true
         },
+        "glm-5.2": {
+          "context": 1000000,
+          "reasoning": true
+        },
         "kimi-k2.6": {
           "context": 256000,
           "attachment": true
         },
+        "kimi-k3": {
+          "context": 1000000,
+          "reasoning": true,
+          "attachment": true,
+          "options": {
+            "reasoningEffort": "max"
+          }
+        },
         "qwen3.6-plus": {
           "context": 260000,
+          "attachment": true
+        },
+        "kimi-k2": {
+          "context": 256000,
+          "reasoning": true,
           "attachment": true
         }
       },
@@ -150,6 +167,42 @@
       "options": {
         "baseURL": "https://api.deepseek.com",
         "apiKey": "{file:~/.config/opencode/secrets/deepseek}"
+      }
+    },
+    "kimi": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Kimi (月之暗面)",
+      "models": {
+        "kimi-k3": {
+          "context": 1000000,
+          "reasoning": true,
+          "attachment": true,
+          "options": {
+            "reasoningEffort": "max"
+          }
+        },
+        "kimi-k2.7-code": {
+          "context": 256000,
+          "reasoning": true
+        },
+        "kimi-k2.7-code-highspeed": {
+          "context": 256000,
+          "reasoning": true
+        },
+        "kimi-k2.6": {
+          "context": 256000,
+          "reasoning": true,
+          "attachment": true
+        },
+        "kimi-k2.5": {
+          "context": 256000,
+          "reasoning": true,
+          "attachment": true
+        }
+      },
+      "options": {
+        "baseURL": "https://api.moonshot.cn/v1",
+        "apiKey": "{file:~/.config/opencode/secrets/kimi}"
       }
     },
     "jdcloud": {

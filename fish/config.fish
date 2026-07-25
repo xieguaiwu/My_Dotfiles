@@ -229,3 +229,5 @@ alias pentest-scan='$HOME/pentest-ai/scripts/scan-and-report.sh'
 
 # MITM 实验室
 alias pentest-mitm='$HOME/pentest-ai/scripts/mitm-lab.sh'
+
+alias trash='gio trash'

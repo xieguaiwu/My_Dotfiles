@@ -1,13 +1,13 @@
 {
   "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-flash",
+  "defaultModel": "deepseek-v4-pro",
   "defaultThinkingLevel": "xhigh",
   "hideThinkingBlock": false,
   "theme": "opencode",
   "collapseChangelog": true,
   "quietStartup": true,
   "enableInstallTelemetry": false,
-  "lastChangelogVersion": "0.80.3",
+  "lastChangelogVersion": "0.82.0",
   "packages": [
     "git:https://github.com/awtotty/pi-opencode.git",
     "npm:pi-mcp-adapter",
@@ -50,6 +50,48 @@
         "turnBudget": {
           "maxTurns": 25,
           "graceTurns": 5
+        }
+      },
+      "hephaestus": {
+        "turnBudget": {
+          "maxTurns": 30,
+          "graceTurns": 5
+        }
+      },
+      "prometheus": {
+        "turnBudget": {
+          "maxTurns": 20,
+          "graceTurns": 3
+        }
+      },
+      "metis": {
+        "turnBudget": {
+          "maxTurns": 15,
+          "graceTurns": 3
+        }
+      },
+      "ultrabrain": {
+        "turnBudget": {
+          "maxTurns": 20,
+          "graceTurns": 3
+        }
+      },
+      "momus": {
+        "turnBudget": {
+          "maxTurns": 15,
+          "graceTurns": 3
+        }
+      },
+      "oracle": {
+        "turnBudget": {
+          "maxTurns": 20,
+          "graceTurns": 3
+        }
+      },
+      "sisyphus": {
+        "turnBudget": {
+          "maxTurns": 20,
+          "graceTurns": 3
         }
       }
     }
