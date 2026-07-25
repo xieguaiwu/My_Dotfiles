@@ -1,7 +1,7 @@
 ---
 name: resource-aware-delegation
-version: 1.0.0
-description: 在发起 subagent 前检查系统资源状态，根据 CPU/内存/Swap/GPU/PSI 压力数据自动调整并行策略、turnBudget 和 timeoutMs，避免 OOM 和系统卡顿
+version: 1.1.0
+description: 在发起 subagent 前检查系统资源状态，根据 CPU/内存/Swap/GPU/PSI 压力数据自动调整并行策略、turnBudget 和 timeoutMs，避免 OOM 和系统卡顿。含跨服务器变体 pi-resmon-remote 与训练看门狗的集成流程
 triggers:
   - "资源检查"
   - "subagent 规划"
@@ -172,6 +172,49 @@ WARNINGS=disk_usage=92%
 ```
 
 → 串行化、仅 light agent、timeoutMs ×1.5、maxTurns ×0.6
+
+## 跨服务器变体：pi-resmon-remote
+
+当需要将训练任务调度到远程服务器时，先使用 `pi-resmon-remote` 并行采集多台服务器的系统指标并自动检测训练崩溃，再做调度决策。
+
+```bash
+# 编排器用 --recommend（K=V 格式，与 pi-resmon --recommend 兼容）
+pi-resmon-remote --recommend
+
+# 人类可读摘要
+pi-resmon-remote --summary
+
+# 测试连通性
+pi-resmon-remote --validate
+
+# 只显示告警
+pi-resmon-remote --alert
+```
+
+| 字段 | 说明 |
+|------|------|
+| 配置位置 | `~/.pi/agent/resmon-remote/inventory.json`（用 SSH key 认证，不含密码） |
+| 认证方式 | 仅 SSH key（需先 `ssh-copy-id`）；不支持密码 |
+| dmesg OOM 检测 | 需要 root 权限 |
+| 回落机制 | 工具不可用时静默跳过，不影响现有流程 |
+
+**调用时机**（系统提示规则 #17 的扩展）：
+- 执行 `subagent({ tasks: [...] })` 或 `subagent({ chain: [...] })` 前，若需在远程服务器上运行任务
+- 检查训练任务状态时（替代手动 ssh 逐个检查）
+- 做跨服务器调度决策前
+
+## 与 ml-training.md 看门狗的集成
+
+在远程服务器上调度训练任务前，资源感知调度是前置步骤：
+
+1. **本地检查**：`pi-resmon --recommend --class heavy` — 确认本机可发起任务
+2. **远程检查**：`pi-resmon-remote --recommend` — 确认目标服务器资源充足
+3. **部署看门狗**：根据目标服务器的 GPU 数量选择模式
+   - 单 GPU → `watchdog.py`（顺序执行）
+   - 双 GPU → `parallel_watchdog.py`（分批量并行）
+4. **任务定义**：在看门狗的 `TASKS` 列表中按优先级定义训练任务
+
+> 详见 `~/prompt_boilerplates/Coding/ml-training.md` 的《扩展：看门狗 (Watchdog) 自动化训练》章节，以及该文档 §十一《自优化闭环》——训练不满意时的自主改进循环。
 
 ## 注意事项
 

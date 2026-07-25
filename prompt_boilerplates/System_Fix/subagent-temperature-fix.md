@@ -1,7 +1,7 @@
 ---
 name: subagent-temperature-fix
-version: 2.0.0
-description: 验证并修复 pi-agent subagent 的 temperature 配置链。检测 4 个包 12 个文件是否完整传递 temperature，如被 npm update 覆盖则自动重新打补丁。同时可作为温度配置审计工具。
+version: 2.2.0
+description: 验证并修复 pi-agent subagent 的 temperature 配置链。pi-coding-agent v0.82.0+ 移除了 dist 层的 temperature 透传，本 skill 检测 3 个包 9 个文件并自动重新打补丁。补丁已集成到 ~/.pi/patches/temperature/reapply.sh（postinstall 自动重打）。
 triggers:
   - "subagent温度修复"
   - "temperature fix"
@@ -73,9 +73,9 @@ PI_CODING_DIR="$HOME/.npm-global/lib/node_modules/@earendil-works/pi-coding-agen
 AGENT_CORE_DIR="$PI_CODING_DIR/node_modules/@earendil-works/pi-agent-core"
 AGENT_YAML_DIR="$HOME/.pi/agent/agents"
 
-echo "pi-subagents:    ${NPM_DIR:?NOT FOUND}"
-echo "pi-coding-agent: ${PI_CODING_DIR:?NOT FOUND}"
-echo "pi-agent-core:   ${AGENT_CORE_DIR:?NOT FOUND}"
+echo "pi-subagents:    ${NPM_DIR:?NOT FOUND} ($(node -e "console.log(require('$NPM_DIR/package.json').version)" 2>/dev/null || echo '?'))"
+echo "pi-coding-agent: ${PI_CODING_DIR:?NOT FOUND} ($(node -e "console.log(require('$PI_CODING_DIR/package.json').version)" 2>/dev/null || echo '?'))"
+echo "pi-agent-core:   ${AGENT_CORE_DIR:?NOT FOUND} ($(node -e "console.log(require('$AGENT_CORE_DIR/package.json').version)" 2>/dev/null || echo '?'))"
 echo "agent YAML dir:  ${AGENT_YAML_DIR:?NOT FOUND}"
 ```
 
@@ -348,10 +348,65 @@ echo -n "Agent createLoop:    "; grep -q "temperature: this.temperature" "$AGENT
 
 ---
 
+## ✅ 当前状态（2026-07-26）
+
+温度链已全部修复并验证通过 ✅ （9/9 检查点，pi-coding-agent v0.82.1）
+
+## 🔄 v0.82.0+ 重大变更
+
+**pi-coding-agent v0.82.0+ 移除了整个 temperature 传递链**：
+- `cli/args.js` — 无 `--temperature` 参数
+- `main.js` / `sdk.js` / `agent-session-services.js` — 无 temperature 字段
+- `pi-agent-core/agent.js` — 无 `this.temperature`，`createLoopConfig()` 不包含 temperature
+- Pi-ai provider 层（`simple-options.js` → `buildBaseOptions`）**仍原生支持** `options.temperature`
+- pi-subagents（`pi-args.ts`）**仍设置** `PI_SUBAGENT_TEMPERATURE` 环境变量
+
+**断点在 pi-coding-agent 中间层**，需在 5 个 dist 文件中重建传递链。
+
+### 新数据流（v0.82.1 修复后）
+
+```
+Agent YAML → buildPiArgs → PI_SUBAGENT_TEMPERATURE
+             ↘ 或 CLI: --temperature <value>
+  → sdk.js (resolve CLI > env > undefined)
+    → Agent({temperature})
+      → agent.js: this.temperature
+        → createLoopConfig() → { temperature }
+          → streamFn → ...options
+            → buildBaseOptions → temperature: options?.temperature
+              → provider API (anthropic/openai/gemini)
+```
+
+### v0.82.x 检查点（9 个）
+
+| # | 文件 | 检查模式 |
+|---|------|----------|
+| 1 | `pi-coding-agent/dist/cli/args.js` | `result.temperature` |
+| 2 | `pi-coding-agent/dist/main.js` | `options.temperature` |
+| 3 | `pi-coding-agent/dist/main.js` | `temperature: sessionOptions.temperature` |
+| 4 | `pi-coding-agent/dist/core/agent-session-services.js` | `temperature: options.temperature` |
+| 5 | `pi-coding-agent/dist/core/sdk.js` | `PI_SUBAGENT_TEMPERATURE` or `temperature =` |
+| 6 | `pi-agent-core/dist/agent.js` | `this.temperature` |
+| 7 | `pi-agent-core/dist/agent.js` | `temperature: this.temperature` |
+| 8 | `pi-subagents/src/agents/agent-serializer.ts` | `temperature` (KNOWN_FIELDS) |
+| 9 | `pi-subagents/src/runs/shared/pi-args.ts` | `PI_SUBAGENT_TEMPERATURE` |
+
+## 🤖 自动重打
+
+修复已集成到 `~/.pi/patches/reapply.sh`（pi-agent postinstall 钩子）。
+
+**手动重打**：
+```bash
+~/.pi/patches/temperature/reapply.sh --apply
+```
+
+**版本兼容**：脚本对 0.82.x 自动修复，对 0.83+ 尝试修复并报告，对未知版本输出诊断。
+
 ## ⚠️ 注意事项
 
-1. **npm update 会覆盖**：所有修改在 `node_modules/` 中。运行 `npm update` 或重装后需重新运行本 skill。
+1. **npm update 会覆盖**：所有修改在 `node_modules/` 的 `dist/` 编译产物中。运行 `pi update` 后运行 `~/.pi/patches/reapply.sh` 或手动执行本 skill。
 2. **Anthropic 特例**：启用 thinking 时跳 temperature（API 限制），`compat.supportsTemperature=false` 的模型也不接受自定义温度。这是 provider 层行为，非本修复引入。
 3. **默认值行为**：`temperature` 未设置（`undefined`）时，provider 使用 API 默认温度，与修复前一致。
-4. **版本要求**：`pi-subagents >= 0.28.0`，`pi-coding-agent >= 0.79.0`。
-5. **Git 安全网不适用**：修改的是 `~/.pi/agent/npm/` 和 `~/.npm-global/` 下的 `node_modules` 文件，位于 HOME 目录内。不能用 git 追踪。每次 npm update 后重新运行本 skill。
+4. **版本要求**：`pi-subagents >= 0.36.0`，`pi-coding-agent >= 0.82.1`。
+5. **Git 安全网不适用**：修改的是 `~/.pi/agent/npm/` 和 `~/.npm-global/` 下的 `node_modules` 文件。补丁脚本在 `~/.pi/patches/temperature/` 下。
+6. **版本升级**：若 pi-coding-agent 升级到 0.83+ 且 auto-apply 失败，用 pi agent 运行本 skill 进行适配。

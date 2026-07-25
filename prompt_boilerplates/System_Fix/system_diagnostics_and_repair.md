@@ -23,8 +23,8 @@ tools:
   - edit
   - grep
   - glob
-  - todowrite
-  - task
+  - todo_create
+  - subagent
 ---
 
 # Linux 系统诊断与修复 Skill

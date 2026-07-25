@@ -1,7 +1,7 @@
 ---
 name: ml-training
-version: 1.4.0
-description: 在远程服务器上进行机器学习训练任务的完整方法论——从环境检查、烟雾测试、看门狗自动化、训练监控、可视化诊断到结果验证的全流程
+version: 1.5.0
+description: 在远程服务器上进行机器学习训练任务的完整方法论——从环境检查、烟雾测试、看门狗自动化、训练监控、可视化诊断到结果验证的全流程。额外定义结果不理想时的自主优化循环：批判性评估→修复施工→重新训练→再评估
 triggers:
   - "训练模型"
   - "跑训练"
@@ -13,6 +13,11 @@ triggers:
   - "看门狗"
   - "watchdog"
   - "自动化训练"
+  - "自优化"
+  - "改进循环"
+  - "训练不满意"
+  - "结果不好"
+  - "自我改进"
   - "多领域训练"
   - "并行训练"
   - "训练可视化"
@@ -39,6 +44,14 @@ inputs:
     description: 目标训练步数
     required: false
     default: "500"
+  - name: max_optimization_iterations
+    description: 自优化循环最大迭代次数（训练结果不理想时自动进入循环）
+    required: false
+    default: "3"
+  - name: acceptance_threshold
+    description: 验收阈值级别（通过/有风险/需重训）
+    required: false
+    default: "通过"
 tools:
   - bash
   - read
@@ -52,6 +65,14 @@ tools:
 ## 任务目标
 
 在远程服务器上可靠地执行机器学习训练任务，避免资源竞争、静默失败、输出缓冲、NaN爆炸等常见陷阱。本 skill 总结了实际项目中反复遇到的训练事故及修复方法。
+
+> **📖 快速导航**：本文件 ~4700 行，建议先读以下核心章节了解全貌：
+> - **第零步**：了解项目（§0）— 必读，避免盲目行动
+> - **执行流程**（§Step 1-7）— 训练标准操作流程
+> - **训练可视化 → “七、快速验收流程”**（含量化验收阈表）— 训练结果好坏的判定标准
+> - **看门狗自动化训练**（正文“扩展：看门狗”节）— 多任务自动化训练
+> - **自优化闭环**（§十一）— 结果不理想时的自主改进循环
+> - **附录A**：可视化代码清单 — 可直接复制使用的绘图函数
 
 ## 第零步：了解项目（训练前必须完成）
 
@@ -72,8 +93,11 @@ tools:
 | 4 | **GOAL.md**（如存在） | 项目目标和当前 Phase |
 | 5 | **ASSET_INVENTORY.md**（如存在） | 目录结构、文件用途、服务器列表 |
 | 6 | 最近的 daily log / scratchpad | 上一个 Agent 在做什么、是否还有训练在运行 |
+| 7 | **ml-training.md**（本文档） | 训练方法论、可视化、验收阈表、自优化循环（§十一） |
 
 **如果你不知道项目当前在哪，后面的所有决策都是盲目的。**
+
+> 🔄 **结果不理想？** 训练完成后，如果 IC/胜率等指标达不到预期，本文档 §十一（自优化闭环）定义了完整的改进循环：批判性 agent 诊断根因 → worker agent 修复 → 重新训练 → 再评估。不需要手动猜测该改什么。
 
 ### 0.2 检查服务器状态
 
@@ -345,6 +369,9 @@ if step % 50 == 0 or step == 0 or (best_score - prev_best) > 0.01:
 | **ASSET_INVENTORY.md** | 新增/删除模块 | 目录变动、数据文件、服务器信息 |
 | **特征文档** | 特征增删改 | 特征名、定义、计算方式 |
 | **证伪文档**（FALSIFICATION_SUMMARY.md） | 结论变更 | 修正过时结论、添加新证伪 |
+| **自优化迭代日志**（§十一） | 每次自优化循环后 | 迭代次数、诊断报告、改动清单、前后指标对比 |
+
+> 🔄 **自优化循环产出**：每次 §十一 自优化迭代结束后，迭代日志、诊断报告、对比图也必须更新到项目文档中。终态为「方向饱和」时，必须更新 FALSIFICATION_SUMMARY.md。
 
 #### 7.2 文档漂移检测
 
@@ -3346,6 +3373,8 @@ for d in Path('results').iterdir():
 **验收输出示例：**
 `IC=+0.054 (阈 +0.050 → ✅); 胜率=67% (≥60 → ✅); VRAM 趋势=+0.3 MB/step (<+1 → ✅); 三图无异常 → ✅ 通过`。
 不要输出“看起来不错”这种无数字结论。
+
+> 🔄 **验收未通过？** 如果结果落入 ⚠️ 或 🔥 范围，不要盲目重跑或直接放弃——进入 **§十一 自优化闭环**：批判性 agent 诊断根因 → worker agent 修复 → 重新训练 → 再评估。最多 3 次迭代，要么修复问题，要么诚实承认方向受限。
 ---
 
 ## 八、扩展可视化（第二部分）
@@ -3923,41 +3952,11 @@ visual-engineering (看图) → momus (审查) → orchestrator (整合) → 结
 
 ---
 
-## 附录 A：本可视化章节的完整文件清单（快速索引）
-
-以下是可以直接复制到项目中的代码模块及其所在章节：
-
-| 模块 | 位置 | 功能 | 文件建议名 |
-|:---|:---|:---|:---|
-| `plot_loss_curve` | §1.1 | Loss/IC 曲线 + 滑动平均 | `viz_curves.py` |
-| `plot_gradient_diagnostics` | §1.2 | 梯度范数 + 信噪比 | `viz_dl.py` |
-| `plot_gpu_timeline` | §1.3 | GPU VRAM / util / 泄漏检测 | `viz_gpu.py` |
-| `plot_walkforward_panel` | §1.4 | Walkforward IC 面板 | `viz_walkforward.py` |
-| `plot_permutation_test` | §1.5 | 置换检验分布 | `viz_perm.py` |
-| `plot_formula_evolution` | §1.6 | RL 公式多样性演化 | `viz_formula.py` |
-| `plot_dl_health` | §1.7 | DL 熵/增益热力图 | `viz_dl.py` |
-| `plot_kappa_dashboard` | §1.8 | κ 共移性仪表板 | `viz_kappa.py` |
-| `plot_experiment_comparison` | §1.9 | 多实验对比 | `viz_compare.py` |
-| `TrainingLogger` | §三 | 训练日志记录器 | `training_logger.py` |
-| `save_all_plots` | §三 | 批量生成全部图 | `viz_save.py` |
-| `create_training_hooks` | §3.1 | 训练可视化钩子 | `viz_hooks.py` |
-| `plot_lr_schedule` | §8.1 | LR 调度曲线 | `viz_lr.py` |
-| `plot_calibration_scatter` | §8.2 | 预测校准散点图 | `viz_calibration.py` |
-| `plot_formula_hall_of_fame` | §8.3 | RL 公式 Hall of Fame | `viz_formula.py` |
-| `plot_multi_seed_curves` | §8.4 | 多种子聚合阴影图 | `viz_multi_seed.py` |
-| `plot_attention_map` | §8.5 | Transformer 注意力图 | `viz_dl.py` |
-| `should_alert_kill` | §8.7 | 自动告警 kill 判断 | `auto_alert.py` |
-| `cleanup_plots` | §8.8 | 磁盘 cleaned 图文件 | `viz_save.py` |
-| `plot_feature_winnow` | §九 | 特征漂移图 | `viz_debug.py` |
-| `plot_loss_histogram` | §九 | per-sample loss 直方图 | `viz_debug.py` |
-| `plot_nan_rootcause` | §九 | NaN 根因图 | `viz_debug.py` |
-
-> 建议：在项目根目录创建 `training_utils/` 目录，按上表模块建文件，使 §训练可视化 中每个绘图函数都可直接 `from training_utils import plot_xxx` 调用。
-
-
-### 2.4 事件标注工具（C6）——在已有图上叠加训练事件
+### 事件标注工具（C6）——在已有图上叠加训练事件
 
 任何已生成的 `matplotlib.axes.Axes` 对象都可以在调用 `fig.savefig` 之前通过此函数叠加事件标注线，标明 checkpoint 保存点、LR 调度切换点、OOM 恢复点等。
+
+> 📍 本节可应用于 §一至 §十中任何已生成的图。原编号 “2.4” 因其通用性改为独立节，不绑定于 §二实现方案。
 
 ```python
 def annotate_events(ax, events, ymax=None, fontsize=7):
@@ -4087,3 +4086,669 @@ fig.savefig(path, dpi=100, bbox_inches='tight')
 **注意事项**：
 - 事件不会保存在 `TrainingLogger` 中，因为没有事件记录接口
 - 如需跨实验追踪事件，在 `training_metrics.json` 中新增 `"events": [...]` 字段
+
+---
+
+## 附录 A：本可视化章节的完整文件清单（快速索引）
+
+以下是可以直接复制到项目中的代码模块及其所在章节：
+
+| 模块 | 位置 | 功能 | 文件建议名 |
+|:---|:---|:---|:---|
+| `plot_loss_curve` | §1.1 | Loss/IC 曲线 + 滑动平均 | `viz_curves.py` |
+| `plot_gradient_diagnostics` | §1.2 | 梯度范数 + 信噪比 | `viz_dl.py` |
+| `plot_gpu_timeline` | §1.3 | GPU VRAM / util / 泄漏检测 | `viz_gpu.py` |
+| `plot_walkforward_panel` | §1.4 | Walkforward IC 面板 | `viz_walkforward.py` |
+| `plot_permutation_test` | §1.5 | 置换检验分布 | `viz_perm.py` |
+| `plot_formula_evolution` | §1.6 | RL 公式多样性演化 | `viz_formula.py` |
+| `plot_dl_health` | §1.7 | DL 熵/增益热力图 | `viz_dl.py` |
+| `plot_kappa_dashboard` | §1.8 | κ 共移性仪表板 | `viz_kappa.py` |
+| `plot_experiment_comparison` | §1.9 | 多实验对比 | `viz_compare.py` |
+| `TrainingLogger` | §三 | 训练日志记录器 | `training_logger.py` |
+| `save_all_plots` | §三 | 批量生成全部图 | `viz_save.py` |
+| `create_training_hooks` | §3.1 | 训练可视化钩子 | `viz_hooks.py` |
+| `plot_lr_schedule` | §8.1 | LR 调度曲线 | `viz_lr.py` |
+| `plot_calibration_scatter` | §8.2 | 预测校准散点图 | `viz_calibration.py` |
+| `plot_formula_hall_of_fame` | §8.3 | RL 公式 Hall of Fame | `viz_formula.py` |
+| `plot_multi_seed_curves` | §8.4 | 多种子聚合阴影图 | `viz_multi_seed.py` |
+| `plot_attention_map` | §8.5 | Transformer 注意力图 | `viz_dl.py` |
+| `should_alert_kill` | §8.7 | 自动告警 kill 判断 | `auto_alert.py` |
+| `cleanup_plots` | §8.8 | 磁盘 cleaned 图文件 | `viz_save.py` |
+| `plot_feature_winnow` | §九 | 特征漂移图 | `viz_debug.py` |
+| `plot_loss_histogram` | §九 | per-sample loss 直方图 | `viz_debug.py` |
+| `plot_nan_rootcause` | §九 | NaN 根因图 | `viz_debug.py` |
+| `should_enter_self_optimization` | §11.1 | 根据阈表判断是否进入自优化循环 | `self_optimize.py` |
+| `compare_iterations` | §11.6 | 两次迭代指标对比 | `self_optimize.py` |
+| `plot_iteration_comparison` | §11.9 | 多迭代对比条形图 | `self_optimize.py` |
+
+> 建议：在项目根目录创建 `training_utils/` 目录，按上表模块建文件，使 §训练可视化 中每个绘图函数都可直接 `from training_utils import plot_xxx` 调用。
+
+> 🔄 **自优化循环模块**（`self_optimize.py`）：包含自优化闭环的三个核心函数，与看门狗集成后实现训练结果不理想时的自主改进循环。详见 §十一。
+
+
+---
+
+## 十一、自优化闭环：训练结果不理想时的自主改进循环
+
+> 核心思想：当训练结果未通过 §量化验收阈表 的验收标准时，不盲目重跑或放弃，而是进入一个结构化的自主改进循环——**诊断 → 修复 → 训练 → 再评估**，直至结果达标或确认该方向不可行为止。
+
+### 11.0 前置理念
+
+传统训练流程在结果不理想时，常常陷入两种极端：
+- **盲目重跑**：改一个随机参数就重来，不分析根因
+- **轻率放弃**：试一次没效果就关掉整个方向
+
+自优化闭环提供一个中间路径：**让每次失败的训练产生至少一个有价值的改进方向**，并把改进过程自动化。它不是万能药——如果三次迭代后没有改善，应诚实承认该方向当前不可行而非无休止循环。
+
+---
+
+### 11.1 触发条件（自优化入口）
+
+训练完成后，根据 §量化验收阈表 的验收结果决定是否进入自优化循环：
+
+| 验收结论 | 含义 | 行动 |
+|:---:|---|---|
+| ✅ 通过 | 所有指标在 ✅ 范围内 | 结束，不进入循环 |
+| ⚠️ 有风险 | 1-2 个指标在 ⚠️ 范围，无 🔥 | **建议进入循环**，但允许跳过 |
+| 🔥 硬故障 | 任一 🔥 指标或硬故障触发 | **强制进入循环**（除非根因明确且无法修复） |
+| ❌ NaN/崩溃 | 训练未完成 | 先修复崩溃（见 §Step 6），再评估是否进入循环 |
+
+**自动触发检查**（在训练结束的 `finalize()` 中集成）：
+
+```python
+def should_enter_self_optimization(metrics: dict, thresholds: dict = None) -> tuple:
+    """根据验收阈表判断是否应进入自优化循环。
+    
+    Returns:
+        (should_enter: bool, reason: str, severity: str)
+        severity: 'mandatory' | 'recommended' | 'skip'
+    """
+    if thresholds is None:
+        thresholds = {
+            'mean_ic_min': 0.030,        # ⚠️ 下限
+            'mean_ic_fail': 0.030,       # 🔥 下限（同上，复用）
+            'win_rate_min': 0.50,        # ⚠️
+            'win_rate_fail': 0.50,       # 🔥
+            'degradation_ratio_max': 0.60,  # 🔥
+            'n_unique_formulas_min': 10,    # ⚠️
+            'n_unique_fail': 10,            # 🔥
+        }
+    
+    hard_failures = []
+    warnings = []
+    
+    # 1. IC 检查
+    mean_ic = metrics.get('wf_mean_ic', 0)
+    if mean_ic < thresholds['mean_ic_fail']:
+        hard_failures.append(f'IC={mean_ic:+.4f} < {thresholds["mean_ic_fail"]}')
+    elif mean_ic < thresholds.get('mean_ic_ok', 0.05):
+        warnings.append(f'IC={mean_ic:+.4f} 在风险区')
+    
+    # 2. 胜率检查
+    win_rate = metrics.get('wf_win_rate', 0)
+    if win_rate < thresholds['win_rate_fail']:
+        hard_failures.append(f'胜率={win_rate:.0%} < {thresholds["win_rate_fail"]:.0%}')
+    
+    # 3. NaN 检查
+    if metrics.get('has_nan', False):
+        hard_failures.append('训练中出现 NaN')
+    
+    # 4. 过拟合检查
+    ic_degradation = metrics.get('ic_degradation_ratio', 0)
+    if ic_degradation > thresholds.get('degradation_ratio_max', 0.60):
+        hard_failures.append(f'IC退化率={ic_degradation:.0%} > 60%')
+    
+    # 5. 公式多样性检查（RL 专属）
+    n_unique = metrics.get('n_unique_formulas', 999)
+    if n_unique < thresholds.get('n_unique_fail', 10):
+        hard_failures.append(f'公式多样性={n_unique} < 10')
+    
+    if hard_failures:
+        return True, '; '.join(hard_failures), 'mandatory'
+    elif warnings:
+        return True, '; '.join(warnings), 'recommended'
+    else:
+        return False, '所有指标通过', 'skip'
+```
+
+### 11.2 循环结构（三迭代上限）
+
+自优化循环有严格的最大迭代次数，防止无限循环：
+
+```yaml
+自优化循环参数:
+  最大迭代次数: 3          # 超过则视为该方向当前不可行
+  每次迭代最大耗时: 4h       # 防止单次迭代过长
+  退出条件（任一满足）:
+    - 所有指标进入 ✅ 范围
+    - 连续两次迭代指标无改善（< 5% 提升）
+    - 达到最大迭代次数 3
+    - 诊断发现根本性不可行（如数据泄漏无法修复、信号不存在于数据中）
+```
+
+**循环流程图**：
+
+```
+训练完成
+  ↓
+验收评估（§量化验收阈表）
+  ↓          
+  ├── ✅ 通过 ──→ 结束，输出最终报告
+  │
+  └── ⚠️/🔥 ──→ 进入自优化循环
+                    ↓
+              iteration += 1
+                    ↓
+              ╔══════════════════════════╗
+              ║  第 1 步：诊断           ║
+              ║  (批判性 agent 评估)     ║
+              ╚══════════════════════════╝
+                    ↓
+              ╔══════════════════════════╗
+              ║  第 2 步：修复           ║
+              ║  (worker agent 施工)    ║
+              ╚══════════════════════════╝
+                    ↓
+              ╔══════════════════════════╗
+              ║  第 3 步：训练部署       ║
+              ║  (重新训练 + 可视化)    ║
+              ╚══════════════════════════╝
+                    ↓
+              ╔══════════════════════════╗
+              ║  第 4 步：再评估         ║
+              ║  (再次验收)             ║
+              ╚══════════════════════════╝
+                    ↓
+               ├── ✅ 通过 ──→ 结束
+               ├── ⚠️/🔥 且 < 3 次且有改善 → 继续循环
+               ├── ⚠️/🔥 且 ≥ 3 次 → 结束，标记受限
+               └── ⚠️/🔥 且无改善 → 结束，标记饱和
+```
+
+---
+
+### 11.3 第 1 步：诊断——批判性 Agent 评估方向
+
+诊断是整个循环中最关键的一步。必须由具备批判性思维能力的子代理（如 `momus` / `oracle` / `deep`）执行，不能由施工 agent 自诊自修。
+
+#### 诊断范围
+
+诊断 agent 必须回答以下问题（按优先级排序）：
+
+| 优先级 | 问题 | 检查方法 | 输出 |
+|:---:|------|---------|------|
+| P0 | **数据是否干净？** | 特征相关矩阵、NaN 分布、np.roll 回绕检查 | 数据健康评分 ✅/⚠️/🔥 |
+| P0 | **有无前瞻偏误？** | update-before-fuse、全序列 z-score | 偏误清单 |
+| P1 | **信号方向对不对？** | RL 裸 IC vs Ridge 预测 IC 的符号对比 | deploy_sign 正确性 |
+| P1 | **公式是否在坍塌？** | n_unique 趋势、特征家族集中度 | 坍塌程度 |
+| P2 | **超参是否合理？** | LR、batch size、max_tokens 与模型规模匹配 | 超参建议 |
+| P2 | **特征是否足够多样？** | 特征来源数、跨族平均 |r| | 多样性评分 |
+| P3 | **训练时长是否足够？** | Loss 曲线是否仍在下降 | 建议步数 |
+| P3 | **随机种子是否导致波动？** | 多种子对比（如果有） | 稳定性评估 |
+
+#### 诊断输出格式
+
+```yaml
+诊断报告:
+  迭代: 1/3
+  数据质量:
+    评分: ⚠️
+    问题: "特征 F[7] 和 F[12] 相关系数 = 0.999（复制品）"
+    证据: "特征相关矩阵第 7 行第 12 列"
+    修复建议: "删除 F[12]，替换为 OI 变化率"
+  信号方向:
+    评分: ✅
+    说明: "Ridge 系数 6/8 窗口同号，deploy_sign=+1"
+  公式多样性:
+    评分: 🔥
+    问题: "20 个 top 公式中 16 个是 SIGN(x) 变体"
+    证据: "n_unique=5 < 阈值 10"
+    修复建议: "增加探索噪声系数从 0.05 到 0.15"
+  超参:
+    评分: ⚠️
+    建议: "LR 从 3e-4 降至 1e-4，max_tokens 从 30 降至 15"
+  总体判定: "可修复，预计 1-2 次迭代后达标"
+  行动优先级: ["删除 F[12] 并替换", "增大探索噪声", "降低 LR"]
+```
+
+#### Agent 调度示例
+
+```yaml
+# 在 subagent chain 中执行诊断
+subagent:
+  chain:
+    - agent: momus           # 批判性评估——先独立审查结果
+      task: |
+        审查以下训练结果，对照 ml-training.md §量化验收阈表 逐项检查：
+        - training_metrics.json 内容
+        - loss_curve_final.png 的收敛状态
+        - walkforward_panel_final.png 的窗口稳定性
+        - gpu_timeline_final.png 的资源使用
+        输出结构化诊断报告（包含 P0-P3 评级和具体修复建议）
+    - agent: oracle          # 交叉验证——确认 Momus 的判断没有遗漏
+      task: |
+        基于 Momus 的诊断报告，做第二人审查：
+        1. 是否有遗漏的 P0 问题？
+        2. Momus 给出的修复建议是否合理？
+        3. 修复优先级排序是否正确？
+        输出确认/修正后的行动优先级列表
+```
+
+> **关键约束**：诊断 agent 只读不写。它不修改代码、不启动训练。它的唯一产出是一份结构化诊断报告。
+
+---
+
+### 11.4 第 2 步：修复——Worker Agent 施工
+
+诊断报告产出后，由施工 agent（如 `hephaestus` / `worker`）执行修复。修复范围严格限制在诊断报告中指定的变更。
+
+#### 修复类型
+
+| 修复类型 | 典型操作 | 验证方法 | 风险 |
+|---------|---------|---------|------|
+| **数据修复** | 删除复制特征、替换泄漏特征、重算数据 | `md5sum` 对比；特征相关矩阵重新检查 | 低——影响可逆 |
+| **代码修复** | 修正 update-before-fuse、修正 np.roll→shift | grep 验证顺序；单元测试 | 低——可版本回退 |
+| **超参调整** | LR、batch_size、max_tokens、entropy_coeff | 烟雾测试确认不 crash | 中——可能效果不如预期 |
+| **架构调整** | 增删层、改激活函数、加 dropout | 烟雾测试确认 loss 下降正常 | 高——可能引入新 bug |
+| **特征增删** | 加新数据源、删冗余特征 | 烟雾测试 + 特征相关矩阵 | 中——可能需要修改数据管线 |
+
+#### 施工原则
+
+1. **单次迭代只改 1-2 个问题**：改动越多，越难判断哪个修复有效。P0 优先。
+2. **每次改动必须有 git commit**：
+   ```bash
+   git commit -m "self-opt iter{iter}: {fix_description}"
+   # 如： self-opt iter1: remove duplicate F[12], increase exploration noise
+   ```
+3. **施工完成后必须跑烟雾测试**（§Step 1）：确认改动不引入新问题
+4. **记录改动到迭代日志**：
+   ```python
+   iteration_log = {
+       "iteration": 1,
+       "diagnosis": "特征复制 + 探索噪声不足",
+       "changes": ["删除 F[12]", "entropy_coeff 0.05→0.15"],
+       "smoke_test": "✅ 通过",
+       "commit": "abc123def",
+   }
+   ```
+
+#### Agent 调度示例
+
+```yaml
+subagent:
+  chain:
+    - agent: hephaestus
+      task: |
+        根据 Momus 诊断报告执行以下修复（严格按优先级顺序）：
+        P0: 删除 features.py 中的 F[12]（与 F[7] 重复），替换为 OI 变化率
+        P1: 在 config 中将 entropy_coeff 从 0.05 改为 0.15
+        P2: 将 learning_rate 从 3e-4 降至 1e-4
+        
+        每完成一项改动：
+        1. git commit（message 格式: "self-opt iter1: {描述}"）
+        2. 验证改动生效（grep/print 确认）
+        
+        所有改动完成后：
+        3. 运行烟雾测试（--steps 10）
+        4. 确认烟雾测试通过
+        5. 记录改动摘要到迭代日志
+```
+
+---
+
+### 11.5 第 3 步：训练部署（重新训练）
+
+修复完成后，用与首次训练**完全相同的配置**（除修复项外）重新部署训练：
+
+| 参数 | 规则 |
+|:---|:---|
+| 训练步数 | 与首次相同（或根据诊断建议增加） |
+| 随机种子 | **使用新种子**（避免与首次相同的初始化偏差） |
+| GPU | 与首次相同 |
+| 看门狗 | 如果有看门狗，作为新任务追加（不覆盖首次结果） |
+
+**重新训练的部署方式**：
+
+```bash
+# 方式 1：直接用训练脚本（推荐用于单次迭代）
+ssh user@server "
+  cd /path/to/project && \
+  CUDA_VISIBLE_DEVICES={gpu_id} PYTHONUNBUFFERED=1 python3 -u train.py \
+    --steps {steps} --output results/{task_name}_iter{iter} --seed {new_seed}
+"
+
+# 方式 2：通过看门狗（推荐用于多个迭代同时进行时）
+# 在看门狗 TASKS 列表中追加新任务
+TASKS.append({
+    "name": f"{task_name}_iter{iter}",
+    "script": "scripts/run.py",
+    "args": ["--steps", "500", "--seed", str(new_seed),
+             "--output", f"results/{task_name}_iter{iter}"],
+    "timeout": 3600,
+})
+```
+
+**关键**：迭代结果存入独立输出目录（`results/{task_name}_iter{iter}/`），不覆盖首次结果。这样三者（v1/iter1/iter2）都可做对比可视化。
+
+---
+
+### 11.6 第 4 步：再评估
+
+训练完成后，用 §量化验收阈表 再次验收，并与前一次结果对比：
+
+```python
+def compare_iterations(prev_metrics: dict, curr_metrics: dict) -> dict:
+    """对比两次迭代的指标变化。
+    
+    Returns:
+        dict with keys:
+        - improved: list[str] 改善项
+        - regressed: list[str] 退步项
+        - unchanged: list[str] 无变化项
+        - overall: float 综合改善评分 (-1.0 ~ 1.0)
+        - verdict: 'improved' | 'worsened' | 'mixed' | 'saturated'
+    """
+    KEYS = ['wf_mean_ic', 'wf_win_rate', 'ic_sharpe', 'n_unique_formulas']
+    
+    improved = []
+    regressed = []
+    unchanged = []
+    
+    for key in KEYS:
+        if key not in prev_metrics or key not in curr_metrics:
+            continue
+        diff = curr_metrics[key] - prev_metrics[key]
+        # 正方向：IC/胜率/Sharpe/多样性 越高越好
+        if diff > 0.01 * abs(prev_metrics[key] + 1e-10):
+            improved.append(f"{key}: {prev_metrics[key]:+.4f} → {curr_metrics[key]:+.4f} ({diff:+.4f})")
+        elif diff < -0.01 * abs(prev_metrics[key] + 1e-10):
+            regressed.append(f"{key}: {prev_metrics[key]:+.4f} → {curr_metrics[key]:+.4f} ({diff:+.4f})")
+        else:
+            unchanged.append(f"{key}: {curr_metrics[key]:+.4f}")
+    
+    # 综合判定
+    n_improved = len(improved)
+    n_regressed = len(regressed)
+    
+    if n_improved > 0 and n_regressed == 0:
+        verdict = 'improved'
+    elif n_regressed > 0 and n_improved == 0:
+        verdict = 'worsened'
+    elif n_improved == 0 and n_regressed == 0:
+        verdict = 'saturated'
+    else:
+        verdict = 'mixed'
+    
+    return {
+        'improved': improved,
+        'regressed': regressed,
+        'unchanged': unchanged,
+        'overall': (n_improved - n_regressed) / max(len(KEYS), 1),
+        'verdict': verdict,
+    }
+```
+
+**再评估决策树**：
+
+```
+验收通过?（所有指标 ✅）
+  ├── 是 ──→ 输出最终报告，结束循环
+  └── 否 ──→ 检查迭代次数
+                ├── ≥ 3 次 ──→ 结束，标记为 "达到最大迭代，方向受限"
+                └── < 3 次 ──→ 检查改善趋势
+                                ├── 改善（verdict='improved'） ──→ 继续循环
+                                ├── 混合（verdict='mixed'）   ──→ 检查 P0 问题是否解决
+                                │     ├── P0 已解决 ──→ 继续循环
+                                │     └── P0 未解决 ──→ 回到诊断阶段聚焦 P0
+                                └── 无改善/退步 ──→ 结束，标记为 "方向饱和"
+```
+
+---
+
+### 11.7 退出后处理（三种终态）
+
+循环结束后，根据终态执行不同操作：
+
+| 终态 | 定义 | 输出 | 后续行动 |
+|:---:|------|------|---------|
+| ✅ **通过** | 验收通过 | 最终结果报告 + 迭代对比图 | 正常进入部署/文档更新流程 |
+| 🔶 **方向受限** | 3 次迭代未通过，但持续改善 | "方向未成熟"报告 + 迭代对比 | 接入 §RL 公式发现的适用性边界（决策树）评估是否该继续 |
+| 🔴 **方向饱和** | 连续无改善，停止迭代 | "方向放弃"报告 + 为什么不可行 | 更新 FALSIFICATION_SUMMARY.md，归档结果 |
+
+```yaml
+# 方向受限报告示例
+终态: 方向受限
+迭代: 3/3
+指标演化:
+  iter0 (baseline): IC=+0.021, 胜率=48%
+  iter1 (删重复特征): IC=+0.035, 胜率=52%  ← 改善
+  iter2 (加探索噪声): IC=+0.042, 胜率=55%  ← 改善
+  iter3 (降 LR):      IC=+0.039, 胜率=53%  ← 回落
+趋势: 持续改善但未达阈值（IC=+0.050, 胜率=60%）
+结论: 方向有微弱信号，但尚不稳定
+建议: 接入 §RL 公式发现的适用性边界（决策树）—检查特征多样性是否足够？
+      如果特征仅来自 OHLCV 单源，考虑添加独立数据源后重试
+```
+
+```yaml
+# 方向放弃报告示例
+终态: 方向饱和
+迭代: 2/3（提前终止——连续无改善）
+指标演化:
+  iter0 (baseline): IC=+0.018, 胜率=45%
+  iter1 (加特征):   IC=+0.015, 胜率=44%  ← 退步
+  iter2 (改超参):   IC=+0.019, 胜率=46%  ← 无改善
+P0 根因排查:
+  - 数据无泄漏（✅ passed）
+  - 特征多样性: 5 个特征全部来自 OHLCV 单源，跨族 |r|=0.62 > 0.3 ❌
+  - Ridge 基线 IC=+0.022 ≈ 迭代结果 → 信号已经饱和
+结论: 当前特征集下信号已到达极限，RL 无增量价值
+建议: 关闭此方向，记录到 FALSIFICATION_SUMMARY.md
+      如果未来有新的独立数据源（如基本面/另类数据），可重新评估
+```
+
+---
+
+### 11.8 与看门狗集成
+
+看门狗可以扩展为支持自优化循环：
+
+```python
+# 在看门狗配置中启用自优化
+WATCHDOG_CONFIG = {
+    "self_optimization": {
+        "enabled": True,
+        "max_iterations": 3,
+        "diagnosis_agent": "momus",      # 诊断 agent
+        "fix_agent": "hephaestus",        # 施工 agent
+        "verify_agent": "oracle",         # 验证 agent（可选）
+        # 触发条件：验收未通过时自动进入循环
+        "trigger_on": ["⚠️", "🔥"],
+        # 迭代结果目录前缀
+        "output_prefix": "results/{task_name}_iter{iter}",
+    }
+}
+```
+
+**看门狗状态扩展**：
+```python
+status["tasks"][task_name]["iterations"] = [
+    {
+        "iter": 0,
+        "status": "completed",
+        "mean_ic": 0.021,
+        "output": "results/task_v1/",
+    },
+    {
+        "iter": 1,
+        "status": "completed",
+        "mean_ic": 0.035,
+        "changes": ["删除 F[12]", "entropy_coeff 0.05→0.15"],
+        "output": "results/task_iter1/",
+    },
+    {
+        "iter": 2,
+        "status": "running",
+        "changes": ["LR 3e-4→1e-4"],
+        "output": "results/task_iter2/",
+    },
+]
+```
+
+---
+
+### 11.9 可视化：迭代对比图
+
+每次迭代完成后，自动生成迭代对比图，直观展示改进效果：
+
+```python
+def plot_iteration_comparison(iteration_results: dict, metric_key='wf_mean_ic'):
+    """绘制多次迭代的指标对比条形图。
+    
+    iteration_results: {iter_name: {'mean_ic': float, 'win_rate': float, ...}}
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    
+    names = list(iteration_results.keys())
+    metrics = ['wf_mean_ic', 'wf_win_rate', 'n_unique_formulas', 'ic_sharpe']
+    labels = ['Mean IC', 'Win Rate', 'Unique Formulas', 'IC Sharpe']
+    
+    fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+    
+    for idx, (metric, label) in enumerate(zip(metrics, labels)):
+        ax = axes[idx // 2, idx % 2]
+        values = [iteration_results[n].get(metric, 0) for n in names]
+        colors = ['#e74c3c' if v <= 0 else '#2ecc71' for v in values]
+        
+        bars = ax.bar(range(len(names)), values, color=colors, alpha=0.8, width=0.6)
+        ax.set_xticks(range(len(names)))
+        ax.set_xticklabels(names, rotation=45, ha='right', fontsize=9)
+        ax.set_ylabel(label)
+        ax.set_title(f'{label} across Iterations')
+        ax.axhline(y=0, color='black', linewidth=0.5)
+        
+        # 标注数值
+        for i, v in enumerate(values):
+            ax.text(i, v + 0.001 * (1 if v >= 0 else -1),
+                    f'{v:+.4f}' if metric != 'wf_win_rate' else f'{v:.0%}',
+                    ha='center', fontsize=8)
+        ax.grid(True, alpha=0.3, axis='y')
+    
+    plt.suptitle(f'Self-Optimization Loop Results ({len(names)-1} iterations)',
+                 fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    return fig
+```
+
+---
+
+### 11.10 自优化循环 Checklist（Agent 使用前逐项确认）
+
+- [ ] 首次训练验收未通过（⚠️ 或 🔥）
+- [ ] 迭代次数 ≤ 3
+- [ ] 诊断 agent 已输出结构化报告，包含 P0-P3 问题
+- [ ] 施工 agent 严格按诊断报告的优先级顺序修复
+- [ ] 每次改动后有 git commit（message 格式规范）
+- [ ] 烟雾测试在修复后通过
+- [ ] 重新训练使用新种子（非首次相同种子）
+- [ ] 迭代结果存入独立目录（不覆盖首次）
+- [ ] 再评估使用 §量化验收阈表 的同一标准
+- [ ] 达到退出条件后，输出终态报告（通过/受限/饱和）
+- [ ] 方向饱和时更新 FALSIFICATION_SUMMARY.md
+- [ ] 迭代对比图已生成并存档
+
+---
+
+### 11.11 常见自优化失败模式
+
+| 模式 | 表现 | 根因 | 修复 |
+|:---|------|------|------|
+| **循环空转** | 每次迭代微调 IC 但不改变方向 | 修复焦点在 P2/P3，P0 问题从未解决 | 诊断阶段强制检查 P0 后再施工 |
+| **过度自信** | 连续 3 次迭代 IC 从 0.025→0.032→0.038，但未审视特征多样性不足导致的硬上限 | 只看了 IC 数值趋势，未对照 §RL 公式发现的适用性边界 判断饱和 | 每轮迭代后运行 §RL 公式发现的适用性边界（决策树），确认 RL 在该领域仍有增量价值 |
+| **自我修复窄化** | 每次迭代只改一个参数（如仅调 LR），忽略数据问题 | 施工 agent 选择最容易改的，而非优先级最高的 | 施工前强制审查诊断报告中的 P0 问题是否已修复，P0 未完成不进入施工 |
+| **缺乏归档** | 3 次迭代结束后，FALSIFICATION_SUMMARY.md 无更新 | 退出时只关注了结果，忘记更新上下文文档 | 退出时强制检查：FALSIFICATION_SUMMARY.md 和 CONTEXT_FOR_NEXT_AGENT.md 已更新 |
+| **GPU 时间黑洞** | 循环迭代消耗大量 GPU 时间，最终方向被放弃 | 未设置单次迭代最大耗时（4h） | 在看门狗中配置 `self_optimization.timeout_per_iter`，超时自动退出 |
+
+---
+
+### 11.12 调用示例：完整自优化流程
+
+以下是一个完整调用的伪代码示例，展示 orchestrator agent 如何编排整个自优化循环：
+
+```yaml
+# orchestrator 视角的自优化流程
+
+# 阶段 0：首次训练完成，验收不通过
+验收结果: 🔥 (IC=+0.021, 胜率=48%, 特征复制 F[7]=F[12])
+
+# 阶段 1：启动自优化循环
+subagent:
+  chain:
+    # Step 1: 诊断——批判性 agent 分析问题根因
+    - agent: momus
+      task: |
+        训练结果验收失败。审查以下内容输出诊断报告：
+        - results/ashare_clean/training_metrics.json
+        - results/ashare_clean/plots/*.png
+        重点关注：P0 数据质量、P1 信号方向、P2 超参、P3 容量
+        
+    # Step 2: 施工——按诊断报告修复
+    - agent: hephaestus
+      task: |
+        执行 Momus 诊断报告中指定的修复（P0 优先）：
+        1. 删除重复特征 F[12]，替换为 OI 变化率
+        2. 增加熵探索系数到 0.15
+        修复后运行烟雾测试确认通过
+        
+    # Step 3: 重新训练
+    - agent: hephaestus
+      task: |
+        在服务器上重新启动训练（新种子，输出目录 results/ashare_clean_iter1/）
+        使用看门狗或直接 nohup 启动
+        等待训练完成（或定期检查状态）
+        
+    # Step 4: 再评估
+    - agent: oracle
+      task: |
+        读取 iter1 的训练结果，对照 §量化验收阈表 逐项检查
+        与 baseline 比较：有哪些指标改善？哪些退步？
+        输出比对比结果和下一步建议
+```
+
+---
+
+### 11.13 自优化循环的适用性边界
+
+不是所有情况都适合自优化循环：
+
+| 适合进入循环 | 不适合进入循环 |
+|:---|:---|
+| IC=0.030 → 目标 0.050，差距明确 | 数据管线根本性损坏（如所有特征全是 NaN） |
+| 特征复制/泄漏等可修复 bug | 数据源不存在（如需要 OI 但市场不提供） |
+| 超参明显不合理（LR=0.1, batch=8） | 训练脚本本身有语法错误/依赖缺失 |
+| 公式坍塌（可调探索噪声） | 目标 IC 阈值设定不合理（如要求单时序 IC=0.20） |
+| 跨市场迁移第一次失败（可调整） | 方法论决策树已指向 ❌（§RL 公式发现的适用性边界——决策树） |
+
+**黄金法则**：
+> 自优化循环修复的是**实现缺陷**，不是**方法论天花板**。
+> 如果 §RL 公式发现的适用性边界中的决策树已经指向 ❌，循环应该直接被跳过，而非硬跑 3 次迭代。
+
+---
+
+## 附录 Z：自优化循环相关代码索引
+
+| 代码 | 位置 | 功能 |
+|:---|:---|:---|
+| `should_enter_self_optimization()` | §11.1 | 根据阈表判断是否进入循环 |
+| `compare_iterations()` | §11.6 | 两次迭代指标对比 |
+| `plot_iteration_comparison()` | §11.9 | 迭代对比图 |
+| `iteration_log` 格式 | §11.4 | 迭代日志记录 |
+| 看门狗 `self_optimization` 配置 | §11.8 | 看门狗集成 |
+| 终态报告模板 | §11.7 | 方向受限/饱和报告格式 |
+| 诊断报告格式 | §11.3 | 结构化诊断输出标准 |
+| 自优化 checklist | §11.10 | 操作前确认清单 |
+
+---
+
+*本附录索引会随 §十一 的更新而同步更新。*
