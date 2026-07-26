@@ -2,5 +2,5 @@
   "provider": "auto",
   "braveApiKey": "",
   "workflow": "auto-summary",
-  "allowBrowserCookies": false
+  "allowBrowserCookies": true
 }
