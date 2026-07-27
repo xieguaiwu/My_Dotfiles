@@ -24,7 +24,7 @@ These rules apply to ALL agents in this system:
    - 重量任务 (`hephaestus`, `ultrabrain`): `timeoutMs: 900000` (15 min)
    - Chain 调用: `timeoutMs` 设为各步推荐值之和，最低 600000
 
-    注意：`timeoutMs` 到期后编排器可继续推进，不要因为一个 agent 卡住而阻塞整个会话。
+   注意：`timeoutMs` 到期后编排器可继续推进，不要因为一个 agent 卡住而阻塞整个会话。
 
 ### 资源感知调度
 
