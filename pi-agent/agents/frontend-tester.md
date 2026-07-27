@@ -1,7 +1,7 @@
 ---
 name: frontend-tester
 description: Frontend testing specialist. Analyzes UI screenshots, renders, and generates visual regression tests with precision.
-model: nvidia/meta/llama-4-maverick-17b-128e-instruct
+model: opencode-go/qwen3.6-plus
 fallbackModels: nvidia/qwen/qwen3.5-397b-a17b
 thinking: low
 temperature: 0.3

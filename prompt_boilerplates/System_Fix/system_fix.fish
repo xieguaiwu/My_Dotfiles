@@ -178,21 +178,21 @@ function check_cache
     echo ""
     echo "  ② 用户缓存占用"
 
-    # 缓存列表: 路径 描述 危险性(safe/caution)
+    # 缓存列表: 路径|描述|危险性(safe/caution)
     set -l caches
-    set caches $caches "$HOME/.cache/pip\tpip (Python 包缓存)\tsafe"
-    set caches $caches "$HOME/.cache/uv\tuv (Python 包缓存)\tsafe"
-    set caches $caches "$HOME/.cache/bun\tbun (JS 运行时缓存)\tsafe"
-    set caches $caches "$HOME/.npm\tnpm (Node 包缓存)\tsafe"
-    set caches $caches "$HOME/.cache/opencode\tOpenCode AI 缓存\tsafe"
-    set caches $caches "$HOME/.cache/huggingface\thuggingface 模型缓存\tcaution"
-    set caches $caches "$HOME/.cache/ms-playwright\tPlaywright 浏览器\tcaution"
-    set caches $caches "$HOME/.cache/puppeteer\tPuppeteer 浏览器\tcaution"
-    set caches $caches "$HOME/.cache/mathlib\tmathlib 缓存\tsafe"
-    set caches $caches "$HOME/.local/share/Trash\t回收站\tsafe"
+    set caches $caches "$HOME/.cache/pip|pip (Python 包缓存)|safe"
+    set caches $caches "$HOME/.cache/uv|uv (Python 包缓存)|safe"
+    set caches $caches "$HOME/.cache/bun|bun (JS 运行时缓存)|safe"
+    set caches $caches "$HOME/.npm|npm (Node 包缓存)|safe"
+    set caches $caches "$HOME/.cache/opencode|OpenCode AI 缓存|safe"
+    set caches $caches "$HOME/.cache/huggingface|huggingface 模型缓存|caution"
+    set caches $caches "$HOME/.cache/ms-playwright|Playwright 浏览器|caution"
+    set caches $caches "$HOME/.cache/puppeteer|Puppeteer 浏览器|caution"
+    set caches $caches "$HOME/.cache/mathlib|mathlib 缓存|safe"
+    set caches $caches "$HOME/.local/share/Trash|回收站|safe"
 
     for entry in $caches
-        set -l parts (string split \t $entry)
+        set -l parts (string split "|" $entry)
         set -l path $parts[1]
         set -l desc $parts[2]
         set -l risk $parts[3]

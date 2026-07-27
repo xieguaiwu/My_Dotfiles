@@ -82,7 +82,7 @@ tools:
 ```
 ## 🔍 计划执行以下操作
 1. 同步配置  — 更新 ~/My_Dotfiles/ 中 N 个文件的备份（仅更新已有项）
-2. 仓库审计  — 检查 K 个本地仓库的提交推送状态
+2. 仓库审计  — 扫描 ~/*/ ~/works/ ~/Desktop/ ~/Documents/ 等位置，检查 K 个本地仓库的提交推送状态
    - 自有仓库 → commit + push
    - 有上游的 fork → 仅本地 commit
 ```
@@ -122,8 +122,8 @@ find ~/My_Dotfiles -not -path '*/.git/*' -not -name '.gitignore' -not -path '*/n
 #### 1.2 Git 仓库审计
 
 ```bash
-# 扫描常见位置的所有 git 仓库
-for dir in ~/works/*/ ~/Desktop/*/ ~/My_Dotfiles/; do
+# 扫描所有常见位置的 git 仓库（含 ~/ 根层级和 ~/Documents/）
+for dir in ~/*/ ~/works/*/ ~/Desktop/*/ ~/Documents/*/ ~/My_Dotfiles/; do
   [ -d "$dir/.git" ] && echo "$dir"
 done
 ```
@@ -170,6 +170,7 @@ git remote -v           # 远程仓库 URL
   🟢 My_Dotfiles — 干净
   🟡 workspace/project — 2 个未提交文件
   🔴 Desktop/project — 3 个未推送 commit
+  🟡 Documents/Obsidian Vault — 1 个未跟踪文件
 
 ⚠️ 安全过滤：
   • 已跳过 N 个含敏感 key 的文件
@@ -214,7 +215,7 @@ git remote -v           # 远程仓库 URL
 
 
 
-#### 3.3 Git 提交推送（逐仓库确认）
+#### 3.2 Git 提交推送（逐仓库确认）
 
 对 Phase 1 中标记为 🟡/🔴/🔵 的仓库（🟢 干净的仓库自动跳过），**逐个确认**：
 
