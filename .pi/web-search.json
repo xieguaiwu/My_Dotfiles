@@ -2,5 +2,6 @@
   "provider": "auto",
   "braveApiKey": "",
   "workflow": "auto-summary",
-  "allowBrowserCookies": true
+  "allowBrowserCookies": true,
+  "tavilyApiKey": "<your-tavily-key>"
 }

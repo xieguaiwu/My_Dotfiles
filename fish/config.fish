@@ -82,6 +82,8 @@ alias fenglish-p='bl --llm --parse --from-lang English'
 alias tenglish-p='bl --llm --parse --to-lang English'
 alias ffrench-p='bl --llm --parse --from-lang French --to-lang English'
 
+alias trash='gio trash'
+
 # 智能语法解析: 输入含空格(句子) → 自动解析; 否则 → 普通翻译
 # 例: fgerman? "Der Mann geht nach Hause."
 function fgerman?
@@ -230,4 +232,5 @@ alias pentest-scan='$HOME/pentest-ai/scripts/scan-and-report.sh'
 # MITM 实验室
 alias pentest-mitm='$HOME/pentest-ai/scripts/mitm-lab.sh'
 
-alias trash='gio trash'
+# Tavily Search API key (free tier, 1000 searches/month)
+set -gx TAVILY_API_KEY "<your-tavily-key>"
