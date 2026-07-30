@@ -1,5 +1,5 @@
 #!/bin/sh
-# pi-resmon v1.0.0 — Lightweight resource monitor for pi-agent orchestration
+# pi-resmon v1.1.0 — Lightweight resource monitor for pi-agent orchestration
 #
 # Reads /proc and optional nvidia-smi, computes a risk score,
 # and recommends subagent delegation strategy.
@@ -14,6 +14,32 @@
 # Exit code: 0=ok, 1=error
 
 set -eu
+
+# ==============================================
+# bc availability guard (use awk fallback if missing)
+# Without this, tier classification silently falls
+# to else branch → everything becomes CRITICAL.
+# ==============================================
+if command -v bc >/dev/null 2>&1; then
+    _float_cmp() { echo "$1" | bc -l 2>/dev/null; }
+else
+    _float_cmp() {
+        _expr="$1"
+        # Expressions with 'scale=N;' prefix (arithmetic, not comparison)
+        # awk cannot parse 'scale=3; 2.5/4' as a single expression because
+        # ';' is a statement separator.  Split and use printf with precision.
+        case "$_expr" in
+            scale=*\;*)
+                _scale="${_expr%%;*}"; _scale="${_scale#scale=}"
+                _rhs="${_expr#*; }"
+                awk -v _s="$_scale" 'BEGIN { printf "%." _s "f", ('"$_rhs"'); }' 2>/dev/null
+                ;;
+            *)
+                awk "BEGIN { print ($_expr) ? 1 : 0 }" 2>/dev/null
+                ;;
+        esac
+    }
+fi
 
 # Detect logical cores (default 4 if detection fails)
 NPROC=$(nproc 2>/dev/null || grep -c ^processor /proc/cpuinfo 2>/dev/null || echo 4)
@@ -34,7 +60,7 @@ while [ $# -gt 0 ]; do
             esac
             ;;
         --show-thresholds) ACTION="thresholds" ;;
-        -v|--version) echo "pi-resmon v1.0.0"; exit 0 ;;
+        -v|--version) echo "pi-resmon v1.1.0"; exit 0 ;;
         -h|--help)
             sed -n '/^# Usage:/,/^$/p' "$0" | sed 's/^# *//; /^$/d'
             exit 0 ;;
@@ -48,18 +74,18 @@ done
 # ==============================================
 
 # --- CPU Load (1m, 5m, 15m from /proc/loadavg) ---
-read LOAD1 LOAD5 LOAD15 RUNNING TOTAL_PROC < /proc/loadavg 2>/dev/null
+read LOAD1 LOAD5 LOAD15 _REST1 _REST2 < /proc/loadavg 2>/dev/null || { LOAD1=0; LOAD5=0; LOAD15=0; }
 LOAD1=${LOAD1:-0}; LOAD5=${LOAD5:-0}; LOAD15=${LOAD15:-0}
 
 # Load ratio: 5-min average normalized by logical cores
-LOAD_RATIO=$(echo "scale=3; $LOAD5 / $NPROC" | bc -l 2>/dev/null || echo "0")
+LOAD_RATIO=$(_float_cmp "scale=3; $LOAD5 / $NPROC" || echo "0")
 # Ensure leading zero for display consistency
-case "$LOAD_RATIO" in .*) LOAD_RATIO="0$LOAD_RATIO" ;; esac
+case "$LOAD_RATIO" in .*) LOAD_RATIO="0$LOAD_RATIO" ;; -.*) LOAD_RATIO="0${LOAD_RATIO#-}" ;; esac
 
 # Spike detection: 1-min load significantly exceeds 5-min trend
 SPIKE=0
-if [ "$(echo "$LOAD1 > 2 * $LOAD5" | bc -l 2>/dev/null)" = "1" ] && \
-   [ "$(echo "$LOAD5 > 0.5" | bc -l 2>/dev/null)" = "1" ]; then
+if [ "$(_float_cmp "$LOAD1 > 2 * $LOAD5")" = "1" ] || \
+   [ "$(_float_cmp "$LOAD1 > $LOAD15 * 2")" = "1" ]; then
     SPIKE=1
 fi
 
@@ -71,21 +97,41 @@ PSI_IO=$(awk '/some avg10/ {gsub(/avg10=/,"",$2); print $2}' /proc/pressure/io 2
 # --- Memory from /proc/meminfo ---
 MEM_TOTAL=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
 MEM_AVAIL=$(awk '/MemAvailable/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
+# Fallback for pre-3.14 kernels without MemAvailable
+if [ -z "$MEM_AVAIL" ] || [ "$MEM_AVAIL" = "0" ]; then
+  MEM_FREE=$(awk '/MemFree/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
+  MEM_BUFFERS=$(awk '/Buffers/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
+  MEM_CACHED=$(awk '/^Cached/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
+  MEM_AVAIL=$((MEM_FREE + MEM_BUFFERS + MEM_CACHED))
+fi
 MEM_TOTAL_MB=$((MEM_TOTAL / 1024))
 MEM_AVAIL_MB=$((MEM_AVAIL / 1024))
 
-# --- cgroup v2 memory limits (container/dotfiles awareness) ---
+# --- cgroup memory limits (container / dotfiles awareness) ---
+# v2 first (unified hierarchy), v1 fallback (legacy containers)
 MEM_CGROUP_LIMIT="inf"
+CGROUP_MAX="max"
+CGROUP_CUR=0
 if [ -f /sys/fs/cgroup/memory.max ]; then
+    # cgroup v2
     read -r CGROUP_MAX < /sys/fs/cgroup/memory.max 2>/dev/null || CGROUP_MAX="max"
     if [ "$CGROUP_MAX" != "max" ] && [ -n "$CGROUP_MAX" ] && [ "$CGROUP_MAX" -gt 0 ] 2>/dev/null; then
         read -r CGROUP_CUR < /sys/fs/cgroup/memory.current 2>/dev/null || CGROUP_CUR=0
-        CGROUP_AVAIL=$((CGROUP_MAX - CGROUP_CUR))
-        CGROUP_AVAIL_MB=$((CGROUP_AVAIL / 1048576))
-        if [ "$CGROUP_AVAIL_MB" -lt "$MEM_AVAIL_MB" ]; then
-            MEM_AVAIL_MB=$CGROUP_AVAIL_MB
-            MEM_CGROUP_LIMIT="set"
-        fi
+    fi
+elif [ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+    # cgroup v1 fallback (Docker legacy, older k8s)
+    read -r CGROUP_MAX < /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || CGROUP_MAX="max"
+    # v1 limit_in_bytes can be 9223372036854771712 (~max int64) → treat as unlimited
+    if [ "$CGROUP_MAX" != "max" ] && [ -n "$CGROUP_MAX" ] && [ "$CGROUP_MAX" -lt 9223372036854771712 ] 2>/dev/null; then
+        read -r CGROUP_CUR < /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null || CGROUP_CUR=0
+    fi
+fi
+if [ "$CGROUP_MAX" != "max" ] && [ -n "$CGROUP_MAX" ] && [ "$CGROUP_MAX" -gt 0 ] 2>/dev/null && [ "$CGROUP_CUR" -gt 0 ] 2>/dev/null; then
+    CGROUP_AVAIL=$((CGROUP_MAX - CGROUP_CUR))
+    CGROUP_AVAIL_MB=$((CGROUP_AVAIL / 1048576))
+    if [ "$CGROUP_AVAIL_MB" -lt "$MEM_AVAIL_MB" ]; then
+        MEM_AVAIL_MB=$CGROUP_AVAIL_MB
+        MEM_CGROUP_LIMIT="set"
     fi
 fi
 
@@ -102,35 +148,53 @@ if [ "$SWAP_TOTAL" -gt 0 ] 2>/dev/null; then
         SWAP_TYPE="disk"
     fi
     SWAP_USED=$((SWAP_TOTAL - SWAP_FREE))
-    [ "$SWAP_USED" -lt 0 ] && SWAP_USED=0
-    SWAP_PCT=$(echo "scale=1; $SWAP_USED * 100 / $SWAP_TOTAL" | bc 2>/dev/null || echo "0")
+    # Guard against SwapFree > SwapTotal (edge case after reboot / cgroup migration)
+    if [ "$SWAP_USED" -lt 0 ]; then
+        SWAP_USED=0
+    elif [ "$SWAP_USED" -gt "$SWAP_TOTAL" ]; then
+        SWAP_USED="$SWAP_TOTAL"
+    fi
+    SWAP_PCT=$(_float_cmp "scale=1; $SWAP_USED * 100 / $SWAP_TOTAL" || echo "0")
     case "$SWAP_PCT" in .*) SWAP_PCT="0$SWAP_PCT" ;; esac
 fi
 
 # --- Disk usage (working directory partition) ---
-DISK_PCT=$(df . --output=pcent 2>/dev/null | tail -1 | tr -d ' %')
+# GNU df preferred; POSIX fallback via df -P + awk
+if df --output=pcent . >/dev/null 2>&1; then
+    DISK_PCT=$(df . --output=pcent 2>/dev/null | tail -1 | tr -d ' %')
+else
+    DISK_PCT=$(df -P . 2>/dev/null | awk 'NR==2 {print $5}' | tr -d '%')
+fi
 DISK_PCT=${DISK_PCT:-0}
 
-# --- GPU (optional, via nvidia-smi) ---
+# --- GPU (optional, via nvidia-smi) — sample all cards, take worst free memory
 GPU_AVAIL="no"
 GPU_MEM_FREE_PCT="0"
 GPU_UTIL="0"
 if command -v nvidia-smi >/dev/null 2>&1; then
-    GPU_LINE=$(nvidia-smi --query-gpu=memory.total,memory.used,utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1)
-    if [ -n "$GPU_LINE" ]; then
-        GPU_MEM_TOTAL=$(echo "$GPU_LINE" | awk -F', ' '{print $1}')
-        GPU_MEM_USED=$(echo "$GPU_LINE" | awk -F', ' '{print $2}')
-        GPU_UTIL=$(echo "$GPU_LINE" | awk -F', ' '{print $3}')
-        if [ "$GPU_MEM_TOTAL" -gt 0 ] 2>/dev/null; then
-            GPU_AVAIL="yes"
-            GPU_MEM_FREE_PCT=$(echo "scale=1; ($GPU_MEM_TOTAL - $GPU_MEM_USED) * 100 / $GPU_MEM_TOTAL" | bc 2>/dev/null || echo "0")
-        fi
+    GPU_LINES=$(nvidia-smi --query-gpu=memory.total,memory.used,utilization.gpu --format=csv,noheader,nounits 2>/dev/null)
+    if [ -n "$GPU_LINES" ]; then
+        GPU_AVAIL="yes"
+        _worst_free_pct="100"
+        _worst_util="0"
+        while IFS=', ' read -r _gpu_mem_total _gpu_mem_used _gpu_util; do
+            [ -z "$_gpu_mem_total" ] && continue
+            if [ "$_gpu_mem_total" -gt 0 ] 2>/dev/null; then
+                _free_pct=$(_float_cmp "scale=1; ($_gpu_mem_total - $_gpu_mem_used) * 100 / $_gpu_mem_total" || echo "0")
+                [ "$(_float_cmp "$_free_pct < $_worst_free_pct")" = "1" ] && _worst_free_pct="$_free_pct"
+                [ "$(_float_cmp "$_gpu_util > $_worst_util")" = "1" ] && _worst_util="$_gpu_util"
+            fi
+        done <<GPUEOF
+$GPU_LINES
+GPUEOF
+        GPU_MEM_FREE_PCT="$_worst_free_pct"
+        GPU_UTIL="$_worst_util"
     fi
 fi
 
-# --- Self RSS (pi-agent / node processes this session may spawn) ---
+# --- Self RSS (pi-agent session + spawned child processes) ---
 SELF_RSS_MB=0
-for _pid in $(pgrep -x 'pi|node' 2>/dev/null); do
+for _pid in $(pgrep '^(pi|node|python|python3)' 2>/dev/null); do
     _rss_val=$(ps -o rss= -p "$_pid" 2>/dev/null || echo 0)
     SELF_RSS_MB=$((SELF_RSS_MB + _rss_val / 1024))
 done
@@ -141,9 +205,9 @@ done
 # ==============================================
 
 # --- Load tier (5-min avg / nproc) ---
-if [ "$(echo "$LOAD_RATIO < 0.7" | bc -l)" = "1" ]; then load_tier=0
-elif [ "$(echo "$LOAD_RATIO < 1.5" | bc -l)" = "1" ]; then load_tier=1
-elif [ "$(echo "$LOAD_RATIO < 2.5" | bc -l)" = "1" ]; then load_tier=2
+if [ "$(_float_cmp "$LOAD_RATIO < 0.7")" = "1" ]; then load_tier=0
+elif [ "$(_float_cmp "$LOAD_RATIO < 1.5")" = "1" ]; then load_tier=1
+elif [ "$(_float_cmp "$LOAD_RATIO < 2.5")" = "1" ]; then load_tier=2
 else load_tier=3; fi
 
 # --- Memory tier (MemAvailable MB) ---
@@ -153,15 +217,15 @@ elif [ "$MEM_AVAIL_MB" -ge 1024 ]; then mem_tier=2
 else mem_tier=3; fi
 
 # --- PSI CPU tier ---
-if   [ "$(echo "$PSI_CPU < 5" | bc -l)" = "1" ]; then psi_cpu_tier=0
-elif [ "$(echo "$PSI_CPU < 20" | bc -l)" = "1" ]; then psi_cpu_tier=1
-elif [ "$(echo "$PSI_CPU < 40" | bc -l)" = "1" ]; then psi_cpu_tier=2
+if   [ "$(_float_cmp "$PSI_CPU < 5")" = "1" ]; then psi_cpu_tier=0
+elif [ "$(_float_cmp "$PSI_CPU < 20")" = "1" ]; then psi_cpu_tier=1
+elif [ "$(_float_cmp "$PSI_CPU < 40")" = "1" ]; then psi_cpu_tier=2
 else psi_cpu_tier=3; fi
 
 # --- PSI Memory tier ---
-if   [ "$(echo "$PSI_MEM < 1" | bc -l)" = "1" ]; then psi_mem_tier=0
-elif [ "$(echo "$PSI_MEM < 5" | bc -l)" = "1" ]; then psi_mem_tier=1
-elif [ "$(echo "$PSI_MEM < 15" | bc -l)" = "1" ]; then psi_mem_tier=2
+if   [ "$(_float_cmp "$PSI_MEM < 1")" = "1" ]; then psi_mem_tier=0
+elif [ "$(_float_cmp "$PSI_MEM < 5")" = "1" ]; then psi_mem_tier=1
+elif [ "$(_float_cmp "$PSI_MEM < 15")" = "1" ]; then psi_mem_tier=2
 else psi_mem_tier=3; fi
 
 # --- Swap tier (type-dependent) ---
@@ -169,15 +233,15 @@ swap_tier=0
 case "$SWAP_TYPE" in
     zram)
         # zram is compressed memory, not disk thrashing — much more lenient
-        if   [ "$(echo "$SWAP_PCT < 70" | bc -l)" = "1" ]; then swap_tier=0
-        elif [ "$(echo "$SWAP_PCT < 90" | bc -l)" = "1" ]; then swap_tier=1
+        if   [ "$(_float_cmp "$SWAP_PCT < 70")" = "1" ]; then swap_tier=0
+        elif [ "$(_float_cmp "$SWAP_PCT < 90")" = "1" ]; then swap_tier=1
         else swap_tier=2; fi  # zram never reaches tier 3
         ;;
     disk)
         # Real disk swap — system is likely overcommitted
-        if   [ "$(echo "$SWAP_PCT < 5" | bc -l)" = "1" ]; then swap_tier=0
-        elif [ "$(echo "$SWAP_PCT < 20" | bc -l)" = "1" ]; then swap_tier=1
-        elif [ "$(echo "$SWAP_PCT < 50" | bc -l)" = "1" ]; then swap_tier=2
+        if   [ "$(_float_cmp "$SWAP_PCT < 5")" = "1" ]; then swap_tier=0
+        elif [ "$(_float_cmp "$SWAP_PCT < 20")" = "1" ]; then swap_tier=1
+        elif [ "$(_float_cmp "$SWAP_PCT < 50")" = "1" ]; then swap_tier=2
         else swap_tier=3; fi
         ;;
 esac
@@ -185,9 +249,9 @@ esac
 # --- GPU tier (only if nvidia-smi available) ---
 gpu_tier=0
 if [ "$GPU_AVAIL" = "yes" ]; then
-    if   [ "$(echo "$GPU_MEM_FREE_PCT >= 50" | bc -l)" = "1" ]; then gpu_tier=0
-    elif [ "$(echo "$GPU_MEM_FREE_PCT >= 30" | bc -l)" = "1" ]; then gpu_tier=1
-    elif [ "$(echo "$GPU_MEM_FREE_PCT >= 10" | bc -l)" = "1" ]; then gpu_tier=2
+    if   [ "$(_float_cmp "$GPU_MEM_FREE_PCT >= 50")" = "1" ]; then gpu_tier=0
+    elif [ "$(_float_cmp "$GPU_MEM_FREE_PCT >= 30")" = "1" ]; then gpu_tier=1
+    elif [ "$(_float_cmp "$GPU_MEM_FREE_PCT >= 10")" = "1" ]; then gpu_tier=2
     else gpu_tier=3; fi
 fi
 
@@ -195,13 +259,20 @@ fi
 # RISK AGGREGATION
 # ==============================================
 
-# Base risk = max of all primary indicators
+# --- Disk tier (working directory partition usage) ---
+disk_tier=0
+if [ "$DISK_PCT" -gt 90 ] 2>/dev/null; then disk_tier=2  # MODERATE
+elif [ "$DISK_PCT" -gt 80 ] 2>/dev/null; then disk_tier=1  # LOW→MODERATE bridge
+fi
+
+# Base risk = max of all primary indicators (now includes disk)
 risk_num=$load_tier
 [ "$mem_tier" -gt "$risk_num" ] && risk_num=$mem_tier
 [ "$psi_mem_tier" -gt "$risk_num" ] && risk_num=$psi_mem_tier
 [ "$psi_cpu_tier" -gt "$risk_num" ] && risk_num=$psi_cpu_tier
 [ "$swap_tier" -gt "$risk_num" ] && risk_num=$swap_tier
 [ "$gpu_tier" -gt "$risk_num" ] && risk_num=$gpu_tier
+[ "$disk_tier" -gt "$risk_num" ] && risk_num=$disk_tier
 
 # Agent class modifier: heavy agents tighten restrictions
 if [ "$AGENT_CLASS" = "heavy" ] && [ "$risk_num" -ge 1 ]; then
@@ -284,7 +355,7 @@ _print_summary() {
 
 _print_thresholds() {
     cat <<'THRESHOLDS'
-=== pi-resmon v1.0.0 — Decision Thresholds ===
+=== pi-resmon v1.1.0 — Decision Thresholds ===
 
 Load Ratio (5-min load / nproc logical cores):
   LOW      < 0.7
@@ -314,6 +385,11 @@ Swap (type-dependent):
   zram: LOW <70% | MODERATE 70-90% | HIGH >90%  (compressed RAM, not thrashing)
   disk: LOW <5% | MODERATE 5-20% | HIGH 20-50% | CRITICAL >50%
 
+Disk (working directory partition usage %):
+  LOW      < 80%
+  MODERATE 80% – 90%
+  HIGH     > 90%
+
 GPU (if nvidia-smi available, by free memory %):
   LOW      free >= 50%
   MODERATE free 30-50%
@@ -325,7 +401,7 @@ Agent Class Modifier:
   light / medium => no adjustment
 
 Aggregation:
-  risk = max(load, mem, psi_mem, psi_cpu, swap, gpu)
+  risk = max(load, mem, psi_mem, psi_cpu, swap, gpu, disk)
 
 Strategy:
   LOW       → free_parallel       max 4, all agent classes
