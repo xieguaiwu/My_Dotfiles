@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "servers": {
+    "S5": {
+      "host": "223.109.239.36",
+      "port": 13732,
+      "user": "root",
+      "gpu_count": 0,
+      "gpu_names": [],
+      "enabled": true,
+      "tasks": []
+    }
+  },
+  "global": {
+    "ssh_timeout_sec": 15,
+    "ssh_retries": 1,
+    "collect_parallel": true,
+    "log_stale_default_threshold_sec": 300,
+    "gpu_idle_threshold_pct": 5.0,
+    "gpu_idle_consecutive_count": 2,
+    "loss_plateau_window": 50,
+    "loss_plateau_threshold_pct": 1.0,
+    "alert_dedup_window_sec": 3600,
+    "history_retention_days": 7,
+    "state_file": "~/.pi/agent/resmon-remote/state.json",
+    "dmesg_oom_keywords": ["Out of memory", "oom-kill", "Killed process"],
+    "log_oom_keywords": ["OOM", "out of memory", "CUDA out of memory", "RuntimeError: CUDA error"]
+  }
+}
