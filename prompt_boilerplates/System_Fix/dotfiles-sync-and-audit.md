@@ -123,15 +123,16 @@ find ~/My_Dotfiles -not -path '*/.git/*' -not -name '.gitignore' -not -path '*/n
 
 ```bash
 # 扫描所有常见位置的 git 仓库（含 ~/ 根层级和 ~/Documents/）
-for dir in ~/*/ ~/works/*/ ~/Desktop/*/ ~/Documents/*/ ~/My_Dotfiles/; do
-  [ -d "$dir/.git" ] && echo "$dir"
+# 限制深度防止大目录卡死
+for dir in $(find ~/ ~/works/ ~/Desktop/ ~/Documents/ ~/My_Dotfiles/ -maxdepth 2 -type d -name '.git' 2>/dev/null | sed 's|/.git||' | sort -u | head -50); do
+  [ -d "$dir" ] && echo "$dir"
 done
 ```
 
 对每个仓库：
 ```bash
 cd "$dir"
-git status --short      # 未暂存/未跟踪变更
+git status --porcelain      # 未暂存/未跟踪变更（机器可解析格式）
 git log --oneline @{u}..HEAD 2>/dev/null || echo "(no upstream)"  # 未推送提交
 git remote -v           # 远程仓库 URL
 ```

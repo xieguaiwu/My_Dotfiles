@@ -94,10 +94,43 @@ tools:
 | 5 | **ASSET_INVENTORY.md**（如存在） | 目录结构、文件用途、服务器列表 |
 | 6 | 最近的 daily log / scratchpad | 上一个 Agent 在做什么、是否还有训练在运行 |
 | 7 | **ml-training.md**（本文档） | 训练方法论、可视化、验收阈表、自优化循环（§十一） |
+| 8 | **graphify-out/GRAPH_REPORT.md**（如存在，否则先 graphify） | 项目架构图、God Nodes、跨模块依赖关系、社区划分 |
 
 **如果你不知道项目当前在哪，后面的所有决策都是盲目的。**
 
+> **统一文档阅读协议**：本清单是对 `project-documentation-protocol.md` §阶段A 的 ML 领域特化。非 ML 项目或首次进入项目时，先执行通用协议的文档清单检查（含 graphify 时效性检测和领域 skill 加载判断）。
+
+> 📐 **知识图谱**：项目若有 `graphify-out/` 目录，优先通过 `graphify-out/GRAPH_REPORT.md` 了解架构，再用 `graphify query/path/explain` 深入查询模块关系。
+
 > 🔄 **结果不理想？** 训练完成后，如果 IC/胜率等指标达不到预期，本文档 §十一（自优化闭环）定义了完整的改进循环：批判性 agent 诊断根因 → worker agent 修复 → 重新训练 → 再评估。不需要手动猜测该改什么。
+
+### 0.1a 构建/读取项目知识图谱
+
+在阅读项目文档后，使用 graphify 构建或更新项目的代码知识图谱：
+
+```bash
+# 如尚无 graphify-out，构建图谱
+graphify update .
+
+# 查阅架构概览
+cat graphify-out/GRAPH_REPORT.md
+
+# 查询特定模块的关系
+graphify query "数据流走向" --graph graphify-out/graph.json
+graphify explain "核心模块" --graph graphify-out/graph.json
+graphify path "数据加载" "模型" --graph graphify-out/graph.json
+```
+
+如果已有 `graphify-out/` 目录，优先通过 `GRAPH_REPORT.md` 了解项目架构，
+再通过 `graphify query/path/explain` 深入了解模块间关系。
+
+**graphify 图谱提供的信息**：
+- **God Nodes**：项目中最核心的模块（修改需谨慎）
+- **社区划分**：模块分组和边界
+- **依赖方向**：数据/控制流走向
+- **跨模块调用链**：比纯文本 grep 更全面的引用分析
+
+> ⚠️ graphify 依赖 DeepSeek API。若 API 不可用，使用 `graphify update .` 仍可生成不依赖 LLM 的代码结构图。
 
 ### 0.2 检查服务器状态
 
@@ -358,6 +391,9 @@ if step % 50 == 0 or step == 0 or (best_score - prev_best) > 0.01:
 
 训练**不是**终点。结果被记录在项目文档中才算一次完整的训练循环。**不更新文档的训练等于没跑**——后续 Agent 无从知晓你的发现。
 
+> **统一文档协议**：本章的文档更新清单和频率约定遵循 `project-documentation-protocol.md` 的通用协议。
+> ML 训练项目特有的文档（实验记录、FALSIFICATION_SUMMARY、graphify 重建）是对通用协议的领域特化。
+
 #### 7.1 必须更新的文档
 
 训练完成后，根据改动范围更新以下文档：
@@ -370,6 +406,7 @@ if step % 50 == 0 or step == 0 or (best_score - prev_best) > 0.01:
 | **特征文档** | 特征增删改 | 特征名、定义、计算方式 |
 | **证伪文档**（FALSIFICATION_SUMMARY.md） | 结论变更 | 修正过时结论、添加新证伪 |
 | **自优化迭代日志**（§十一） | 每次自优化循环后 | 迭代次数、诊断报告、改动清单、前后指标对比 |
+| **graphify-out/（知识图谱）** | 架构变更 / 模块增删 | 重建图谱：`graphify update .` → 验证 God Nodes → 确认新模块正确归类 |
 
 > 🔄 **自优化循环产出**：每次 §十一 自优化迭代结束后，迭代日志、诊断报告、对比图也必须更新到项目文档中。终态为「方向饱和」时，必须更新 FALSIFICATION_SUMMARY.md。
 
@@ -412,6 +449,11 @@ cat results/latest.json | python3 -c "import sys,json; d=json.load(sys.stdin); p
 每次架构变更后:
   - 全部核心文档审查
   - 运行文档 vs 代码一致性检查
+  - **重建 graphify 知识图谱**：`graphify update .`（命令参考 §0.1a）
+  - **验证图谱一致性**：God Nodes 是否合理、新模块是否正确归类
+  - **检查图谱社区划分**：确认新增模块被分配到正确的功能社区
+
+> **graphify 重建参考**：具体命令和验证步骤见 §0.1a「构建/读取项目知识图谱」。重建后可用 `graphify query`、`graphify explain`、`graphify path` 验证图谱一致性。
 ```
 
 ---

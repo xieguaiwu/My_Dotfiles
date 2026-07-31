@@ -226,7 +226,11 @@ Pi-agent 扩展的 `package.json` 包含 postinstall 脚本：
 
 2. **"Unknown type 1 charstring command" 警告**：此警告来自 PDF.js 的 Type 1 字体解析器，与 CMap 加载无关。CMap 加载失败可能导致字体回退到 Type 1 解析路径，间接触发此警告。修复 CMap 后此警告通常会减少，但若 PDF 本身包含非标准 Type 1 指令，仍可能出现残留警告——这是正常的，不影响文本提取。
 
-3. **版本兼容性**：本修复适用于 `unpdf@1.8.0` + `pdfjs-dist@5.7.284` 组合。如果 Pi-agent 升级了这些依赖，补丁可能需要调整 line offset。此时应检查新版本的 `getDocumentProxy` 函数是否已内置此修复，若未内置则重新生成补丁。
+3. **版本兼容性**：本修复适用于 `unpdf@1.8.0` + `pdfjs-dist@5.7.284` 组合。修复前先确认版本：
+   ```bash
+   node -e "console.log(require('./node_modules/unpdf/package.json').version)"
+   ```
+   如果版本不匹配，检查新版本 `getDocumentProxy` 是否已内置此修复（搜索 `fileURLToPath`）。若未内置，重新生成补丁。
 
 4. **替代修复方案**：也可以修改 `pdfjs-dist` 的 `node_utils_fetchData` 函数，在 `fs.readFile` 前添加 `fileURLToPath` 转换。但修改 unpdf 更简单、更局部化，且不会影响其他 pdfjs-dist 消费者。
 

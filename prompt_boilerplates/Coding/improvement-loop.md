@@ -315,5 +315,8 @@ REVIEW_PASSED: true — 架构合理、无关键问题、代码质量达标
 
 ## 相关技能
 
-- **ML 训练自优化闭环**：`~/prompt_boilerplates/Coding/ml-training.md` §11 提供了类似但专门针对机器学习训练场景的优化循环变体
+- **预防性质量关卡**：`development-quality-gates.md` — 在写代码时逐条对照 10 个关卡，预防本循环中会被审查出来的大部分问题。建议在循环开始前先过一次关卡清单。
+- **ML 训练自优化闭环**：`ml-training.md` §11 提供了专门针对机器学习训练场景的优化循环变体
+- **文档更新协议**：`project-documentation-protocol.md` §阶段B — 循环结束后必须按协议更新文档、重建 graphify
+- **资源感知调度**：`resource-aware-delegation.md` — 本循环使用 subagent（momus 审查 + hephaestus 修复），每次调用前应检查系统资源
 - **Git 安全网**：本技能依赖的 git 快照规范见 `git_safety_net.md`

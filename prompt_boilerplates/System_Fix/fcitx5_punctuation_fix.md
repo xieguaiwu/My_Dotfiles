@@ -185,16 +185,14 @@ sudo apt install --reinstall fcitx5-chinese-addons
 
 #### 3.4 重载配置
 
-修改配置后无需重启，发送 dbus 信号让 fcitx5 重载：
+修改配置后优先用 dbus 信号热重载（无需重启），仅在 dbus 不可用时使用 `pkill`：
 
 ```bash
+# 推荐：热重载
 dbus-send --session --dest=org.fcitx.Fcitx5 --type=method_call \
   /controller org.fcitx.Fcitx5.Controller1.ReloadConfig
-```
 
-或重启 fcitx5：
-
-```bash
+# 备选：重启（仅在 dbus 不可用时）
 pkill fcitx5
 # systemd user service 会自动重启
 ```

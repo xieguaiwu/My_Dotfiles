@@ -1,7 +1,7 @@
 ---
 name: subagent-temperature-fix
-version: 2.2.0
-description: 验证并修复 pi-agent subagent 的 temperature 配置链。pi-coding-agent v0.82.0+ 移除了 dist 层的 temperature 透传，本 skill 检测 3 个包 9 个文件并自动重新打补丁。补丁已集成到 ~/.pi/patches/temperature/reapply.sh（postinstall 自动重打）。
+version: 2.3.0
+description: 验证并修复 pi-agent subagent 的 temperature 配置链。pi-coding-agent v0.82.0+ 移除了 dist 层的 temperature 透传，本 skill 检测 3 个包 17 个检查点并自动重新打补丁。补丁已集成到 ~/.pi/patches/temperature/reapply.sh（postinstall 自动重打），覆盖 pi-coding-agent + pi-agent-core + pi-subagents 全部三层。
 triggers:
   - "subagent温度修复"
   - "temperature fix"
@@ -81,9 +81,16 @@ echo "agent YAML dir:  ${AGENT_YAML_DIR:?NOT FOUND}"
 
 ---
 
-### Step 1：全链验证（检测模式）
+### Step 0：快速检测（推荐）
 
-运行以下脚本，逐项检查每层温度传递是否完整。`✅`=通过，`❌`=缺失。
+优先使用集成检测脚本（覆盖全部 17 检查点）：
+```bash
+~/.pi/patches/temperature/reapply.sh
+```
+
+### Step 1：手动全链验证（备选）
+
+仅在 reapply.sh 不可用时运行以下脚本，逐项检查每层温度传递是否完整。`✅`=通过，`❌`=缺失。
 
 ```bash
 NPM_DIR="$HOME/.pi/agent/npm/node_modules/pi-subagents"
@@ -102,7 +109,7 @@ check() { local file=$1 label=$2 pattern=$3; shift 3
 
 echo "=== Step 1：全链温度验证 ==="
 echo ""
-echo "--- pi-subagents 源文件（7） ---"
+echo "--- pi-subagents 源文件（10） ---"
 check "$NPM_DIR/src/agents/agent-serializer.ts" \
   "KNOWN_FIELDS 包含 temperature" '"temperature"'
 check "$NPM_DIR/src/agents/agents.ts" \
@@ -123,6 +130,10 @@ check "$NPM_DIR/src/runs/background/subagent-runner.ts" \
   "subagent-runner.ts buildPiArgs 传 temperature" "temperature: step.temperature"
 
 echo ""
+check "$NPM_DIR/src/runs/shared/parallel-utils.ts" \
+  "parallel-utils.ts 有 temperature?: number" "temperature?: number"
+
+echo ""
 echo "--- pi-coding-agent 编译文件（4） ---"
 check "$PI_CODING_DIR/dist/cli/args.js" \
   "CLI --temperature 参数解析" "result.temperature"
@@ -132,6 +143,10 @@ check "$PI_CODING_DIR/dist/core/agent-session-services.js" \
   "agent-session-services.js 透传 temperature" "temperature: options.temperature"
 check "$PI_CODING_DIR/dist/core/sdk.js" \
   "sdk.js 读取 PI_SUBAGENT_TEMPERATURE env" "PI_SUBAGENT_TEMPERATURE"
+
+echo ""
+check "$NPM_DIR/src/runs/background/subagent-runner.ts" \
+  "subagent-runner.ts 读 temperature" "temperature: step.temperature"
 
 echo ""
 echo "--- pi-agent-core 编译文件（1） ---"
@@ -201,7 +216,7 @@ if ! grep -q "temperature: agent.temperature" "$FILE"; then
 fi
 
 # buildBuiltinOverrideConfig：在 Pick 中加入 temperature
-if ! grep -q '"temperature"' "$FILE" | grep -q "Pick"; then
+if ! grep -q 'Pick.*"temperature"' "$FILE"; then
   sed -i 's/\("thinking".*\)"\(.*\)"/\1"temperature", \2/' "$FILE" 2>/dev/null || true
 fi
 
@@ -318,7 +333,7 @@ fi
 
 ```bash
 FILE="$AGENT_CORE_DIR/dist/agent.js"
-if ! grep -q "this.temperature" "$FILE" | grep -v "createLoopConfig" | head -1 > /dev/null 2>&1; then
+if ! grep -q "this.temperature" < <(grep -v "createLoopConfig" "$FILE"); then
   sed -i '/this.toolExecution =/a\\tthis.temperature = runtimeOptions.temperature;' "$FILE"
   sed -i '/reasoning: this.reasoning,/a\\ttemperature: this.temperature,' "$FILE"
   echo "✅ agent.js: Agent 类接受 + 传递 temperature"
@@ -348,9 +363,19 @@ echo -n "Agent createLoop:    "; grep -q "temperature: this.temperature" "$AGENT
 
 ---
 
-## ✅ 当前状态（2026-07-26）
+## ✅ 当前状态（2026-07-31）
 
-温度链已全部修复并验证通过 ✅ （9/9 检查点，pi-coding-agent v0.82.1）
+温度链已全部修复并验证通过 ✅ （18/18 检查点，pi-coding-agent v0.83.0，pi-subagents **v0.38.0**）。
+
+**v0.38.0 适配**：0.38.0 再次从 pi-subagents 源码中删除了全部 temperature 支持（`agent-serializer.ts`/`agents.ts`/`pi-args.ts`/`parallel-utils.ts`/`execution.ts`/`async-execution.ts`/`subagent-runner.ts` 共 11 处）。reapply.sh 已适配：
+- `agents.ts` 补丁新增 **AgentConfig 接口**补丁（此前只补 BuiltinAgentOverrideBase/Config）
+- `async-execution.ts` 补丁新增 **spawnRunner steps** 路径（单跑异步路径，缩进 6-tab，`temperature: agentConfig.temperature`）——注意 buildSeqStep 的 replace 必须带 3-tab + `buildModelCandidates` 后缀精确匹配，否则全局 replace 会误伤 spawnRunner 处插入不存在的 `a` 变量导致 ReferenceError
+- `subagent-runner.ts` 补丁新增 **status store** 补丁（`thinking: step.thinking,` 后插入）——0.38.0 不再原生包含 status store 序列化
+- 修复 shell bug：`[ $(grep -cF ... || echo 0) -ge 2 ]` 无匹配时会变 `[ 0 0 -ge 2 ]` 报 too many arguments，改用 `runner_count=$(... || true)` + 变量比较
+
+**v0.83.0 适配**：`reapply.sh` 的 `agent-session-services.js` 和 `agent.js createLoopConfig` 补丁模式已改进为 regex fallback，兼容 v0.82.x 和 v0.83.x 代码结构。
+
+**持久化机制已就绪**：`~/.pi/patches/temperature/reapply.sh` 现覆盖全部三层，postinstall 钩子自动重打，无需手动干预。
 
 ## 🔄 v0.82.0+ 重大变更
 
@@ -377,7 +402,7 @@ Agent YAML → buildPiArgs → PI_SUBAGENT_TEMPERATURE
               → provider API (anthropic/openai/gemini)
 ```
 
-### v0.82.x 检查点（9 个）
+### v0.82.x 检查点（17 个，reapply.sh 覆盖全部）
 
 | # | 文件 | 检查模式 |
 |---|------|----------|
@@ -388,23 +413,51 @@ Agent YAML → buildPiArgs → PI_SUBAGENT_TEMPERATURE
 | 5 | `pi-coding-agent/dist/core/sdk.js` | `PI_SUBAGENT_TEMPERATURE` or `temperature =` |
 | 6 | `pi-agent-core/dist/agent.js` | `this.temperature` |
 | 7 | `pi-agent-core/dist/agent.js` | `temperature: this.temperature` |
-| 8 | `pi-subagents/src/agents/agent-serializer.ts` | `temperature` (KNOWN_FIELDS) |
-| 9 | `pi-subagents/src/runs/shared/pi-args.ts` | `PI_SUBAGENT_TEMPERATURE` |
+| 8 | `pi-subagents/src/agents/agent-serializer.ts` | `"temperature"` (KNOWN_FIELDS) |
+| 9 | `pi-subagents/src/agents/agents.ts` | `temperature?: number` (接口) |
+| 10 | `pi-subagents/src/agents/agents.ts` | `Number(frontmatter.temperature)` (解析) |
+| 11 | `pi-subagents/src/runs/shared/pi-args.ts` | `temperature?: number` (接口) |
+| 12 | `pi-subagents/src/runs/shared/pi-args.ts` | `PI_SUBAGENT_TEMPERATURE` (env var) |
+| 13 | `pi-subagents/src/runs/shared/parallel-utils.ts` | `temperature?: number` (接口) |
+| 14 | `pi-subagents/src/runs/foreground/execution.ts` | `temperature: agent.temperature` |
+| 15 | `pi-subagents/src/runs/background/async-execution.ts` | `temperature: a.temperature` (buildSeqStep) |
+| 16 | `pi-subagents/src/runs/background/async-execution.ts` | `temperature: agentConfig.temperature` (recoveryDescriptor) |
+| 17 | `pi-subagents/src/runs/background/subagent-runner.ts` | `temperature: step.temperature`（状态存储，原生）|
+| 18 | `pi-subagents/src/runs/background/subagent-runner.ts` | `temperature: step.temperature,`（buildPiArgs 调用，后台路径）|
 
-## 🤖 自动重打
+> **主要执行路径**：优先使用 `~/.pi/patches/temperature/reapply.sh` 进行一键检测/修复，以下 Step 1/2/3 的手动脚本仅在 reapply.sh 不可用或版本不兼容时作为备选。
 
-修复已集成到 `~/.pi/patches/reapply.sh`（pi-agent postinstall 钩子）。
+## 🤖 自动重打（持久化）
+
+修复已集成到 `~/.pi/patches/temperature/reapply.sh`，通过 `~/.pi/patches/reapply.sh` → pi-agent postinstall 钩子自动触发。
+
+**覆盖范围**（17 检查点，1 个脚本）：
+- pi-coding-agent `dist/` 文件：5 检查点（`cli/args.js`, `main.js`×2, `agent-session-services.js`, `sdk.js`）
+- pi-agent-core `dist/` 文件：2 检查点（`agent.js`×2）
+- pi-subagents `src/` 文件：10 检查点（`agent-serializer.ts`, `agents.ts`×2, `pi-args.ts`×2, `parallel-utils.ts`, `execution.ts`, `async-execution.ts`×2, `subagent-runner.ts`）
+
+**自动触发链路**：
+```
+npm update / pi update
+  → pi-agent postinstall hook
+    → ~/.pi/patches/reapply.sh
+      → ~/.pi/patches/temperature/reapply.sh --apply
+        → 检测全部 17 点 → 缺则自动修复 → 二次验证
+```
 
 **手动重打**：
 ```bash
-~/.pi/patches/temperature/reapply.sh --apply
+~/.pi/patches/temperature/reapply.sh          # 纯检测
+~/.pi/patches/temperature/reapply.sh --apply  # 检测 + 自动修复
 ```
+
+**幂等性**：所有补丁操作均为幂等——已修复项自动跳过，多次运行安全。
 
 **版本兼容**：脚本对 0.82.x 自动修复，对 0.83+ 尝试修复并报告，对未知版本输出诊断。
 
 ## ⚠️ 注意事项
 
-1. **npm update 会覆盖**：所有修改在 `node_modules/` 的 `dist/` 编译产物中。运行 `pi update` 后运行 `~/.pi/patches/reapply.sh` 或手动执行本 skill。
+1. **npm update 会自动修复**：postinstall 钩子触发 `~/.pi/patches/reapply.sh` → `temperature/reapply.sh --apply` 自动重打全部补丁。仅在自动重打失败时才需手动执行本 skill。
 2. **Anthropic 特例**：启用 thinking 时跳 temperature（API 限制），`compat.supportsTemperature=false` 的模型也不接受自定义温度。这是 provider 层行为，非本修复引入。
 3. **默认值行为**：`temperature` 未设置（`undefined`）时，provider 使用 API 默认温度，与修复前一致。
 4. **版本要求**：`pi-subagents >= 0.36.0`，`pi-coding-agent >= 0.82.1`。

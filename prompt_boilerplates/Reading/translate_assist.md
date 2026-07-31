@@ -1,6 +1,6 @@
 ---
 name: translate-assist
-version: 1.0.0
+version: 1.1.0
 description: 翻译英文论文至中文Markdown文档
 triggers:
   - "翻译论文"

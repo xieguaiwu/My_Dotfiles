@@ -474,7 +474,10 @@
           "reasoning": true,
           "contextWindow": 1000000,
           "maxTokens": 1048576,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "compat": {
             "thinkingFormat": "deepseek",
             "supportsReasoningEffort": true,
@@ -494,7 +497,10 @@
           "reasoning": true,
           "contextWindow": 262144,
           "maxTokens": 262144,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "compat": {
             "thinkingFormat": "deepseek",
             "supportsReasoningEffort": false,
@@ -519,7 +525,10 @@
           "reasoning": true,
           "contextWindow": 262144,
           "maxTokens": 65536,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "compat": {
             "thinkingFormat": "deepseek",
             "supportsReasoningEffort": false,
@@ -532,7 +541,10 @@
           "reasoning": true,
           "contextWindow": 262144,
           "maxTokens": 65536,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "compat": {
             "thinkingFormat": "deepseek",
             "supportsReasoningEffort": false,
