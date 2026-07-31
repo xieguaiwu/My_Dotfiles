@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# tq — 顺义天气一键查询（和风天气 JWT）
+set -a
+source "$HOME/.config/qweather/qw.env"
+set +a
+
+echo "== 顺义实时 =="
+qw weather now --city 顺义
+echo
+echo "== 未来3天预报 =="
+qw weather daily 3 --city 顺义
