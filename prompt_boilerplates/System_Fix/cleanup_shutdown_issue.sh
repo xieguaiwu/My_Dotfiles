@@ -33,15 +33,23 @@ echo "core dump 目录: ${BEFORE} → ${AFTER}"
 echo ""
 
 echo "=== 4/4 禁用 ABRT 自动处理（防止再次内存爆炸）==="
-systemctl disable --now abrt-journal-core abrt-oops abrt-xorg 2>/dev/null || true
-echo "ABRT 组件已禁用"
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl disable --now abrt-journal-core abrt-oops abrt-xorg 2>/dev/null || true
+  echo "ABRT 组件已禁用"
+else
+  echo "systemctl 不可用，跳过 ABRT 禁用"
+fi
 echo ""
 
 echo "=== 重新加载配置 ==="
-systemctl restart systemd-journald
-echo "journald 已重启，新限制生效"
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl restart systemd-journald
+  echo "journald 已重启，新限制生效"
+else
+  echo "systemctl 不可用，跳过重启（新限制将在下次启动时生效）"
+fi
 
 echo ""
 echo "=== 清理完成 ==="
 echo "当前 journal 占用:"
-journalctl --disk-usage 2>/dev/null
+journalctl --disk-usage 2>/dev/null || true

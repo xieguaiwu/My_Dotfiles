@@ -62,8 +62,7 @@ function _prompt -a msg
     set_color yellow
     echo "→ $msg [y/N] "
     set_color normal
-    read -l response
-    or set response "n"
+    read --line response
     # string match is sensitive to $ placement, use explicit test
     echo "$response" | grep -qiE '^y|yes$' >/dev/null 2>&1
 end
@@ -458,11 +457,11 @@ function check_resources
     # 内存
     echo ""
     echo "  内存:"
-    free -h 2>/dev/null | grep -E "Mem|Swap" | while read -l line
-        set -l parts (string split -n " " $line)
-        # parts[1] already has colon (e.g. "Mem:")
-        set -l label (string trim -c ':' $parts[1])
-        echo "    $label: 已用 $parts[3] / 共 $parts[2]"
+    free -h 2>/dev/null | grep -E "Mem|Swap" | while read --line line
+        set -l line_parts (string split " " "$line")
+        # line_parts[1] already has colon (e.g. "Mem:")
+        set -l mem_label (string trim -c ':' $line_parts[1])
+        echo "    $mem_label: 已用 $line_parts[3] / 共 $line_parts[2]"
     end
 
     # 大目录 TOP10

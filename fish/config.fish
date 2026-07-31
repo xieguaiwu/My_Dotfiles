@@ -3,15 +3,15 @@ if not status is-interactive
 end
 
 # API keys (for OpenCode + pi-agent) — replace with your own keys
-#xieguiawu: set -gx OPENCODE_API_KEY "<your-openai-key>"
-set -gx OPENCODE_API_KEY "<your-openai-key>"
-set -gx DEEPSEEK_API_KEY "<your-openai-key>"
-set -gx NVIDIA_API_KEY "<your-nvidia-key>"
-set -gx MODELSCOPE_API_KEY "<REDACTED-MODELSCOPE_API_KEY>"
-set -gx VOLCENGINE_API_KEY "<your-volcengine-key>"
-set -gx OPENROUTER_API_KEY "<your-openrouter-key>"
-set -gx ZHIPUAI_API_KEY "<your-zhipu-key>"
-set -gx KIMI_API_KEY "<your-openai-key>"
+set -gx OPENCODE_API_KEY "<your-key>"
+#songjieshi: set -gx OPENCODE_API_KEY "<your-key>"
+set -gx DEEPSEEK_API_KEY "<your-key>"
+set -gx NVIDIA_API_KEY "<your-key>"
+set -gx MODELSCOPE_API_KEY "<your-key>"
+set -gx VOLCENGINE_API_KEY "<your-key>"
+set -gx OPENROUTER_API_KEY "<your-key>"
+set -gx ZHIPUAI_API_KEY "<your-key>"
+set -gx KIMI_API_KEY "<your-key>"
 
 tirith init
 /usr/bin/starship init fish --print-full-init | source
@@ -233,4 +233,4 @@ alias pentest-scan='$HOME/pentest-ai/scripts/scan-and-report.sh'
 alias pentest-mitm='$HOME/pentest-ai/scripts/mitm-lab.sh'
 
 # Tavily Search API key (free tier, 1000 searches/month)
-set -gx TAVILY_API_KEY "<your-tavily-key>"
+set -gx TAVILY_API_KEY "<your-key>"

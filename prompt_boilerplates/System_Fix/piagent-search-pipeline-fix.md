@@ -70,6 +70,7 @@ search() 路由 (pi-web-access/gemini-search.ts)
 | 文件 | 角色 |
 |------|------|
 | `~/.pi/web-search.json` | **配置入口** — provider 选择、各 API key、workflow |
+| `~/.pi/agent/npm/node_modules/pi-web-access/credential-source.ts` | **统一凭证入口** — 所有 provider 的 key 均经 `resolveCredential()` → `normalize()` 返回（Latin-1 防御应加在此处） |
 | `~/.pi/agent/npm/node_modules/pi-web-access/brave.ts` | Brave provider + API key 校验 |
 | `~/.pi/agent/npm/node_modules/pi-web-access/openai-search.ts` | OpenAI/Codex provider |
 | `~/.pi/agent/npm/node_modules/pi-web-access/gemini-search.ts` | Provider 路由 + 级联回退逻辑 |
@@ -124,46 +125,55 @@ for key in ['braveApiKey','openaiApiKey','exaApiKey','tavilyApiKey','parallelApi
 
 **判断标准**：任何 key 包含 `ord(c) > 255` 的字符 → ❌ 必须修复。此类 key 被用作 HTTP Header 时 Bun 会抛 ByteString 错误。
 
-#### 1.3 验证 provider 可用性
+#### 1.3 验证 provider 配置状态
+
+> 新版 pi-web-access 的 `.ts` 源文件无法被 node 直接 import（需要 loader），因此这里只做配置层检查；**运行时可用性以 Phase 3 实网测试为准**。
 
 ```bash
-echo "=== provider 快速检查 ==="
-echo -n "OpenAI (Codex): "
-node --input-type=module -e "
-import {resolveOpenAIAuth} from '$HOME/.pi/agent/npm/node_modules/pi-web-access/openai-search.ts';
-try { const a = await resolveOpenAIAuth(); console.log(a ? '✅ available ('+a.provider+')' : '❌ unavailable'); }
-catch(e) { console.log('❌ error:', e.message); }
-" 2>&1 | tail -1
+echo "=== provider 配置检查 ==="
+python3 - "$HOME/.pi/web-search.json" "$HOME/.pi/agent/auth.json" << 'PYCHECK'
+import json, sys, os
 
-echo -n "Brave: "
-node -e "
-const {isBraveAvailable} = require('$HOME/.pi/agent/npm/node_modules/pi-web-access/brave.ts');
-console.log(isBraveAvailable() ? '⚠️ reports available (请验证 key 非占位符)' : '❌ unavailable');
-" 2>&1 | tail -1
+cfg_path, auth_path = sys.argv[1], sys.argv[2]
+cfg = json.load(open(cfg_path)) if os.path.exists(cfg_path) else {}
+auth = json.load(open(auth_path)) if os.path.exists(auth_path) else {}
 
-echo -n "Exa: "
-node -e "
-const {hasExaApiKey} = require('$HOME/.pi/agent/npm/node_modules/pi-web-access/exa.ts');
-console.log(hasExaApiKey() ? '✅ has key' : '❌ no key');
-" 2>&1 | tail -1
+def show(name, val):
+    if isinstance(val, str) and val:
+        print(f"  {name}: {'✅ 已配置 (ASCII 安全)' if val.isascii() else '❌ 含非 ASCII 字符'}")
+    elif isinstance(val, dict) and val:
+        print(f"  {name}: ✅ 已配置 (嵌套对象，如 auth.json 中的来源)")
+    else:
+        print(f"  {name}: ⚪ 未配置/为空")
 
-echo -n "Gemini API: "
-node -e "
-const {getApiKey} = require('$HOME/.pi/agent/npm/node_modules/pi-web-access/gemini-api.ts');
-console.log(getApiKey() ? '✅ has key' : '❌ no key');
-" 2>&1 | tail -1
+print("- web-search.json keys:")
+for k in ['braveApiKey','openaiApiKey','exaApiKey','tavilyApiKey','parallelApiKey','perplexityApiKey','geminiApiKey','cloudflareApiKey']:
+    if k in cfg:
+        show(k, cfg[k])
+print("- auth.json 顶层来源:", ', '.join(auth.keys()) if auth else '(空)')
+PYCHECK
 ```
 
-#### 1.4 验证 provider key 校验器是否已防御非 Latin-1 字符
+#### 1.4 验证 Latin-1 编码防御
+
+> 检测用 `grep -Fq` 匹配固定注释文本 `Reject non-Latin-1 chars`（**不要**用 `[^\\x00-\\xFF]` 正则：GNU grep 3.5+ 将 `\xNN` 解析为 hex 转义，`[^\x00-\xFF]` 补集为空永远不匹配，会误判）。
 
 ```bash
-echo "=== 检查 normalizeApiKey 是否含编码防御 ==="
+echo "=== 检查 Latin-1 编码防御 ==="
+PI_WEB="$HOME/.pi/agent/npm/node_modules/pi-web-access"
+# 统一入口：所有 provider 的 key 最终都经 credential-source.ts 的 normalize() 返回
+if grep -Fq 'Reject non-Latin-1 chars' "$PI_WEB/credential-source.ts" 2>/dev/null; then
+  echo "✅ credential-source.ts: 已有 Latin-1 校验（统一入口，覆盖全部 provider）"
+else
+  echo "❌ credential-source.ts: 缺少 Latin-1 校验（必须修复）"
+fi
+# 各 provider 文件（新版多数已无内联 normalizeApiKey，走统一入口即可）
 for f in brave exa gemini-api openai-search parallel perplexity tavily; do
-  path="$HOME/.pi/agent/npm/node_modules/pi-web-access/${f}.ts"
-  if grep -q '[^\\x00-\\xFF]' "$path" 2>/dev/null; then
-    echo "✅ ${f}.ts: 已有 Latin-1 校验"
+  path="$PI_WEB/${f}.ts"
+  if grep -Fq 'Reject non-Latin-1 chars' "$path" 2>/dev/null; then
+    echo "✅ ${f}.ts: 已有内联 Latin-1 校验"
   else
-    echo "⚠️ ${f}.ts: 缺少 Latin-1 校验（若 key 含中文占位符会崩溃）"
+    echo "⚪ ${f}.ts: 无内联校验（经 resolveCredential 时由统一入口覆盖）"
   fi
 done
 ```
@@ -262,11 +272,13 @@ else:
 **情况 B**：`allowBrowserCookies` 为 false 且无其他可用 provider
 → 如果用户需要 Gemini Web，设为 `true`。但通常保持 `false` 更安全（避免浏览器 cookie 依赖）。
 
-#### 2.2 为 provider 文件添加 Latin-1 编码防御
+#### 2.2 为统一凭证入口添加 Latin-1 编码防御
 
-如果 Phase 1.4 发现任何 provider 的 `normalizeApiKey` 缺少 Latin-1 校验，执行批量修复。
+如果 Phase 1.4 发现缺少防御，执行批量修复。
 
-**目标替换模式**（7 个文件中的 `normalizeApiKey` 函数模式一致）：
+**新版架构说明**：pi-web-access 新版本中所有 provider 的 key 统一经 `credential-source.ts` 的 `resolveCredential()` → `normalize()` 返回（7 个 provider 文件中多数已无内联 `normalizeApiKey`）。防御策略：**统一入口（credential-source.ts）必须修**；残留 `normalizeApiKey` 的文件（如 gemini-api.ts、parallel.ts）一并修复。
+
+**目标替换模式**（`normalizeApiKey` / `normalize` 函数）：
 
 ```typescript
 // 修复前
@@ -287,35 +299,71 @@ function normalizeApiKey(value: unknown): string | null {
 }
 ```
 
-**需要修复的文件列表**（仅修复未防御的）：
+**需要修复的文件列表**（统一入口 + 全部 provider，仅修复未防御的）：
 
 ```bash
 PI_WEB="$HOME/.pi/agent/npm/node_modules/pi-web-access"
+# 统一入口 + 所有 provider 文件（新版多数已无内联 normalizeApiKey，防御集中在统一入口）
+FILES=("$PI_WEB/credential-source.ts")
 for f in brave exa gemini-api openai-search parallel perplexity tavily; do
-  path="$PI_WEB/${f}.ts"
-  if ! grep -q '[^\\x00-\\xFF]' "$path" 2>/dev/null; then
-    echo "修复 $path ..."
-    # 使用 sed 精确替换 normalizeApiKey 函数体
-    # 注意：需要根据实际缩进（tab）匹配
-    sed -i '/^function normalizeApiKey/,/^}$/{
-      /return normalized.length > 0 ? normalized : null;/{
-        s/return normalized.length > 0 ? normalized : null;/if (normalized.length === 0) return null;\n\t\/\/ Reject non-Latin-1 chars (prevent ByteString errors in HTTP headers)\n\tif (\/[^\\x00-\\xFF]\/.test(normalized)) return null;\n\treturn normalized;/
-      }
-    }' "$path" 2>/dev/null
+  FILES+=("$PI_WEB/${f}.ts")
+done
 
-    # 验证修改
-    if grep -q '[^\\x00-\\xFF]' "$path" 2>/dev/null; then
-      echo "  ✅ 修复成功"
-    else
-      echo "  ⚠️ sed 修复可能失败，需手动 edit"
-    fi
-  else
-    echo "  ✅ ${f}.ts 已防御，跳过"
+for path in "${FILES[@]}"; do
+  if grep -Fq 'Reject non-Latin-1 chars' "$path" 2>/dev/null; then
+    echo "  ✅ $(basename "$path") 已防御，跳过"
+    continue
   fi
+  echo "修复 $path ..."
+  python3 - "$path" << 'PYFIX'
+import sys
+p = sys.argv[1]
+with open(p) as fh:
+    c = fh.read()
+
+# 1) 优先精确替换 normalizeApiKey 函数块（避免误伤 normalizeBaseUrl 等相似函数）
+block_old = (
+    'function normalizeApiKey(value: unknown): string | null {\n'
+    '\tif (typeof value !== "string") return null;\n'
+    '\tconst normalized = value.trim();\n'
+    '\treturn normalized.length > 0 ? normalized : null;\n'
+    '}'
+)
+block_new = (
+    'function normalizeApiKey(value: unknown): string | null {\n'
+    '\tif (typeof value !== "string") return null;\n'
+    '\tconst normalized = value.trim();\n'
+    '\tif (normalized.length === 0) return null;\n'
+    '\t// Reject non-Latin-1 chars (prevent ByteString errors)\n'
+    '\tif (/[^\\x00-\\xFF]/.test(normalized)) return null;\n'
+    '\treturn normalized;\n'
+    '}'
+)
+# 2) 回退：单行模式（credential-source.ts 的 normalize() 等函数名不同的情况）
+plain_old = 'return normalized.length > 0 ? normalized : null;'
+plain_new = ('if (normalized.length === 0) return null;\n'
+             '\t// Reject non-Latin-1 chars (prevent ByteString errors)\n'
+             '\tif (/[^\\x00-\\xFF]/.test(normalized)) return null;\n'
+             '\treturn normalized;')
+
+changed = False
+if block_old in c:
+    c = c.replace(block_old, block_new)
+    changed = True
+elif plain_old in c:
+    c = c.replace(plain_old, plain_new)
+    changed = True
+if changed:
+    with open(p, 'w') as fh:
+        fh.write(c)
+    print('  ✅ 修复成功')
+else:
+    print('  ⚠️ 未找到目标模式（可能已修复或版本不同），跳过')
+PYFIX
 done
 ```
 
-**注意**：`sed` 行内替换对多行模式支持有限。如果 sed 修复失败，使用 `edit` 工具对每个文件单独替换（上述 7 个文件的 oldText 模式一致，仅上下文略异）。
+> **注意**：以上脚本先精确替换 `normalizeApiKey` 函数块，未匹配时回退到单行模式（覆盖 `credential-source.ts` 的 `normalize()`）。若全部跳过，需检查 pi-web-access 升级后的源码变化，手动用 `edit` 工具修复。
 
 #### 2.3 验证修复
 
@@ -337,17 +385,17 @@ for k in ['braveApiKey','openaiApiKey']:
     print(f'  {k}={\"***\" if v else \"(空)\"}')
 "
 
-# 3. 确认所有 provider 文件有 Latin-1 防御
+# 3. 确认统一入口 + 所有 provider 文件有 Latin-1 防御
 missing=0
-for f in brave exa gemini-api openai-search parallel perplexity tavily; do
-  path="$HOME/.pi/agent/npm/node_modules/pi-web-access/${f}.ts"
-  if ! grep -q '[^\\x00-\\xFF]' "$path" 2>/dev/null; then
-    echo "  ❌ ${f}.ts 仍缺少 Latin-1 防御"
+for path in "$HOME/.pi/agent/npm/node_modules/pi-web-access/credential-source.ts" \
+            "$HOME/.pi/agent/npm/node_modules/pi-web-access"/{brave,exa,gemini-api,openai-search,parallel,perplexity,tavily}.ts; do
+  if ! grep -Fq 'Reject non-Latin-1 chars' "$path" 2>/dev/null; then
+    echo "  ❌ $(basename "$path") 仍缺少 Latin-1 防御"
     missing=$((missing+1))
   fi
 done
 if [ $missing -eq 0 ]; then
-  echo "✅ 所有 7 个 provider 文件均已防御"
+  echo "✅ 统一入口 + 7 个 provider 文件均已防御"
 fi
 ```
 
@@ -387,7 +435,7 @@ echo "建议在 pi-agent 会话中运行: web_search({ query: 'test search pipel
 
 2. **`get_search_content` 的 responseId 陷阱**：`web_search` 的 details 中返回 `searchId`（查询结果数据），而 `fetch_content` 的 details 中返回 `responseId`（抓取内容）。`get_search_content` 参数名为 `responseId`，但实际接受任意存储 ID。常用方式：先用 `fetch_content` 抓取 URL → 获取其 `responseId` → 再传给 `get_search_content`。
 
-3. **provider 文件的修改不会自动持久化**：pi-web-access 是 npm 包，`npm update` 或 `pi update` 可能覆盖修复。目前不提供 patch 持久化方案（与 CMap fix 不同，这里的修改属于「防御性加固」而非核心缺陷修复）。
+3. **provider 文件的修改不会自动持久化**：pi-web-access 是 npm 包，`npm update` 或 `pi update` 可能覆盖修复。目前不提供 patch 持久化方案（与 CMap fix 不同，这里的修改属于「防御性加固」而非核心缺陷修复）。升级后重新运行 Phase 1 检测即可确认防御是否仍在。
 
 4. **Linux headless 环境的 curator**：`workflow: "auto-summary"` 在 headless 环境下自动生成摘要，无需打开浏览器 curator。`workflow: "summary-review"` 需要浏览器交互，在无 GUI 环境下会超时后自动回退。
 

@@ -58,6 +58,8 @@ zramctl
 cat /proc/sys/vm/swappiness
 ```
 
+> ⚠️ **df -h 不要过滤掉 tmpfs**：`/run/user/1000`、`/tmp` 等 tmpfs 满时根盘可能仍然空闲，但任何写入都会 ENOSPC。若发现 tmpfs 挂载点 Use% 接近 100%，或用户报「no space left」但磁盘显示正常，**切换到 [enospc-tmpfs-check.md](enospc-tmpfs-check.md)** 按专门流程排查（含 swap 压力、换出页占配额、孤儿进程清理）。
+
 #### 1.3 内核与驱动日志
 ```bash
 journalctl -p err -b --no-pager | tail -50
@@ -202,7 +204,7 @@ sudo dnf install intel-media-driver  # Intel VAAPI
 **包依赖修复**（类型 B）：
 ```fish
 # Fedora
-sudo dnf check && sudo dnf distro-sync
+sudo dnf check; and sudo dnf distro-sync
 # Debian
 sudo apt --fix-broken install
 ```
@@ -268,11 +270,12 @@ sudo modprobe -r btusb; and sudo modprobe btusb
 
 1. **sudo 权限**：本 skill 涉及读取系统日志和配置，部分命令需要 sudo。首次执行 `journalctl` 可能不需要 sudo，但 `dmesg` 需要 root。
 2. **root 命令无法直接通过 AI 代理执行**：如果环境没有 passwordless sudo，将 root 命令整理为脚本让用户手动执行。
-3. **fish shell 兼容**：本 skill 默认使用 fish 语法。用户在 bash/zsh 环境时，需将 `and`/`or` 替换为 `&&`/`||`，将 `echo ... | sudo tee ...` 替换为 `sudo sh -c 'echo ... > ...'`。
-4. **VMX 问题无法纯软件修复**：必须进 BIOS，脚本/命令无法解决。明确告知用户。
-5. **首次启动日志噪音**：刚刚启动的系统日志中会有大量 transient 错误（服务竞态、设备初始化）。区分"真实问题"和"启动瞬态"的关键：
+3. **fish shell 兼容**：本 skill 默认使用 fish 语法（`and`/`or`，不是 `&&`/`||`）。用户在 bash/zsh 环境时，需将 `and`/`or` 替换为 `&&`/`||`，将 `echo ... | sudo tee ...` 替换为 `sudo sh -c 'echo ... > ...'`。
+4. **工具缺失兼容**：`glxinfo`（需 mesa-demos）、`ausearch`（需 audit）、`dmesg --level`（需较新 util-linux）在精简系统上可能不可用。缺失时用 `journalctl -k -b --no-pager` 替代 `dmesg`，跳过不可用的诊断项即可。
+5. **VMX 问题无法纯软件修复**：必须进 BIOS，脚本/命令无法解决。明确告知用户。
+6. **首次启动日志噪音**：刚刚启动的系统日志中会有大量 transient 错误（服务竞态、设备初始化）。区分"真实问题"和"启动瞬态"的关键：
    - 服务是否最终变为 active
    - 错误是否持续重试（restart_count >> 3）
    - 设备是否最终可用
-6. **不要过度诊断**：`snd_hda_codec_conexant: vmaster hook`、`polkitd JS error` 等 warning 是 cosmetic，无功能影响，标记为 info 即可。
-7. **btrfs 用户**：对 btrfs 环境检查 `sudo btrfs device stats /` 和 `sudo btrfs filesystem usage /`。
+7. **不要过度诊断**：`snd_hda_codec_conexant: vmaster hook`、`polkitd JS error` 等 warning 是 cosmetic，无功能影响，标记为 info 即可。
+8. **btrfs 用户**：对 btrfs 环境检查 `sudo btrfs device stats /` 和 `sudo btrfs filesystem usage /`。
