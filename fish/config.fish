@@ -234,3 +234,12 @@ alias pentest-mitm='$HOME/pentest-ai/scripts/mitm-lab.sh'
 
 # Tavily Search API key (free tier, 1000 searches/month)
 set -gx TAVILY_API_KEY "<your-key>"
+
+# 和风天气 qw CLI (JWT 认证) —— 私钥路径指向本机 qweather 目录
+set -gx QWEATHER_KID "TMGTQTN2TJ"
+set -gx QWEATHER_PROJECT_ID "2DKTPF8PGY"
+set -gx QWEATHER_PRIVATE_KEY "$HOME/.config/qweather/ed25519-private.pem"
+set -gx QWEATHER_BASE_URL "https://p56vhhm5yp.re.qweatherapi.com/v7"
+set -gx QWEATHER_GEO_URL "https://p56vhhm5yp.re.qweatherapi.com/geo/v2"
+# API KEY 模式备用（控制台创建 API KEY 凭据后取消注释并填入）
+# set -gx QWEATHER_API_KEY "<your-key>"
