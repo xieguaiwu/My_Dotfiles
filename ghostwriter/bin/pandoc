@@ -1,0 +1,43 @@
+#!/bin/bash
+# pandoc compat wrapper — fixes ghostwriter 26.04 preview math rendering.
+#
+# Problem: ghostwriter 26.04 builds its Pandoc HTML render command as
+#   pandoc -f markdown +smart -t html --mathjax
+# but pandoc 3.x treats a standalone "+smart" as an input FILE, so the
+# command fails with "withBinaryFile: does not exist" and the live preview
+# (including all math) breaks. The extension must be merged into the format
+# spec: "markdown+smart".
+#
+# This wrapper merges a standalone "+smart" into the preceding -f/--from
+# format value and passes everything else through unchanged, so it is
+# transparent for all other pandoc invocations.
+
+if [ -x /app/bin/pandoc ]; then
+    PANDOC=/app/bin/pandoc
+else
+    PANDOC=/usr/bin/pandoc
+fi
+
+# Collect args into an indexed array
+out=("$@")
+
+# Merge "+smart" (and only that exact token) into the value of a preceding
+# -f/--from/--format option:  -f markdown +smart  ->  -f markdown+smart
+for i in "${!out[@]}"; do
+    case "${out[$i]}" in
+        -f|--from|--format)
+            if [ $((i + 2)) -lt ${#out[@]} ] && [ "${out[$((i + 2))]}" = "+smart" ]; then
+                out[$((i + 1))]="${out[$((i + 1))]}+smart"
+                unset 'out[$((i + 2))]'
+            fi
+            ;;
+    esac
+done
+
+# Rebuild array without holes
+final=()
+for a in "${out[@]}"; do
+    final+=("$a")
+done
+
+exec "$PANDOC" "${final[@]}"
