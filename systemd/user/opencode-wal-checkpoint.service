@@ -1,0 +1,10 @@
+[Unit]
+Description=Checkpoint opencode SQLite WAL file to reduce memory usage
+Documentation=https://sqlite.org/wal.html
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/opencode-wal-checkpoint
+Nice=19
+IOSchedulingClass=idle

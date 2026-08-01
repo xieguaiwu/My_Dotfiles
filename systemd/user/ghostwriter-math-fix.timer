@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily self-heal of ghostwriter math rendering config
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=1d
+Persistent=true
+Unit=ghostwriter-math-fix.service
+
+[Install]
+WantedBy=timers.target

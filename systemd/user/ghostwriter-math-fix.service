@@ -1,0 +1,7 @@
+[Unit]
+Description=Fix ghostwriter math rendering (pandoc wrapper, flatpak overrides, exporter config)
+After=default.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/fix-ghostwriter-math.sh

@@ -1,0 +1,21 @@
+[Unit]
+Description=Sunshine Game Stream Host
+After=network-online.target pipewire.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/sunshine
+WorkingDirectory=%h/.local/share/sunshine
+Restart=on-failure
+RestartSec=5
+
+# Wayland/Pipewire needs these
+Environment=XDG_RUNTIME_DIR=%t
+Environment=WAYLAND_DISPLAY=wayland-1
+Environment=LD_LIBRARY_PATH=%h/.local/share/sunshine/usr/lib:%h/.local/lib/sunshine
+Environment=LIBVA_DRIVERS_PATH=%h/.local/lib/sunshine/va/drivers
+Environment=LIBVA_DRIVER_NAME=i965
+
+[Install]
+WantedBy=default.target

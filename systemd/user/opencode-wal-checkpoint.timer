@@ -1,0 +1,13 @@
+[Unit]
+Description=Run opencode WAL checkpoint hourly
+
+[Timer]
+# Run hourly at minute 0
+OnCalendar=hourly
+# Add randomized delay (1-10 min) to avoid load spikes
+RandomizedDelaySec=60
+# Avoid running if system is suspended
+Persistent=false
+
+[Install]
+WantedBy=timers.target
