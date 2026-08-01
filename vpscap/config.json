@@ -1,0 +1,12 @@
+{
+  "host": "192.3.247.117",
+  "port": 22,
+  "user": "root",
+  "password": "<your-password>",
+  "bandwidth_total_gb": 5000,
+  "solusvm_user": "vmuser354312",
+  "solusvm_password": "<your-password>",
+  "solusvm_key": "<your-key>",
+  "solusvm_hash": "<your-hash>",
+  "ssh_timeout_seconds": 30
+}
