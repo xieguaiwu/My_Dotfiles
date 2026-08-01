@@ -1,7 +1,7 @@
 ---
 name: dotfiles-sync-and-audit
-version: 1.0.0
-description: 将电脑中的本地配置文档同步到 ~/My_Dotfiles/（仅更新已有项），审计所有 GitHub 仓库的提交推送状态，自动生成 commit 信息，有上游的仓库仅本地备份不推送远程，执行前征求用户同意
+version: 1.1.0
+description: 三合一维护：本地配置增量同步至 ~/My_Dotfiles/（惟更新已有项）、审计本地 Git 仓库提交推送状态、自动生成 commit 信息。自有仓库可 push，有上游者惟本地 commit。执行前必先征得用户同意
 triggers:
   - "同步配置"
   - "备份dotfiles"
@@ -35,72 +35,53 @@ tools:
 
 ## 任务目标
 
-对本机进行三合一维护操作，**执行前必先征求用户同意**：
+三合一维护，**执行前必先征得用户同意**：
 
-1. **配置同步** — 将电脑中的实时本地配置文档，增量同步到 `~/My_Dotfiles/` 的备份副本中（**仅更新已有项**，不新增多余的配置文件）
-2. **Git 仓库审计** — 调查所有本地 Git 仓库，建议可提交（commit）/ 可推送（push）的变更
-   - **用户自己的仓库**（remote 为 github.com/xieguaiwu/*）：可 commit + push
-   - **有上游的仓库**（fork/clone 他人项目）：仅本地 commit 备份，**不推送远程**
+1. **配置同步** — 本地活配置增量同步至 `~/My_Dotfiles/` 备份副本（**惟更新已有项**，禁新增多余配置）
+2. **Git 仓库审计** — 调查本地仓库提交/推送状态
+   - 自有仓库（remote 含 `github.com/xieguaiwu/*`）→ 可 commit + push
+   - 有上游者（fork/克隆他人项目）→ 惟本地 commit 备份，**禁推远程**
 
-## 遵守的偏好（来自长期记忆）
+## 遵守的偏好（长期记忆编号）
 
-本 skill 须严格遵守以下规则：
-
-### ⑧ 永不覆写
-- 禁止 `write` 覆写已有文件。先 `read` 了解差异，再用 `edit` 精确修改或追加。
-- 新增文件才用 `write`，且确认目标不存在。
-- 备份目录 `.gitignore` 中列出的敏感文件（`pi-agent/auth.json`、`.env` 等）**绝不**备份到仓库。
-
-### ⑩ API Key 安全
-- 涉及 `pi-agent/auth.json`、`url.txt`、`codewhale/config.toml` 等含 token 的文件时：
-  - 备份前检查内容是否有明文 key（`sk-`、`nvapi-`、`ms-[a-z0-9]{20,}`）
-  - 有 key 的文件跳过大备份，仅提醒用户手动处理
-  - **若活配置与备份的唯一差异是 API key 是否为占位符**（活配置为真实 key、备份已脱敏为占位符），**直接跳过该文件，不询问用户**
-- 绝不将含 key 的文件提交到 git 仓库
-
-### ⑭ Git 安全网
-- 每次 `write`/`edit` 操作前，确保 `~/My_Dotfiles/` 在 git 仓库中且可以回滚
-- 操作完成后建议用户做一次 `git commit`
-
-### ⑪ 数字信息搜索事实核查
-- 审计仓库数量、未推提交数等具体数字时，调用 Momus 或 oracle 子代理核查
-
-### ⑬ Subagent 调用安全规范
-- 调用子代理时设定 `turnBudget` 和 `timeoutMs`
-- 内联关键上下文，不让子代理自行读大文件
-
-### ⑮ ask_user 高优先级
-- **所有写操作前**，用 `ask_user` 征求明确同意
-- 呈现结构化选项（变更摘要、风险等级），收集用户选择后再执行
+- **⑧ 永不覆写**：禁 `write` 覆写已有文件。先 `read` 察差异，再 `edit` 精确改或追加。新文件方可 `write`，且先确认目标不存在。`.gitignore` 所列敏感文件（`pi-agent/auth.json`、`.env` 等）**绝不备份入仓**
+- **⑩ API Key 安全**：涉 `pi-agent/auth.json`、`url.txt`、`codewhale/config.toml` 等含 token 之文件：
+  - 备份前先查明文 key（`sk-`、`nvapi-`、`ms-[a-z0-9]{20,}`）
+  - 有 key 者跳过备份，仅提醒用户手治
+  - **若活配置与备份之唯一差异乃 key 占位符**（活为真 key、备份已脱敏）→ **直接跳过，不询问**
+  - 绝不以含 key 文件入 git
+- **⑪ 数字信息搜索事实核查**：审计仓库数、未推提交数等具体数字，调 Momus/oracle 核查
+- **git 安全网**：凡 `write`/`edit` 之前，确保 `~/My_Dotfiles/` 在 git 仓库可回滚；事毕建议 commit
+- **ask_user 高优先级**：**凡写操作之前**，必用 `ask_user` 征求明确同意，示结构化选项（变更摘要、风险等级），收用户选择后行
 
 ## 执行流程
 
 ### Phase 0: 征求初始同意
 
-执行任何操作前，先用 `ask_user` 展示整体计划：
+操作之先，以 ask_user 示整体计划：
 
 ```
 ## 🔍 计划执行以下操作
-1. 同步配置  — 更新 ~/My_Dotfiles/ 中 N 个文件的备份（仅更新已有项）
-2. 仓库审计  — 扫描 ~/*/ ~/works/ ~/Desktop/ ~/Documents/ 等位置，检查 K 个本地仓库的提交推送状态
+1. 同步配置  — 更新 ~/My_Dotfiles/ 中 N 个文件备份（惟更新已有项）
+2. 仓库审计  — 扫描 ~/*/ ~/works/ ~/Desktop/ ~/Documents/ 等，检查 K 个仓库提交推送状态
    - 自有仓库 → commit + push
-   - 有上游的 fork → 仅本地 commit
+   - 有上游 fork → 惟本地 commit
 ```
 
-用户确认后进入 Phase 1，否则终止。
+用户允则入 Phase 1，否则止。
 
 ---
 
 ### Phase 1: 并行收集信息（无写操作）
 
-#### 1.1 分析 My_Dotfiles 与 Live Config 的差异
+#### 1.1 分析 My_Dotfiles 与活配置差异
 
 ```bash
 # 列出 My_Dotfiles 所有配置文件（排除 .git/ 和 git 忽略的文件）
 find ~/My_Dotfiles -not -path '*/.git/*' -not -name '.gitignore' -not -path '*/npm/*' -not -path '*/sessions/*' -type f | sort
 ```
 
-对每个配置文件，判断其对应的"活配置"位置：
+对每配置文件，判其活配置位置：
 
 | My_Dotfiles 路径 | 活配置路径 |
 |---|---|
@@ -111,25 +92,26 @@ find ~/My_Dotfiles -not -path '*/.git/*' -not -name '.gitignore' -not -path '*/n
 | ...（类推） | ... |
 
 **规则**：
-- 只保留纯配置（`.conf` `.toml` `.json` `.lua` `.rasi` `.cfg` `.ini` 等文本文件）
-- **跳过**：数据库文件（`.db`）、缓存（`history.dat` `pyindex.dat` `crash.log`）、二进制（`.png` `.jpg`）、运行时临时文件（`dbus/` `bus/` `session`）
-- **跳过**：`.gitignore` 中列出的敏感文件
+- 惟存纯配置（`.conf` `.toml` `.json` `.lua` `.rasi` `.cfg` `.ini` 等文本）
+- **跳过**：数据库（`.db`）、缓存（`history.dat` `pyindex.dat` `crash.log`）、二进制（`.png` `.jpg`）、运行时临时（`dbus/` `bus/` `session`）
+- **跳过**：`.gitignore` 所列敏感文件
 
-对每个需更新的文件：
-1. `diff ~/My_Dotfiles/path ~/.config/actual/path` 算出差异
-2. 若活配置有更新而备份未同步 → 标记为"待同步"
+对每个待更文件：
+1. `diff ~/My_Dotfiles/path ~/.config/actual/path` 算差异
+2. 活配置新而备份旧 → 标「待同步」
 
 #### 1.2 Git 仓库审计
 
 ```bash
-# 扫描所有常见位置的 git 仓库（含 ~/ 根层级和 ~/Documents/）
-# 限制深度防止大目录卡死
+# 扫描常见位置 git 仓库（含 ~/ 根层级和 ~/Documents/）
+# 限深度防大目录卡死
 for dir in $(find ~/ ~/works/ ~/Desktop/ ~/Documents/ ~/My_Dotfiles/ -maxdepth 2 -type d -name '.git' 2>/dev/null | sed 's|/.git||' | sort -u | head -50); do
   [ -d "$dir" ] && echo "$dir"
 done
 ```
 
-对每个仓库：
+每仓库：
+
 ```bash
 cd "$dir"
 git status --porcelain      # 未暂存/未跟踪变更（机器可解析格式）
@@ -137,146 +119,108 @@ git log --oneline @{u}..HEAD 2>/dev/null || echo "(no upstream)"  # 未推送提
 git remote -v           # 远程仓库 URL
 ```
 
-判断归属：
-- **自有仓库**：remote URL 含 `github.com/xieguaiwu/` → 可 commit + push
-- **有上游的 fork/克隆**：remote URL 为他人仓库 → **仅本地 commit，不推送**
-- **无远程**：本地仓库 → 仅 commit
+判归属：
+- **自有**：remote 含 `github.com/xieguaiwu/` → 可 commit + push
+- **有上游 fork/克隆**：remote 为他人仓库 → **惟本地 commit，不推送**
+- **无远程**：本地仓库 → 惟 commit
 
 标记：
-- 🟢 干净的仓库 → 跳过
+- 🟢 干净 → 跳过
 - 🟡 有未提交变更 → 建议 commit
-- 🔴 有未推送提交 + 自有仓库 → 建议 push
-- 🔵 有未推送提交 + 上游 fork → 仅本地 commit，不 push
+- 🔴 有未推送提交 + 自有 → 建议 push
+- 🔵 有未推送提交 + 上游 fork → 惟本地 commit
 
 ---
 
-### Phase 2: 生成报告（仅展示，不征求批量同意）
+### Phase 2: 生成报告（仅展示，不批量征求）
 
-将 Phase 1 收集的信息汇总为清晰报告并输出，**仅用于展示**。
-不在此处调用 `ask_user` 做批量确认——逐项确认移至 Phase 3 逐个执行。
+汇总 Phase 1 为报告输出，**仅展示**。不在此 ask_user 批量确认——逐项确认移至 Phase 3。
 
 #### 报告模板
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Dotfiles 同步与审计报告
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+━━━━━ Dotfiles 同步与审计报告 ━━━━━
 📋 一、配置同步 — N 个文件待更新
-  • ~/My_Dotfiles/fish/config.fish ← ~/.config/fish/config.fish
-    └ 差异: +3 行 / -1 行
-  • ...
-
+  • path ← live  差异: +3 / -1
 📋 二、Git 仓库审计 — K 个仓库
-  🟢 My_Dotfiles — 干净
-  🟡 workspace/project — 2 个未提交文件
-  🔴 Desktop/project — 3 个未推送 commit
-  🟡 Documents/Obsidian Vault — 1 个未跟踪文件
-
-⚠️ 安全过滤：
-  • 已跳过 N 个含敏感 key 的文件
-  • 已跳过 M 个数据库/缓存文件
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  🟢 干净 / 🟡 未提交 / 🔴 未推+自有 / 🔵 未推+fork
+⚠️ 安全过滤：跳过 N 个含 key 文件、M 个缓存文件
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-报告输出后告知用户："以上是收集到的变更概况，接下来逐项确认是否执行。"
+报告后告用户：「以上乃变更概况，以下逐项确认是否执行。」
 
 ---
 
 ### Phase 3: 逐项确认并执行
 
-对所有待同步文件和待操作仓库，**逐个调用 `ask_user` 询问是否执行**，
-不做批量选择。默认提供 `Yes / No` 选项，可使用自定义选项增加灵活性。
-
-对每个条目，先展示变更摘要（diff stat / git status）再做询问：
-
-```
-## 文件: fish/config.fish
-差异: +3 行 / -1 行（见下方diff摘要）
-→ 是否同步此文件？
-```
+对所有待同步文件与待操作仓库，**逐个 ask_user 询问**，禁批量合并。默认 Yes/No，可自定义选项。每条目先示变更摘要（diff stat / git status）再问。
 
 #### 3.1 同步配置（逐文件确认）
 
-对每个标记为"待同步"的配置：
+对每个「待同步」配置：
 
-1. 展示 diff 摘要（行数变化）
-2. **先检查差异是否仅为 API key 占位符**：若活配置与备份的唯一差异只是 API key 为真实值 vs 占位符，**直接跳过，不询问用户**，在报告中记为「已跳过（key 占位符）」。否则继续：
-3. 调用 `ask_user` 询问是否同步此文件，若用户选**同步**：
-   a. **先读**活配置文件和备份文件：
+1. 示 diff 摘要（行数变化）
+2. **先查差异是否仅 key 占位符**：若活配置与备份唯一差异乃真 key vs 占位符 → **直接跳过，不询问**，报告中记「已跳过（key 占位符）」。否则继续：
+3. ask_user 询问是否同步，若选**同步**：
+   a. **先读**活配置与备份：
       ```
       read ~/My_Dotfiles/fish/config.fish
       read ~/.config/fish/config.fish
       ```
-   b. **用 `edit` 增量修改**备份文件，而不是 `write` 覆写整个文件
-   c. 如果差异过多（>50% 文件内容不同），考虑活配置有结构性变化，此时可用 `write` 但**必须再次用 `ask_user` 确认**
-   d. 排除所有含 key/token 的敏感行
-4. 若用户选**跳过**：记录跳过原因，继续下一文件
-
-
+   b. **用 `edit` 增量修改**备份，非 `write` 覆写
+   c. 若差异 >50% 内容，疑结构性变化，可用 `write` 但**必再 ask_user 确认**
+   d. 排除一切含 key/token 敏感行
+4. 若选**跳过**：记原因，续下一文件
 
 #### 3.2 Git 提交推送（逐仓库确认）
 
-对 Phase 1 中标记为 🟡/🔴/🔵 的仓库（🟢 干净的仓库自动跳过），**逐个确认**：
+Phase 1 标记 🟡/🔴/🔵 者（🟢 自动跳过），**逐个确认**：
 
-**判断仓库类型：**
+**判类型：**
+
 ```bash
 cd "$dir"
 remote=$(git remote -v 2>/dev/null | grep -E '^origin' | head -1)
 if echo "$remote" | grep -q 'github.com/xieguaiwu/'; then
     type="own"       # 自有仓库 → 可 push
 elif [ -n "$remote" ]; then
-    type="upstream"  # 有上游仓库 → 仅本地 commit
+    type="upstream"  # 有上游仓库 → 惟本地 commit
 else
-    type="local"     # 无远程 → 仅本地 commit
+    type="local"     # 无远程 → 惟本地 commit
 fi
 ```
 
-**对每个仓库（循环处理）：**
+**每仓库（循环）：**
 
-1. 展示变更摘要：
+1. 示变更摘要：
    ```bash
    cd repo && git diff --stat && git status --short
    ```
-2. 判断可执行的操作，构造 `ask_user` 选项：
-   - **自有仓库**（🟡/🔴）：选项 = ["commit + push", "仅 commit", "跳过"]
-   - **上游/本地仓库**（🟡/🔵）：选项 = ["仅 commit", "跳过"]
-   - 🟢 干净的仓库：自动跳过，不询问
-3. 调用 `ask_user`：
-   - 标题："处理仓库: xxx？"
-   - 上下文：git status 摘要 + 仓库类型
-   - 选项：按上一步判断传入
-4. 按用户选择执行：
+2. 构 ask_user 选项：
+   - **自有**（🟡/🔴）：["commit + push", "仅 commit", "跳过"]
+   - **上游/本地**（🟡/🔵）：["仅 commit", "跳过"]
+   - 🟢 干净：自动跳过，不询问
+3. ask_user：标题「处理仓库: xxx？」，上下文 = git status 摘要 + 仓库类型
+4. 按选择执行：
    - **commit + push**：`git add -A && git commit -m "{自动生成commit信息}" && git push`
    - **仅 commit**：`git add -A && git commit -m "{自动生成commit信息}"`
-   - **跳过**：记录跳过原因，继续下一仓库
-5. **commit 信息自动生成**（不询问自定义）：总结变更内容，如 `chore: update xx, fix yy`
-6. 若 commit 时无变更（空 commit），跳过即可
+   - **跳过**：记原因，续下一仓库
+5. **commit 信息自动生成**（不询问自定义）：如 `chore: update xx, fix yy`
+6. 无变更（空 commit）则跳过
 
 ---
 
 ### Phase 4: 写入总结
 
-执行完成后，输出最终总结：
+事毕，输出最终总结：
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ✅ 执行完成
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 配置同步: X/Y 个文件已更新
-  • fish/config.fish → 同步完成 ✓
-  • ...
-
-📋 仓库操作:
-  • 自有仓库 — N 个 commit, M 个 push
-  • 上游/本地仓库 — K 个本地 commit（未推送）
-  • GK-Paper-Working → 已推送 ✓
-  • ...
+━━━━━ ✅ 执行完成 ━━━━━
+📋 配置同步: X/Y 已更新（逐文件✓）
+📋 仓库操作: 自有 N commit/M push；上游/本地 K 本地 commit
+━━━━━━━━━━━━━━━━━━━━━
 ```
-
-
 
 ---
 
@@ -284,41 +228,28 @@ fi
 
 同步/备份前逐项检查：
 
-### 绝不同步/备份的文件类型
-- [ ] `.db` / `.sqlite` / `.sqlite3` — 数据库，非纯文本配置
-- [ ] `history.dat` / `pyindex.dat` / `*.mb` — 索引/二进制缓存
-- [ ] `crash.log` / `*.log` — 运行时日志
-- [ ] `dbus/` / `bus/` — IPC 临时文件
-- [ ] `sessions/` / `npm/` — pi-agent 运行时目录
-- [ ] `url.txt` — 代理 token
-- [ ] `auth.json` — 明文 API key
-- [ ] `.env` / `.env.*` — 环境变量密钥
+### 绝不同步/备份之文件
+- [ ] `.db`/`.sqlite*` — 数据库 ｜ `history.dat`/`pyindex.dat`/`*.mb` — 缓存 ｜ `*.log` — 日志
+- [ ] `dbus/`/`bus/` — IPC 临时 ｜ `sessions/`/`npm/` — pi-agent 运行时目录
+- [ ] `url.txt` — 代理 token ｜ `auth.json` — 明文 key ｜ `.env*` — 环境密钥
 
-### 含 key 模式扫描（grep 检查后再备份）
-- [ ] `sk-` — OpenAI/兼容 API key
-- [ ] `nvapi-` — NVIDIA API key
-- [ ] `ms-[a-z0-9]{20,}` — 微软 token
-- [ ] `token` / `api_key` / `apikey` — 通用 key 模式
-- [ ] `password` / `passwd` — 密码
+### 含 key 模式扫描（grep 查后再备份）
+- [ ] `sk-` ｜ `nvapi-` ｜ `ms-[a-z0-9]{20,}` ｜ `token`/`api_key`/`apikey` ｜ `password`/`passwd`
 
-### 提交前安全扫描（git 仓库审计时）
+### 提交前安全扫描（git 审计时）
 - [ ] `git diff --cached` grep `sk-\|nvapi-\|ms-[a-z0-9]\{20,\}`
-- [ ] 确认 `.gitignore` 已包含敏感路径
-- [ ] 已泄露的 key 先用 BFG/git filter-branch 清理历史
-
----
+- [ ] `.gitignore` 已含敏感路径；已泄露 key 用 BFG/filter-branch 清历史
 
 ## 注意事项
 
-1. **征求同意分两层** — Phase 0 用 `ask_user` 询问是否开始扫描（"开始扫描配置差异与仓库状态？"），Phase 3 对每个文件和仓库再次逐个 ask_user 确认是否执行；Phase 2 不做批量同意
-2. **commit 信息自动生成** — 不询问自定义 commit message，根据变更内容自动生成（如 `chore: update xx, fix yy`）
-3. **差异过大时预警** — 如果活配置与备份差异 >50%，提示用户可能发生了结构性变化
-4. **不碰未跟踪的敏感文件** — `.gitignore` 中已有的敏感路径跳过备份
-5. **符号链接处理** — 如果活配置是符号链接，追踪其真实目标文件再备份
-6. **子代理调用** — 复杂分析（如扫描大量仓库的 commit 历史统计）可委托给 `explore` 或 `hephaestus`
-7. **My_Dotfiles 本身也是 git 仓库** — 操作完后自动执行 `git commit + git push`（自有仓库规则）
-8. **git 安全网** — 所有文件修改操作前，确保在 git 仓库中执行，以便回滚
-9. **自身上游检测** — `github.com/xieguaiwu/` 作为自有仓库判定标准；若用户名变更新
-    在 `inputs` 中添加 `github_user` 参数覆盖
-10. **不上传 fork 改动** — 所有非自有远程的仓库，仅本地 commit 保留修改，绝不 push 到上游
-11. **逐项确认不批量** — 绝不将多个文件或多个仓库合并到一个 ask_user 调用中做全选/全跳。每 ask_user 调用只问一个条目。用户可在同一会话中依次回答 Yes/No 完成逐个确认。
+1. **同意分两层** — Phase 0 问是否扫描；Phase 3 逐条再问；Phase 2 不批量
+2. **commit 信息自动生成** — 不询问自定义，按变更生成（`chore: update xx, fix yy`）
+3. **差异 >50% 预警** — 疑结构性变化，`write` 前必再确认
+4. **不碰未跟踪敏感文件** — `.gitignore` 已有路径跳过备份
+5. **符号链接** — 活配置为链接时，追真实目标再备份
+6. **子代理** — 复杂分析（大量仓库统计）可委 explore/hephaestus
+7. **My_Dotfiles 亦 git 仓库** — 事毕自动 commit + push（自有规则）
+8. **git 安全网** — 文件修改前确保在 git 仓库中，以便回滚
+9. **自身上游检测** — `github.com/xieguaiwu/` 为自有标准；用户名变则在 inputs 加 `github_user`
+10. **不上传 fork 改动** — 非自有远程，惟本地 commit，绝不 push 上游
+11. **逐项确认不批量** — 每 ask_user 只问一条，禁全选/全跳
