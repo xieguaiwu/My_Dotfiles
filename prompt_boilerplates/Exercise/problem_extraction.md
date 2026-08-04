@@ -19,11 +19,10 @@ inputs:
     required: false
     default: "all"
   - name: translate
-    description: 是否将英文题干翻译成中文
+    description: 是否将非英文题干翻译成英文（产出一律禁用中文）
     required: false
-    default: true
+    default: false
 tools:
-  - look_at
   - read
   - write
   - edit
@@ -50,8 +49,8 @@ tools:
    - 保持公式排版清晰美观
 
 4. **翻译处理**
-   - 若 translate 为 true，将英文题干和选项翻译成中文
-   - 数学公式保持原样，不翻译
+   - 若 translate 为 true，将非英文题干和选项翻译成英文；默认 false（保留原文）
+   - 产出笔记一律不得含中文；数学公式保持原样，不翻译
    - 保持专业术语的准确性
 
 5. **添加解析**
@@ -68,33 +67,31 @@ tools:
 
 ```markdown
 ## Q{题号}
-> {题干内容（中文翻译）}
+> {题干内容}
 > (A) $\displaystyle \sum_{n=1}^{\infty} \frac{1}{n}$
 > (B) ...选项B...
 > (C) ...选项C...
 > (D) ...选项D...
 
-**解析**：使用{方法名称}，...
+**Analysis**：使用{方法名称}，...
 
-计算过程：
+Solution:
 $$\int_1^{\infty} f(x) \, dx = ...$$
 
-**答案：A**
+**Answer: A**
 ```
 
 ## 注意事项
 
 - 数学符号：确保上标、下标、希腊字母等符号准确
-- 专业术语：使用标准的数学中文术语
+- 专业术语：使用标准英文术语
 - 格式一致：保持与目标文件中现有题目的格式一致
 - 链接引用：适当添加相关知识点笔记的链接（如 `[[Infinite Series]]`）
 
-### ⚡ Git 安全网 + 文件写入安全
+### ⚡ 文件写入安全
 
-本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行所有 `write`/`edit` 操作前，必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。
-
-同时遵守以下基本写入安全规则：
-1. **写入前先检查**：使用 `glob` 或 `read` 确认 `output_file` 是否已存在
+执行所有 `write`/`edit` 操作前，遵守以下基本写入安全规则：
+1. **写入前先检查**：使用 `read` 确认 `output_file` 是否已存在
 2. **已有文件优先用 `edit`**：文件已存在时，用 `edit` 在末尾追加，而非 `write` 覆写
 3. **`write` 仅用于新建**：确保目标文件确实不存在再使用 `write`
 4. **覆写前确认**：如果必须覆写已有文件，先告知用户并获许可

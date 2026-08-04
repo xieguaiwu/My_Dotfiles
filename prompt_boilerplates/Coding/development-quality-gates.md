@@ -1,6 +1,6 @@
 ---
 name: development-quality-gates
-version: 1.2.0
+version: 1.4.0
 description: 编码时必须遵守的质量关卡——来自实际项目的教训沉淀，编码时逐条对照防止引入可避免的缺陷
 triggers:
   - "开发规范"
@@ -54,6 +54,8 @@ tools:
 ▶ 关卡 8：中英双语文档       —— 公开项目有中英双语 README 吗？
 ▶ 关卡 9：安全与密钥         —— 代码里有没有硬编码 key / token？
 ▶ 关卡 10：代码知识图谱       —— graphify 查阅过了吗？God Nodes 确认了吗？
+▶ 关卡 11：本地二进制部署     —— 每次改完代码，最新二进制装到本机了吗？
+▶ 关卡 12：字符串 / Rune 安全   —— 字符串操作对中文/多字节字符安全吗？
 ```
 
 ---
@@ -235,6 +237,7 @@ if s.Yomi <= yomiBefore {
 - [ ] happy path + 至少一个 error path（没钱、没资源、越界、为空）
 - [ ] 测试次数与文档声明的数字一致
 - [ ] mock/stub 的返回值覆盖了生产代码的所有调用路径
+- [ ] 交互式 CLI/TUI 工具额外对照 `interactive-cli-design.md` §4 的 10 项强制测试场景
 
 ---
 
@@ -376,13 +379,224 @@ graphify 通过代码结构分析生成项目的知识图谱，明确标注：
 
 ---
 
+## 关卡 11：本地二进制部署
+
+**任何能产出可执行文件的项目（Go / Rust / C / C++ / Node 打包产物等），每次代码变更后必须把最新二进制构建并安装到本机。** 用户实际运行的是 `PATH` 里的二进制——代码改了但没部署 = 用户跑的还是旧版，等于改动没发生。
+
+### 适用范围
+
+| 项目类型 | 是否强制 |
+|----------|:---:|
+| CLI 工具 / TUI（安装到 `~/.local/bin`） | ✅ 每次变更后 |
+| 本地后台服务（systemd user 单元） | ✅ 每次变更后 |
+| 前端打包产物（`dist/` 等） | ✅ 构建并部署到本地 serve 目录 |
+| Python 脚本 / 库（无二进制） | ⚠️ 无二进制则跳过；`pip install -e` 开发模式已满足 |
+| ML 训练（产出 checkpoint 而非可执行文件） | ❌ 不适用 |
+
+### 部署命令速查
+
+| 语言 | 命令 |
+|------|------|
+| Go | `CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o ~/.local/bin/<name> .`（多 cmd 项目逐个构建）或 `go install .` |
+| Rust | `cargo install --path . --root ~/.local` |
+| C/C++ | `make install PREFIX=$HOME/.local`（或项目自带 install 脚本） |
+| Node/TS | `npm run build`（产物按项目约定部署） |
+
+### 验证（部署后必做）
+
+```bash
+command -v <name>            # 确认 PATH 指向的安装位置
+<name> --version             # 确认版本号与代码/文档一致
+ls -l ~/.local/bin/<name>    # 确认构建时间 ≈ 当前时间
+# Go 可查二进制内置的构建来源
+# go version -m ~/.local/bin/<name> | grep -E 'build|mod'
+```
+
+### 作业要求
+
+```
+改代码 → 测试/编译通过 → 构建最新二进制 → 安装到 ~/.local/bin → 运行验证 → 更新文档 → 提交（同一 commit）
+```
+
+1. **每次功能/修复变更后立即部署**，不要攒到「发布时」——用户随时可能在终端运行旧版
+2. 部署后运行一次 `--version` 或 smoke 命令验证
+3. 服务类项目部署后执行 `systemctl --user restart <service>`（如适用）
+4. 配置格式有变更（新增/改名参数）时，部署后按需重新生成默认配置——用户旧配置会覆盖新默认值（news-report v0.2.0 教训）
+5. 多二进制项目（如 bl 的 telegram/dingtalk 子命令）逐个全部部署，不只装主命令
+
+---
+
+## 关卡 12：字符串 / Rune 安全
+
+**任何直接操作包含中文、emoji 等多字节字符的字符串时，是否用 `[]rune` 而非 byte 索引？**
+
+Go 的 `string` 底层是 UTF-8 字节序列。中文字符每个占 3 字节，emoji 可占 4–6 字节。直接用 byte 索引（`s[:n]`）或 `len(s)` 在处理非 ASCII 文本时会静默产生乱码——编译通过、测试也可能通过（只要测试用例全是英文），到用户手里就坏。
+
+以下 6 个子模式来自 news-report（Go CLI 新闻聚合器，大量处理中英文混排）的反复踩坑。
+
+### 12.1 Byte vs Rune 切片
+
+```go
+s := "欧盟达成贸易协议"  // 7 个字符，21 字节
+
+// ❌ 按 byte 切片——切断多字节字符，产生乱码
+short := s[:6]   // "欧盟达\xe2"  → 终端显示乱码 + �
+
+// ✅ 先转 []rune 再切片
+runes := []rune(s)
+short := string(runes[:3])  // "欧盟达"
+```
+
+**陷阱**：`s[:n]` 仅当 n 恰好在字符边界上时才安全。中文全是 3 字节，日语假名 3 字节，emoji 4 字节——肉眼根本看不出 byte 边界在哪。
+
+**典型场景**：标题截断、预览摘要、显示窗口内行截断——这些操作字符串几乎必然包含中文。
+
+### 12.2 Rune 安全的 Cursor 定位
+
+在交互式 CLI/TUI 的输入框中，用户用 Left/Right 键移动光标、Backspace/Delete 删除字符。如果 cursor 是 byte 偏移而非 rune 索引，光标会落入字符中间。
+
+```go
+// ❌ 输入字符串存为 string，cursor 是 byte 偏移
+input := "你好世界"  // 12 字节
+cursor := 4         // 第 4 个 byte——落入 "好" 的第 2 个字节内部！
+// Backspace 删除 input[cursor-1] → 删掉半个字节 → 全串损坏
+
+// ✅ 输入字符串存为 []rune，cursor 是 rune 索引
+type model struct {
+    filter       []rune  // 存储为 rune 切片
+    filterCursor int     // rune 索引，不落字符中间
+}
+// Left:  filterCursor--（光标移动 1 个字符，无论中英文）
+// Backspace:  delete filter[filterCursor-1]（删掉完整的一个字符）
+```
+
+**源代码出处**：`internal/tui/tui.go` line 74–76，`filter` 字段声明为 `[]rune`，`filterCursor` 注释标注 `rune index`。
+
+### 12.3 字符串长度语义混淆
+
+```go
+s := "欧盟达成贸易协议"
+
+len(s)             // 21（字节数）—— 用于缓冲区分配、网络传输
+len([]rune(s))     // 7（字符数）—— 用于截断、显示宽度计算
+utf8.RuneCountInString(s) // 7（同上，不分配内存）
+
+// ❌ 用字节数做截断判断——中文文章几乎必然过早截断
+if len(body) > 200 {
+    body = body[:200]  // 可能把某个中文字切成乱码
+}
+
+// ✅ 用字符数判断
+if utf8.RuneCountInString(body) > maxChars {
+    runes := []rune(body)
+    body = string(runes[:maxChars])
+}
+```
+
+**源代码出处**：`internal/tui/tui.go` line 1362–1366，弹窗标题截断使用 `len([]rune(title))` 判断是否超宽。
+
+### 12.4 空格压缩破坏结构
+
+`strings.Join(strings.Fields(s), " ")` 会把**所有**连续空白（空格、Tab、换行、`\r`）压缩成单个空格。这对纯英文段落没问题，但会把 `\n\n`（段落分隔）也吞掉。
+
+```go
+// ❌ 粗暴压缩——破坏段落结构
+text := "第一段内容。\n\n第二段内容。"
+clean := strings.Join(strings.Fields(text), " ")
+// "第一段内容。 第二段内容。"  ← 两个段落折叠成一句！
+
+// ✅ 占位符保护结构标记
+s := strings.ReplaceAll(s, "\n\n", "\x00")       // 段落分隔 → 占位符
+s = strings.Join(strings.Fields(s), " ")           // 安全压缩空白
+s = strings.ReplaceAll(s, "\x00", "\n\n")          // 还原段落分隔
+```
+
+**源代码出处**：`internal/article/article.go` `clean()` 函数，使用 `\x00` 占位符保护 `\n\n` 段落分隔。`internal/scrape/scrape.go` line 103 的 `collapse()` 函数也是同样陷阱（`strings.Join(strings.Fields(s), " ")`）——该函数用于 RSS 摘要压缩，不涉及段落结构，但需确认调用上下文。
+
+### 12.5 简繁中文搜索
+
+`strings.Contains` 对简繁中文视为不同字符串：搜索"台湾"找不到"臺灣"。中文搜索必须做简繁归一化。
+
+```go
+// ❌ 直接 Contains——简繁不互通
+keyword := "台湾"
+title := "台積電赴臺灣設廠"
+strings.Contains(strings.ToLower(title), keyword)  // false！用户搜不到
+
+// ✅ 搜索前将双方统一转简体
+func matchText(text, filter string) bool {
+    textNorm := s2t.Normalize(text)     // 繁体 → 简体
+    filterNorm := s2t.Normalize(filter)
+    return strings.Contains(strings.ToLower(textNorm),
+        strings.ToLower(filterNorm))
+}
+```
+
+**实现要点**：
+- 建立简→繁单字符映射表（469 对常用字），运行时反向生成繁→简表
+- `Normalize()` 统一转为简体，对映射表未覆盖的字符原样保留
+- 搜索匹配时双方都调用 `Normalize()`，而非只在索引时做
+
+**源代码出处**：`internal/s2t/s2t.go`（完整简繁双向映射包）、`internal/tui/tui.go` line 1258–1261（搜索匹配调用 `s2t.Normalize`）。
+
+### 12.6 显示窗口容量估算
+
+为中文文本计算每屏可容纳的字符数时，不能用硬编码的 `*3` 魔法数字（假设是"英文 1 字节/1 列，中文 3 字节"）——终端列宽对 CJK 字符算 2 列（`runeWidth`），半角字符算 1 列，与字节数无关。
+
+```go
+// ❌ 硬编码估算——宽度不准，换行错位
+bytesPerLine := width * 3  // 假设每列 3 字节？毫无依据！
+
+// ✅ 用 rune 计数 + 实际终端列宽
+// Go: 用 go-runewidth 或类似库获取 rune 显示宽度
+// 实际中常用 rune 计数近似（对 CJK+ASCII 混合已足够）
+runes := []rune(line)
+if len(runes) > pw - margin {
+    line = string(runes[:pw-margin-3]) + "…"
+}
+```
+
+**基本规则**：
+- 终端尺寸（`termW`）× 字符数用 **rune 长度**近似，不乘任何因子
+- 弹窗/面板的 `pw` 已经是列数，`len([]rune(line)) > pw-4` 直接比较
+- 如果需精确到显示列（CJK = 2 列），引入 `runewidth` 库，但多数场景 rune 计数已足够
+
+**源代码出处**：`internal/tui/tui.go` line 1320–1355（弹窗尺寸从 `termW * 7 / 10` 实际终端宽度计算，截断用 `len([]rune(line)) > pw-4`）。
+
+### 作业要求
+
+```
+新写/修改字符串操作 → 检查是否涉及中文/emoji → 逐条对照以上 6 子模式 → 写测试（中/英/简/繁/emoji 全部覆盖） → 提交
+```
+
+1. 任何 `s[:n]` 式切片，确认 `n` 的含义是字符数还是字节数——字符数则必须走 `[]rune(s)[:n]`
+2. 交互式输入组件，输入内容存为 `[]rune`，cursor 使用 rune 索引
+3. `len(s)` 返回值用于缓冲分配；用户可见截断/计数用 `len([]rune(s))` 或 `utf8.RuneCountInString`
+4. `strings.Fields` + `Join` 前，先用占位符保护 `\n\n` 等结构标记
+5. 涉及中文搜索的 `Contains`，先用简繁映射表做归一化
+6. 显示窗口字符容量从 `termW`、`termH` 实算，禁硬编码魔法数
+7. **测试必须覆盖**：纯英文、纯中文、中英混合、emoji、简繁体交叉搜索
+
+---
+
+## 真实案例对照表（续）
+
+| # | 发现 | 违反的关卡 | 根因 |
+|---|------|-----------|------|
+| 10 | TUI 输入框对中文 backspace 乱码 | **关卡 12**（Rune 安全） | 输入字符串未转 `[]rune`，cursor 为 byte 偏移 |
+| 11 | 标题截断后终端出现 `�` | **关卡 12**（Byte vs Rune） | `s[:n]` 在中文 3 字节中间切断 |
+| 12 | 文章段落折叠成一大段 | **关卡 12**（空格压缩） | `strings.Fields` 吞掉 `\n\n` 段落分隔 |
+| 13 | 搜"台湾"找不到"臺灣" | **关卡 12**（简繁搜索） | `Contains` 直接匹配，未做简繁归一化 |
+
+---
+
 ## 严格程度选择
 
 | 级别 | 适用场景 | 强制检查的关卡 |
 |------|---------|---------------|
-| `strict` | 新项目启动、大型重构、上线前 | 1–10 全部逐条通过 |
-| `normal` | 日常功能开发 | 1–4（契约/前置条件/边界/状态一致性）+ 6（测试同步）+ 9–10（安全与密钥 + 知识图谱） |
-| `light` | 紧急修复、小改动 | 1（跨模块契约）+ 2（前置条件可达性）+ 9（安全与密钥）+ 10（知识图谱） |
+| `strict` | 新项目启动、大型重构、上线前 | 1–12 全部逐条通过 |
+| `normal` | 日常功能开发 | 1–4（契约/前置条件/边界/状态一致性）+ 6（测试同步）+ 9–12（安全与密钥 + 知识图谱 + 本地部署 + 字符串安全） |
+| `light` | 紧急修复、小改动 | 1（跨模块契约）+ 2（前置条件可达性）+ 9（安全与密钥）+ 10（知识图谱）+ 11（本地部署）+ 12（字符串安全，涉及中文/emoji 时） |
 
 ---
 
@@ -399,11 +613,24 @@ graphify 通过代码结构分析生成项目的知识图谱，明确标注：
 □ 关卡 8：两个 README 都更新了吗？      中英双语同步
 □ 关卡 9：有硬编码的 key 吗？           git diff --cached grep key-pattern
 □ 关卡 10：知识图谱查阅了吗？           graphify query 确认跨模块影响范围
+□ 关卡 11：最新二进制部署到本地了吗？      build + install + 运行验证
+□ 关卡 12：字符串操作对中文安全吗？         []rune 切片 / rune cursor / 简繁归一化
 ```
 
 ---
 
 ## 变更日志
+
+### 1.4.0 (2026-08-03)
+- 新增：关卡 12「字符串 / Rune 安全」——6 个子模式（Byte vs Rune 切片、Rune 安全 Cursor、长度语义混淆、空格压缩破坏结构、简繁中文搜索、显示窗口容量估算），全部来自 news-report 项目（Go CLI 新闻聚合器）的反复踩坑
+- 新增：真实案例对照表 #10–#13（TUI 中文 backspace 乱码、标题截断乱码、段落折叠、简繁搜索失败）
+- 修改：`strict` 级别改为 1–12 全部通过，`normal` 和 `light` 增加关卡 12
+- 修改：30 秒自检清单增加关卡 12
+
+### 1.3.0 (2026-08-03)
+- 新增：关卡 11「本地二进制部署」——每次代码变更后必须把最新二进制构建安装到本机（`~/.local/bin`），含适用范围、各语言部署命令速查、部署后验证与作业要求
+- 修改：`strict`/`normal`/`light` 均增加关卡 11
+- 修改：30 秒自检清单增加关卡 11
 
 ### 1.2.0 (2026-07-29)
 - 新增：关卡 10「代码知识图谱」——改代码前通过 graphify 了解架构，用 graphify query/path/explain 分析跨模块影响

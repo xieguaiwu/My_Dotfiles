@@ -24,11 +24,10 @@ tools:
   - write
   - bash
   - read
-  - glob
   - grep
   - edit
-  - task
-  - todowrite
+  - subagent
+  - todo_create
 ---
 
 # 错题练习卷生成 (Mistake Practice Generation)
@@ -111,7 +110,6 @@ tools:
 \begin{enumerate}[label=\textbf{\arabic*.}]
 
 % Qn: [Topic] (source)
-\begin{question}
 \item [题目文本]
 \begin{enumerate}[label=(\Alph*)]
     \item 选项 A
@@ -119,7 +117,6 @@ tools:
     \item 选项 C
     \item 选项 D
 \end{enumerate}
-\end{question}
 
 ...
 
@@ -162,6 +159,11 @@ tools:
 tectonic [output_name].tex
 ```
 
+编译完成后清理中间文件（`.aux` `.bbl` `.blg` `.log` `.out` `.toc` `.synctex.gz` 等），只保留 `.tex` 与 `.pdf`：
+```bash
+rm -f [output_name].aux [output_name].bbl [output_name].blg [output_name].log [output_name].out [output_name].toc [output_name].synctex.gz
+```
+
 #### 验证（委托 subagent）
 
 编译成功后，必须启动验证 agent 检查：
@@ -171,7 +173,7 @@ tectonic [output_name].tex
 2. 答案表完整性：确认每个题号都有对应答案
 3. 干扰项质量：确认每个错误选项都有迷惑性
 4. LaTeX 语法：确认无编译错误
-5. 答案分布：确认 A-D 大致均衡
+5. 答案分布：确认 A-D 各约 25%（±5%）
 ```
 
 ### 阶段 5：修复与迭代
@@ -246,7 +248,9 @@ D: 重力与压力的组合 → 常见错误：认为所有数值相等的力都
 6. 不要保留原始数据值
 7. **知识边界约束**：本 skill 遵守 [知识边界规范](../knowledge_boundary.md)。涉及的科目可能超出模型训练数据的准确覆盖范围。**题目设计时**：对公式推导、定理应用、数值计算没有十足把握时，通过计算验证而非猜测硬答。**干扰项设计时**：每个错误选项必须有明确的常见误解来源，不能编造"看起来合理"但实际无依据的选项。**数据修改时**：如果修改后的数值导致题目失去物理/数学合理性，应调整而非执意输出。
 
-8. **Git 安全网 + 不要盲目覆写文件**：本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须先用 `glob` 或 `read` 确认目标 `.tex` 文件是否已存在；若文件已存在，用 `edit` 追加而非 `write` 覆写；确需覆写须先告知用户。
+8. **Git 安全网 + 不要盲目覆写文件**：本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须先用 `read` 确认目标 `.tex` 文件是否已存在；若文件已存在，用 `edit` 追加而非 `write` 覆写；确需覆写须先告知用户。
+
+9. **全英文产出 + 仅 tectonic**：产出物（题目、选项、答案表、验证输出）一律全英文，禁止出现中文；编译仅用 tectonic（全英文内容无需 xelatex 等回退）。
 
 ---
 
@@ -287,7 +291,7 @@ D: 重力与压力的组合 → 常见错误：认为所有数值相等的力都
 - [ ] 题目顺序随机，无连续同主题
 - [ ] 每题 4 个选项 (A-D)
 - [ ] 答案表完整且正确（答案数与题目数一致）
-- [ ] 答案分布大致均衡 (A-D 各 18-22)
+- [ ] 答案分布大致均衡 (A-D 各约 25%，±5%)
 - [ ] 全英文，无中文在题目/选项中
 - [ ] LaTeX 语法正确，tectonic 编译成功
 - [ ] PDF 输出正常

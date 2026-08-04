@@ -24,8 +24,8 @@ inputs:
     required: false
     default: "auto"
 tools:
-  - look_at
-  - task
+  - read
+  - subagent
 ---
 
 # 截图任务解题器
@@ -55,18 +55,18 @@ MCP工具读取截图，评估图像复杂度：
 MCP工具，配合以下 prompt：
 
 ```
-请仔细分析这张截图，识别并提取以下信息：
-1. 题目/任务的完整内容
-2. 相关的图表、数据
-3. 任何限制条件或特殊要求
+Please analyze this screenshot carefully and extract the following:
+1. The complete content of the question/task
+2. Related diagrams, charts, and data
+3. Any constraints or special requirements
 
-请逐字转录所有文字内容，保持原有格式和符号的准确性。
+Transcribe all text verbatim, preserving the original format and symbols.
 ```
 
 #### 复杂图像处理
 当检测到复杂图像特征时，调用 `information-collector` agent：
 
-使用 task 工具，subagent_type 设为 "information-collector"，prompt 包含：
+使用 subagent 工具，agent 设为 "information-collector"，task 描述包含：
 ```
 请深入分析截图文件：{screenshot_path}
 
@@ -115,20 +115,20 @@ MCP工具，配合以下 prompt：
 ### 5. 输出格式
 
 ```markdown
-## 任务识别
-- **类型**: {task_type}
-- **复杂度**: {简单/复杂}
+## Task Identification
+- **Type**: {task_type}
+- **Complexity**: {Simple / Complex}
 
-## 题目内容
+## Question Content
 {完整题目转录}
 
-## 解答过程
+## Solution
 {详细解答}
 
-## 答案
+## Answer
 {最终答案或结论}
 
-## 补充说明
+## Additional Notes
 {如有必要，添加相关知识点或注意事项}
 ```
 
@@ -162,3 +162,4 @@ MCP工具，配合以下 prompt：
 4. **步骤清晰**: 解答过程要逻辑清晰，步骤完整
 5. **复杂图像**: 当 use_agent 为 "auto" 且图像复杂时，主动调用 information-collector agent
 6. **交互确认**: 如果题目内容不清晰或有歧义，向用户确认后再解答
+7. **全英文产出**: 输出内容（题目转录、解答、答案、补充说明）一律英文，禁止中文

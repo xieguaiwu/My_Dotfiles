@@ -23,15 +23,12 @@ inputs:
 tools:
   - write
   - read
-  - glob
   - bash
-  - task
-  - todowrite
   - edit
-  - websearch_web_search_exa
-  - webfetch
-  - context7_query-docs
-  - context7_resolve-library-id
+  - subagent
+  - todo_create
+  - web_search
+  - fetch_content
 ---
 
 # 词汇例句生成器 (Vocabulary Example Generator)
@@ -46,8 +43,7 @@ tools:
 
 ```
 **单词**
-🇩🇪/🇬🇧 外语句子。
-🇬🇧 英文翻译。
+🇬🇧 英文例句。或 🇩🇪 德语句子 + 🇬🇧 英文翻译。
 📝 词源/记忆提示（可选——有帮助时加）。
 ```
 
@@ -62,6 +58,7 @@ tools:
 | **简短** | 句子尽量简短，不拖沓。但画面感优先于长度。 | *"请短一些"*, *"shorter"* |
 | **易记忆** | 优先选择日常场景、有冲突/反转/情感张力的内容。平庸的句子无助于记忆。 | *"方便我以此来记忆单词"* |
 | **多样化** | 同一个单词覆盖不同含义/语境（名词、动词、比喻义等）。 | *"more"*（多次出现） |
+| **禁止中文** | 产出物一律禁用中文：英语例句不附翻译；德语例句附英文翻译（不用中文释义）；记忆提示也用英文。 | *"反正不用中文"* |
 
 ## 完整工作流程
 
@@ -132,16 +129,15 @@ tools:
 ```
 **{单词}**
 🇬🇧 {英语例句1}
-🇬🇧 {英语例句1 英文翻译}
 📝 {词源/记忆提示（可选）}
 
 **{单词}**
 🇬🇧 {英语例句2}
-🇬🇧 {英语例句2 英文翻译}
+📝 {词源/记忆提示（可选）}
 
 **{单词}**
-🇬🇧 {英语例句3}
-🇬🇧 {英语例句3 英文翻译}
+🇩🇪 {德语句}
+🇬🇧 {德语句英文翻译}
 📝 {词源/记忆提示}
 ```
 
@@ -169,16 +165,13 @@ tools:
 ```
 **gaping**
 🇬🇧 The side of the ship had a gaping hole where the iceberg had kissed it.
-🇬🇧 船的侧面有一个裂开的大洞——冰山亲吻过的地方。
 
 **gaping**
 🇬🇧 He stood there with a gaping mouth, watching his car roll into the lake.
-🇬🇧 他目瞪口呆地站在那儿，看着自己的车滚进湖里。
 
 **gaping**
 🇬🇧 The plot of that movie had a gaping logic hole you could drive a truck through.
-🇬🇧 那部电影的情节有一个大得能开卡车过去的逻辑漏洞。
-📝 gaping = gape (张开) + -ing (形容词后缀) → 张得大大的
+📝 gaping = gape (to open wide) + -ing (adjective suffix) → wide open
 ```
 
 ### German (正确格式)

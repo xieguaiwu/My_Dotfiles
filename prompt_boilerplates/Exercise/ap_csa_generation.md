@@ -14,6 +14,7 @@ inputs:
 tools:
   - write
   - bash
+  - read
 ---
 
 # AP CSA 模拟试卷生成
@@ -323,6 +324,20 @@ public class ClassName {
 3. 使用有意义的方法名和变量名
 4. 必要时添加注释
 
+### 核查记录（强制输出）
+
+生成流程结束后，必须逐题重新验证并输出核查记录：
+
+```
+=== 答案核查 ===
+Q1: C → 验证: substring(3,7)="GRAM"，length()=4 ✅
+Q2: D → 验证: ... ❌ 计算错误，应为 B（已修复）
+...
+总计: 40/40 通过
+```
+
+核查不通过（发现任何错误）必须修复后重新编译，全部通过才可报告任务完成。
+
 ---
 
 ## 编译说明
@@ -335,6 +350,11 @@ tectonic AP_CSA_Mock_Exam.tex
 编译输出：
 - PDF 文件
 - 可能的 warning (Underfull \hbox 等排版警告可忽略)
+
+**清理中间文件**：编译完成后删除 LaTeX 中间产物（`.aux` `.bbl` `.blg` `.log` `.out` `.toc` `.synctex.gz` 等），只保留 `.tex` 源码与 `.pdf`：
+```bash
+rm -f AP_CSA_Mock_Exam.aux AP_CSA_Mock_Exam.bbl AP_CSA_Mock_Exam.blg AP_CSA_Mock_Exam.log AP_CSA_Mock_Exam.out AP_CSA_Mock_Exam.toc AP_CSA_Mock_Exam.synctex.gz
+```
 
 ---
 
@@ -352,6 +372,7 @@ tectonic AP_CSA_Mock_Exam.tex
 - [ ] 答案表完整
 - [ ] 答案表全部正确
 - [ ] 选择题答案没有可预测的明显规律
+- [ ] 答案分布均衡（A-E 各约 20%，偏差 ≤ 1）
 - [ ] 简答题有详细解答
 - [ ] Unit 1-4 知识点覆盖完整
 - [ ] LaTeX 语法正确，可编译
@@ -435,4 +456,6 @@ public class NumberUtil {
 9. **避免 charAt**：`charAt()` 不在 Quick Reference 中，题目应使用 `substring(i, i+1)` 替代
 10. **知识边界约束**：本 skill 遵守 [知识边界规范](../knowledge_boundary.md)。AP CSA 的考试大纲和题型可能随年份变化（尤其是 2025-2026 新增的 Wrapper Classes、二分搜索、归并排序等内容），如果对最新课程变更不确定，明确告知用户"我的知识截止于 XXXX，建议查阅 College Board 官方 Course and Exam Description 核实"而非硬答或编造。选择题干扰项设计必须有明确错误来源，不能凭空捏造迷惑性选项。
 
-11. **Git 安全网 + 文件写入安全**：本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须用 `glob` 或 `read` 确认目标文件是否已存在；若文件已存在，优先用 `edit` 追加内容，而非直接 `write` 覆写；确需覆写须先告知用户。
+11. **Git 安全网 + 文件写入安全**：本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：使用 `write` 前必须用 `read` 确认目标文件是否已存在；若文件已存在，优先用 `edit` 追加内容，而非直接 `write` 覆写；确需覆写须先告知用户。
+
+12. **全英文产出 + 仅 tectonic**：本 skill 产出物（题干、选项、答案、说明）一律全英文，禁止出现中文。编译仅使用 tectonic（全英文内容无需 xelatex 等回退）。

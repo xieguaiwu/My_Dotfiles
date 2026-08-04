@@ -29,3 +29,6 @@ pi-agent/sessions/
 *.db
 fcitx/clipboard/
 fcitx/log/
+
+# pi 运行时目录
+.pi-subagents/

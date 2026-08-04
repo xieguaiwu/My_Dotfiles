@@ -46,7 +46,6 @@ tools:
   - write
   - bash
   - read
-  - glob
   - grep
   - edit
   - subagent
@@ -61,7 +60,7 @@ tools:
 
 1. **克隆模式**：读入一份已有的 .tex 或 .md 格式试卷，提取其结构特征（题型分布、选项数、编号方式、段落风格），然后用全新的题目内容填充
 2. **知识点模式**：无模板时根据用户提供的知识点列表，从零设计题目
-3. **全英文**：所有题干、选项、说明文字均为英文
+3. **全英文**：所有产出物（题干、选项、说明、答案、干扰项分析）一律为英文，禁止出现中文
 4. **纸张节省**：通过排版技巧最大化题目密度，最小化页数
 5. **答案分离**：试卷与答案**始终生成独立的两个文件**，分别用 tectonic 编译
 6. **tectonic 编译**：最终产出试卷 PDF + 答案 PDF
@@ -597,7 +596,7 @@ read "{template_path}"
 2. 填入 Phase 4 整理的答案表、解答步骤、干扰项分析
 
 > **写入前必须先执行 Git 安全网步骤**（见 §Git 安全网 + 文件写入安全）
-> 用 `glob` 或 `find` 确认目标文件是否已存在，已存在时优先用 `edit` 而非 `write`。
+> 用 `find` 或 `read` 确认目标文件是否已存在，已存在时优先用 `edit` 而非 `write`。
 
 ---
 
@@ -605,12 +604,20 @@ read "{template_path}"
 
 #### 5.1 编译试卷和答案
 
+> 本 skill 仅使用 tectonic 编译（产出全英文，无需 xelatex 回退）。
+
 ```bash
 cd "{output_dir}"
 # 编译试卷
  tectonic "{subject}_{exam_type}_{output_name}.tex"
 # 编译答案
  tectonic "{subject}_{exam_type}_{output_name}_answer_key.tex"
+```
+
+编译完成后清理中间文件（`.aux` `.bbl` `.blg` `.log` `.out` `.toc` `.synctex.gz` 等），只保留 `.tex` 与 `.pdf`：
+```bash
+rm -f "{subject}_{exam_type}_{output_name}".{aux,bbl,blg,log,out,toc,synctex.gz} \
+      "{subject}_{exam_type}_{output_name}_answer_key".{aux,bbl,blg,log,out,toc,synctex.gz}
 ```
 
 **预期产物：**
@@ -631,9 +638,9 @@ cd "{output_dir}"
 |------|----------|
 | `Underfull \hbox` 警告 | 无操作——排版警告可忽略，不影响内容 |
 | `Overfull \hbox` | 在对应行加 `\emergencystretch=0.5em` 或调整换行 |
-| 缺少宏包错误 | 安装缺失宏包或替换为等效功能 |
+| 缺少宏包错误 | tectonic 首次使用会自动联网拉取宏包；持续失败检查网络或重试（全英文产出无需 xelatex） |
 | LaTeX 语法错误 | 定位错误行修复后重新编译 |
-| tectonic 未安装 | `cargo install tectonic` |
+| tectonic 未安装 | `cargo install tectonic`，或发行版包管理器（apt/pacman 的 tectonic 包） |
 
 #### 5.4 验证输出
 
@@ -782,7 +789,7 @@ Q3: A → 验证: ... ❌ 计算错误，应为 B（已修复）
 执行 `write` 或 `edit` 前必须：
 
 1. 读取 `git_safety_net.md` 并执行 git 版本追踪指令
-2. 用 `glob` 或 `find` 检查目标文件是否已存在
+2. 用 `find` 或 `read` 检查目标文件是否已存在
 3. 文件已存在时优先用 `edit` 修改，不用 `write` 覆写
 4. 确需覆写时先告知用户
 

@@ -1,6 +1,6 @@
 ---
 name: project-documentation-protocol
-version: 1.0.0
+version: 1.0.1
 description: 跨项目标准化文档协议——进入项目时按规范阅读项目文档（含 graphify 知识图谱）和工作完成后按规范更新项目文档（含 graphify 知识图谱）
 triggers:
   - "标准化文档流程"
@@ -213,10 +213,6 @@ find . -name '*.spec' -o -name '*.rpm' 2>/dev/null | grep -q . && \
 # 算法竞赛
 head -5 *.cpp *.py 2>/dev/null | grep -qE 'Codeforces|AtCoder|洛谷|洛谷|LeetCode' && \
   echo "📌 检测到算法竞赛特征 → 建议加载 cp-review-fix.md"
-
-# OpenCode 配置
-grep -rq 'opencode' ~/.config/opencode/ 2>/dev/null && \
-  echo "📌 涉及 OpenCode 配置 → 建议加载 opencode_health_check.md"
 ```
 
 **加载决策矩阵**：
@@ -228,7 +224,6 @@ grep -rq 'opencode' ~/.config/opencode/ 2>/dev/null && \
 | 含有 `Dockerfile` / `docker-compose.yml` / `systemd` 配置 | `vps-operations.md` |
 | 含有 `.spec` 文件 | `copr_packaging.md` |
 | 算法竞赛代码（`.cpp` / `.py` 包含 OJ 题号） | `cp-review-fix.md` |
-| OpenCode 配置目录（`~/.config/opencode/`） | `opencode_health_check.md` |
 | 以上皆非 | 仅基础设施 skill 即可 |
 
 > ⚠️ **加载时机**：领域 skill 应在阅读摘要输出后、开始实际工作前加载。不要在项目入口阶段就加载所有 skill——按需加载避免上下文膨胀。
@@ -240,7 +235,7 @@ grep -rq 'opencode' ~/.config/opencode/ 2>/dev/null && \
 **适用场景**：实验完成、代码修复、架构变更、新增功能后。
 
 > **在开始工作前**，如果项目特征检测（§A5）建议了领域 skill，应先加载它们；
-> 编码阶段应参照 `development-quality-gates.md` 的 10 个关卡逐条自检；
+> 编码阶段应参照 `development-quality-gates.md` 的 11 个关卡逐条自检；
 > 如果涉及 subagent 调用，先执行 `resource-aware-delegation.md` 的资源检查；
 > 如果需要迭代改进，可启动 `improvement-loop.md` 的修改→审查→修复循环。
 
@@ -605,6 +600,9 @@ graphify query "社区划分" --graph graphify-out/graph.json
 ---
 
 ## 变更日志
+
+### 1.0.1 (2026-08-03)
+- 移除：§A5 中 OpenCode 配置特征检测与决策矩阵条目（opencode_health_check.md 已删除）
 
 ### 1.0.0 (2026-07-30)
 - 初始发布：跨项目文档阅读与更新协议
