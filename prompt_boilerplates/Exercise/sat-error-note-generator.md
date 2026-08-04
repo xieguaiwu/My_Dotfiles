@@ -21,7 +21,7 @@ inputs:
   - name: note_title
     description: 笔记标题（英文Title Case）
     required: false
-    default: "SAT RW {卷号} 错题分析"
+    default: "SAT RW {exam_no} Error Analysis"
 tools:
   - read
   - write
@@ -65,9 +65,12 @@ pdftoppm -f {start_page} -l {end_page} -png -r 200 "{test_pdf}" ocr_temp
 tesseract ocr_temp-{page}.png stdout -l eng+chi_sim 2>/dev/null
 ```
 
-**页码估算方法**：
-- Module 1 (Q1-Q27)：每页约2题，Qn ≈ 第 `ceil(n/2)` 页
-- Module 2 (Q1-Q13 或完整)：从 Module 1 结束后继续，留意 "Section 1, Module 2" 标记
+**定位策略（按优先级）**：
+1. 先用 `pdftotext` 检测文本层：若有文本层，直接全文提取按题号定位，无需 OCR
+2. 扫描版（无文本层）：**整本低分辨率 OCR 一遍**（`pdftoppm -r 150` 全页 + tesseract），grep 题号标记建立「题号→页码」索引
+3. 仅对目标页高分辨率重扫（`pdftoppm -r 300`）用于精确转录
+
+> 不建议按"每页约 2 题"线性估算——SAT 阅读长文一页常只覆盖 1-2 题甚至跨页，线性估算会漏题或定位错页。
 
 OCR 后手动确认题目编号与答案文件匹配。
 
@@ -104,11 +107,11 @@ SAT Reading & Writing 常见考点分类：
 
 #### e. 陷阱识别
 标注常见陷阱类型：
-- 因果倒置（词汇题常见）
-- 净效应抵消（支持结论题常见）
-- 相关性≠因果机制
-- 过度推断（超出数据范围）
-- 混淆写作目的（summary vs. narrative）
+- Cause-Effect Reversal (common in vocab questions)
+- Net Effect Cancellation (common in evidence questions)
+- Correlation ≠ Causation
+- Overgeneralization (beyond the data)
+- Purpose Confusion (summary vs. narrative)
 
 ### 4. 生成单文件笔记
 
@@ -117,11 +120,11 @@ SAT Reading & Writing 常见考点分类：
 #### YAML Front Matter
 ```yaml
 ---
-title: SAT RW {卷号} 错题分析
+title: SAT RW {exam_no} Error Analysis
 tags:
   - SAT
   - Reading
-  - 错题
+  - Error-Analysis
 created: {YYYY-MM-DD}
 ---
 ```
@@ -129,59 +132,59 @@ created: {YYYY-MM-DD}
 #### 笔记结构
 
 ```markdown
-# SAT RW {卷号} 错题分析
+# SAT RW {exam_no} Error Analysis
 
-> [!abstract] 试卷信息
-> - **试卷**: {试卷名称}
-> - **来源**: `{answer_file}`
-> - **本次错题/标记题**: N 道
-> - **薄弱技能**: {技能列表}
+> [!abstract] Exam Info
+> - **Test**: {test name}
+> - **Source**: `{answer_file}`
+> - **Marked Questions**: N
+> - **Weak Areas**: {weak areas}
 
-## 目录
+## Table of Contents
 
-- [[#1. Module X QX — 题型（关键词）]]
-- [[#2. Module X QX — 题型（关键词）]]
+- [[#1. Module X QX — Question Type]]
+- [[#2. Module X QX — Question Type]]
 ...
 
 ---
 
-# 1. Module X QX — 题型
+# 1. Module X QX — Question Type
 
-> [!info] 标记: `{作答字母} ({标记})`
+> [!info] Marked: `{answer letter} ({marker})`
 
-## 题干
-{完整题干}
+## Question Stem
+{complete question stem}
 
-## 选项分析
-{选项分析表}
+## Options Analysis
+{options analysis table}
 
-## 解题思路
+## Solution Approach
 
-### 考点
-{考点说明}
+### Skill Tested
+{skill description}
 
-### 推理过程
-{详细分析 + Mermaid 图（如适用）}
+### Reasoning Process
+{detailed analysis + Mermaid diagram (if applicable)}
 
-### 为什么 {正确选项} 正确
-{解释}
+### Why {correct option} Is Correct
+{explanation}
 
-### 为什么 {错误选项} 不对
-{解释}
+### Why {wrong option} Is Wrong
+{explanation}
 
-> [!warning] 陷阱识别
-> {常见陷阱说明}
+> [!warning] Trap Identification
+> {common trap description}
 
 ---
 
-# 2. Module X QX — 题型
+# 2. Module X QX — Question Type
 ...
 
 ---
 
-## 总结：薄弱技能分布
+## Summary: Weak Area Distribution
 
-{技能分布表 + 优先级 + 行动建议}
+{skill distribution table + priorities + action plan}
 ```
 
 #### 关键约束
@@ -198,13 +201,13 @@ created: {YYYY-MM-DD}
 
 ## 输出格式
 
-在 `{output_dir}` 下生成一个 `.md` 文件，文件名为 `SAT RW {卷号} 错题分析.md`。
+在 `{output_dir}` 下生成一个 `.md` 文件，文件名为 `SAT RW {exam_no} Error Analysis.md`。
 
 完成后输出：
 ```
-✓ SAT 错题笔记已生成
-文件: {output_dir}/SAT RW {卷号} 错题分析.md
-题目: {题号列表}
+✓ SAT error analysis note generated
+File: {output_dir}/SAT RW {exam_no} Error Analysis.md
+Questions: {question numbers}
 ```
 
 ## 注意事项
@@ -216,3 +219,4 @@ created: {YYYY-MM-DD}
 5. **客观呈现学生答案** — 标注学生的作答结果，但不预设对错；重点在解释正确的推理过程
 6. **Mermaid 图适度使用** — 仅在有清晰的因果链或流程关系时使用，每道题最多一个
 7. **Git 安全** — 执行 `write` 前检查目标文件是否存在；若已存在先读旧内容，与用户确认是否覆写或追加
+8. **全英文产出** — 笔记内容（题干、选项分析、推理、总结、标签）一律英文，禁止中文。

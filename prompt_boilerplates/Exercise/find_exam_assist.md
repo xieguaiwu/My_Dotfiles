@@ -24,8 +24,8 @@ inputs:
     required: false
     default: past_exam/
 tools:
-  - websearch_web_search_exa
-  - webfetch
+  - web_search
+  - fetch_content
   - bash
   - write
 ---
@@ -95,7 +95,7 @@ site:apcentral.collegeboard.org [subject] FRQ [year]
 
 **下载命令**：
 ```bash
-wget -O {output_dir}/{year}/FRQ.pdf "{url}"
+wget -c -O {output_dir}/{year}/FRQ.pdf "{url}"   # -c 断点续传，失败自动重试
 ```
 
 ### 5. 验证完整性
@@ -105,6 +105,7 @@ wget -O {output_dir}/{year}/FRQ.pdf "{url}"
 - [ ] 每年都有Scoring_Guidelines.pdf
 - [ ] MCQ资源（如有）已下载
 - [ ] 文件大小合理（非空文件）
+- [ ] PDF 魔数校验：`file {output_dir}/{year}/FRQ.pdf` 输出包含 "PDF document"
 - [ ] PDF可正常打开
 
 ### 6. 生成汇总报告
@@ -118,21 +119,21 @@ wget -O {output_dir}/{year}/FRQ.pdf "{url}"
 ## 输出格式
 
 ```markdown
-## AP [Subject] 真题下载报告
+## AP [Subject] Past Exam Download Report
 
-### 已下载资源
+### Downloaded Resources
 
-| 年份 | FRQ | 评分标准 | MCQ | MCQ答案 |
-|------|-----|----------|-----|---------|
+| Year | FRQ | Scoring Guidelines | MCQ | MCQ Answers |
+|------|-----|-------------------|-----|-------------|
 | 2015 | ✓ | ✓ | ✓ | ✓ |
 | 2016 | ✓ | ✓ | - | - |
 | ... | ... | ... | ... | ... |
 
-### 缺失资源
-- 2016年 MCQ: College Board未公开
-- 2020年: 因COVID-19考试形式特殊，无完整试卷
+### Missing Resources
+- 2016 MCQ: Not published by College Board
+- 2020: No complete exam due to COVID-19 special format
 
-### 文件位置
+### File Location
 {output_dir}/
 ```
 
@@ -143,4 +144,6 @@ wget -O {output_dir}/{year}/FRQ.pdf "{url}"
 4. **特殊年份**: 2020年因疫情考试形式特殊，资源可能不完整
 5. **知识边界约束**：本 skill 遵守 [知识边界规范](../knowledge_boundary.md)。关键约束：**搜索未找到时不得断言资源存在**。如果搜索工具返回空结果或不完整，如实报告"未找到该资源"而非推测"可能存在于...某个网站"。如果找到的结果不确定是否为 College Board 官方版本，标注"结果来源未完全确认，建议自行核实"。不要编造不存在的公开资源链接。
 
-6. **Git 安全网 + 文件写入安全**: 本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write` 下载/创建文件前，必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：先用 `glob` 或 `read` 确认目标文件是否已存在；若文件已存在，告知用户并确认是否覆盖。避免重复下载覆写已有资源。
+6. **文件写入安全**: 下载/创建文件前，先用 `read` 确认目标文件是否已存在；若文件已存在，告知用户并确认是否覆盖。避免重复下载覆写已有资源。
+
+7. **全英文产出**: 本 skill 产出的所有文件（README 报告等）一律英文，禁止出现中文。

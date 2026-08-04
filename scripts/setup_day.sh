@@ -324,25 +324,6 @@ else
         vulkan-loader vulkan-tools || true
 fi
 
-echo ">>> Installing TLP power management (AC=performance / BAT=powersave)..."
-if [ "$DISTRO" = "fedora" ]; then
-    sudo dnf install -y tlp tlp-rdw
-else
-    sudo apt install -y tlp tlp-rdw
-fi
-sudo systemctl disable tuned 2>/dev/null || true
-# AC/电池分离：插电 performance（全速），电池 powersave（省电）
-sudo sed -i \
-    -e 's/^#CPU_SCALING_GOVERNOR_ON_AC=.*/CPU_SCALING_GOVERNOR_ON_AC=performance/' \
-    -e 's/^#CPU_SCALING_GOVERNOR_ON_BAT=.*/CPU_SCALING_GOVERNOR_ON_BAT=powersave/' \
-    -e 's/^#CPU_ENERGY_PERF_POLICY_ON_AC=.*/CPU_ENERGY_PERF_POLICY_ON_AC=performance/' \
-    -e 's/^#CPU_ENERGY_PERF_POLICY_ON_BAT=.*/CPU_ENERGY_PERF_POLICY_ON_BAT=power/' \
-    -e 's/^#CPU_BOOST_ON_AC=.*/CPU_BOOST_ON_AC=1/' \
-    -e 's/^#CPU_BOOST_ON_BAT=.*/CPU_BOOST_ON_BAT=0/' \
-    /etc/tlp.conf
-sudo systemctl enable --now tlp
-sudo tlp start
-
 echo ">>> Installing common media libraries..."
 if [ "$DISTRO" = "fedora" ]; then
     sudo dnf install -y ffmpeg ffmpeg-devel gstreamer1-plugins-good gstreamer1-plugins-bad-free \

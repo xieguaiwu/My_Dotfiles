@@ -18,7 +18,7 @@ M.CompileRun = function()
     local escaped_base = vim.fn.shellescape(base)
 
     if ft == 'cpp' or ft == 'cc' then
-        cmd = string.format("!g++ -std=c++17 -O2 -Wall %s -o %s", escaped_file, escaped_base)
+        cmd = string.format("!g++ -std=c++17 -O2 -Wall -Wextra -Wshadow %s -o %s", escaped_file, escaped_base)
     elseif ft == 'c' then
         cmd = string.format("!gcc -std=c11 -O2 -Wall %s -o %s", escaped_file, escaped_base)
     elseif ft == 'java' then
