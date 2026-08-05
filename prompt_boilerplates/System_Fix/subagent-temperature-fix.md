@@ -1,6 +1,6 @@
 ---
 name: subagent-temperature-fix
-version: 2.6.0
+version: 2.6.1
 description: 验证并修复 pi-agent subagent 的 temperature 配置链。v2.5.0 起采用双保险架构：① 传递链补丁（pi-subagents 解析→buildPiArgs→env）② 消费点 YAML 兜底（sdk.js 在 env 缺失时直读 ~/.pi/agent/agents/<name>.md frontmatter）——即使上游 pi-subagents 再次删除 temperature 支持，温度依然生效。v2.6.0 适配 pi-subagents v0.40.0（第 4 次删除）并修复 str.replace 子串误伤 spawnRunner 的静默污染 bug（heal + 锚定正则 + 完整性断言）。共 21 个检查点（含 spawnRunner 6-tab 专用 + serializer 输出 + YAML 兜底），补丁集成在 ~/.pi/patches/temperature/reapply.sh（postinstall 自动重打）。⚠️ 补丁后必须重启 pi 主进程才生效（tsx 模块缓存，见注意事项 #7）。
 triggers:
   - "subagent温度修复"
@@ -382,7 +382,13 @@ echo -n "Agent createLoop:    "; grep -q "temperature: this.temperature" "$AGENT
 
 ## ✅ 当前状态（2026-08-02）
 
-温度链已全部修复并验证通过 ✅ （**21/21 检查点**，pi-coding-agent v0.83.0，pi-subagents **v0.40.0**）。**双保险架构上线**：传递链 + 消费点 YAML 兜底。断链模拟实测：手动 spawn 子进程（env 无 PI_SUBAGENT_TEMPERATURE）→ sdk.js 从 explore.md 直读 temperature=0.1 → 注入 Agent ✅。今后 pi-subagents 再次删除 temperature 支持，不再需要适配——兜底自动接管，传递链补丁只是锦上添花。
+温度链已全部修复并验证通过 ✅ （**21/21 检查点**，pi-coding-agent v0.83.0，pi-subagents **v0.40.0**）。**双保险架构上线**：传递链 + 消费点 YAML 兜底。
+
+**2026-08-05 复验（`pi update --extensions` 后）**：pi-subagents 仍为 v0.40.0 未变动，reapply.sh 21/21 全部通过 ✅。扩展 npm 树新增 overrides（`brace-expansion ^5.0.9` / `undici ^8.9.0`）清零 2 高危漏洞后 `npm install` 触发 postinstall，自动重打输出 `[patch] Temperature chain OK` ✅。
+
+**2026-08-05 教训（更新挂起 56m45s）**：`pi update --extensions` 的 git fetch 在 `package-manager.js` 中**无超时**（`runCommand("git", fetchArgs, ...)` 未传 timeoutMs），代理节点抽风时连接停滞即无限挂起（实测 56m45s，FETCH_HEAD 均在结束时才写入）。已设全局 git 停滞超时防复发：`git config --global http.lowSpeedLimit 1000` + `http.lowSpeedTime 30` + `http.connectTimeout 15`（停滞 30s 即中止）。修后实测 `pi update --extensions` 9s 完成。此挂起不影响补丁链，但会推迟 postinstall 重打。
+
+**2026-08-05 扩展树清理**：`--legacy-peer-deps` 下 `npm install` 会清除 `@earendil-works/pi-*` 过期 peer 自动安装（设计预期，运行时走 loader aliases，见 package-manager.js 注释）；若某次更新后扩展报错，先检查 `~/.pi/agent/npm/node_modules/@earendil-works/` 是否被清空而非怀疑温度补丁。断链模拟实测：手动 spawn 子进程（env 无 PI_SUBAGENT_TEMPERATURE）→ sdk.js 从 explore.md 直读 temperature=0.1 → 注入 Agent ✅。今后 pi-subagents 再次删除 temperature 支持，不再需要适配——兜底自动接管，传递链补丁只是锦上添花。
 
 **v0.40.0 适配（v2.6.0）**：0.40.0 第 4 次从 pi-subagents 源码删除全部 temperature 支持（与 0.38/0.39 同模式，12 检查点全缺）。reapply.sh 已适配 + 加固：
 - **发现并修复 str.replace 子串误伤 bug（CRITICAL）**：buildSeqStep 补丁用 `str.replace` 插入 3-tab `temperature: a.temperature,` 时，因 Python 子串语义，**6-tab 的 spawnRunner 行包含 3-tab 模式作为子串**（最后 3 个 tab + `thinking:`），被同时匹配劈开——在 spawnRunner 里插入了一个作用域不存在的 `a`（运行时 ReferenceError）。且污染后 spawnRunner 的 6-tab anchor 断裂 → 补丁静默跳过 + 报告误报 "ok"
