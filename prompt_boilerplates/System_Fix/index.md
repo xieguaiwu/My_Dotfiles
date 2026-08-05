@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 1.1.0
+version: 1.2.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -127,7 +127,7 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 7 | [subagent-temperature-fix.md](subagent-temperature-fix.md) | 2.3.0 | subagent temperature 配置链验证与重打补丁（17 检查点） | subagent 输出温度异常 |
+| 7 | [subagent-temperature-fix.md](subagent-temperature-fix.md) | 2.6.1 | subagent temperature 配置链验证与重打补丁（21 检查点，双保险：传递链 + YAML 兜底） | subagent 输出温度异常 |
 | 8 | [piagent-search-pipeline-fix.md](piagent-search-pipeline-fix.md) | 1.0.0 | web_search 配置/编码崩溃/provider 不可用/内容检索失败 | 搜索报错、provider 502 |
 | 9 | [piagent-cmap-fix.md](piagent-cmap-fix.md) | 1.0.0 | 处理 PDF 时 CMap 字体警告（unpdf file:// 路径问题） | PDF 解析报 CMap 警告 |
 | 10 | [memory-index-condense.md](memory-index-condense.md) | 1.3.0 | 记忆索引调查与浓缩（并行 reader 合成 MEMORY_INDEX.md） | 记忆膨胀、索引过时 |
@@ -207,6 +207,9 @@ journalctl -p err -b --no-pager | tail -20
 
 ## 变更日志
 
+### 1.2.0 (2026-08-05)
+- 修正：`subagent-temperature-fix.md` 目录条目版本 2.3.0 → **2.6.1**、检查点数 17 → **21**（v2.6.0 适配 pi-subagents v0.40.0 第 4 次删除 + spawnRunner 6-tab 专用检查点 + YAML 兜底；v2.6.1 记录 2026-08-05 `pi update --extensions` 后复验 21/21 通过 + git 停滞超时防挂起）
+
 ### 1.1.0 (2026-07-31)
 - 新增：第五类「应用层」— `ghostwriter-math-check-and-fix.md`（ghostwriter 数学渲染三层自愈）
 - 新增：决策树分支「ghostwriter 公式不渲染 / 数学显示源码」
@@ -223,4 +226,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-07-31（1.1.0 收录 ghostwriter-math-check-and-fix）*
+*最后更新: 2026-08-05（1.2.0 同步 subagent-temperature-fix 2.6.1/21 检查点）*
