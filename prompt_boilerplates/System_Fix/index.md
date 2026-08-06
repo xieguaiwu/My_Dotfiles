@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 1.2.0
+version: 1.3.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -23,6 +23,8 @@ triggers:
   - "记忆索引"
   - "关机慢"
   - "同步配置"
+  - "tor浏览器"
+  - "tor连不上"
 inputs:
   - name: symptom
     description: 用户描述的症状/报错信息
@@ -143,6 +145,7 @@ journalctl -p err -b --no-pager | tail -20
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
 | 12 | [ghostwriter-math-check-and-fix.md](ghostwriter-math-check-and-fix.md) | 1.1.0 | ghostwriter 预览数学公式不渲染三层自愈（pandoc wrapper / flatpak override / 导出器配置）+ 全链验证 | ghostwriter 公式不渲染、数学显示源码 |
+| 13 | [tor-browser-check-and-fix.md](tor-browser-check-and-fix.md) | 1.0.0 | Tor 浏览器 bootstrap 失败检查+修复（IPv6 bridge / Socks5Proxy 禁，HTTPSProxy + IPv4 bridge 实测可用）+ tor 内核验证 | tor 无法连接、bootstrap 卡 0% |
 
 ---
 
@@ -179,6 +182,9 @@ journalctl -p err -b --no-pager | tail -20
 「ghostwriter 公式不渲染 / 数学显示源码 / markdown 公式不显示」
   └─ ghostwriter-math-check-and-fix.md
 
+「tor 连不上 / tor 浏览器用不了 / bootstrap 卡 0%」
+  └─ tor-browser-check-and-fix.md ← 须先确认 clash-verge 代理正常
+
 「以上都不是 / 综合症状 / 说不清楚」
   └─ system_diagnostics_and_repair.md（全面诊断）
        └─ 发现具体问题 → 回到上方对应文档
@@ -193,6 +199,7 @@ journalctl -p err -b --no-pager | tail -20
 | `enospc-tmpfs-check.md` 预防 | `piagent-search-pipeline-fix.md` | opencli/chromedp 泄漏是搜索管道与 tmpfs 满的共同隐患 |
 | `ghostwriter-math-check-and-fix.md` 第三层 | `dotfiles-sync-and-audit.md` | 配置修正后需同步 My_Dotfiles 备份副本 |
 | `clash-verge-diagnose-and-fix.md` | `system_diagnostics_and_repair.md` Phase 1.5 网络 | 网络层诊断先跑通用检查再深入 Clash |
+| `tor-browser-check-and-fix.md` 前置 | `clash-verge-diagnose-and-fix.md` | Tor 经本地代理引导，代理失效时先修 Clash 再修 Tor |
 | `dotfiles-sync-and-audit.md` | `memory-index-condense.md` | 两者都涉及 pi-agent 配置文件的备份/维护 |
 | 任何 pi-agent 层文档修复后 | `memory-index-condense.md` | 修复后如记忆/索引涉及，需重新浓缩 |
 
@@ -206,6 +213,11 @@ journalctl -p err -b --no-pager | tail -20
 ---
 
 ## 变更日志
+
+### 1.3.0 (2026-08-05)
+- 新增：第五类「应用层」— `tor-browser-check-and-fix.md`（Tor 浏览器检查+修复，IPv4 bridge + HTTPSProxy 实测组合）
+- 新增：决策树分支「tor 连不上 / bootstrap 卡 0%」+ 交叉引用「Tor 前置依赖 Clash 代理」
+- 新增：triggers「tor浏览器」「tor连不上」
 
 ### 1.2.0 (2026-08-05)
 - 修正：`subagent-temperature-fix.md` 目录条目版本 2.3.0 → **2.6.1**、检查点数 17 → **21**（v2.6.0 适配 pi-subagents v0.40.0 第 4 次删除 + spawnRunner 6-tab 专用检查点 + YAML 兜底；v2.6.1 记录 2026-08-05 `pi update --extensions` 后复验 21/21 通过 + git 停滞超时防挂起）
