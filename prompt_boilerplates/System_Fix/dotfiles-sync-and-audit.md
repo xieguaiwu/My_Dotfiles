@@ -1,6 +1,6 @@
 ---
 name: dotfiles-sync-and-audit
-version: 1.1.0
+version: 1.2.0
 description: 三合一维护：本地配置增量同步至 ~/My_Dotfiles/（惟更新已有项）、审计本地 Git 仓库提交推送状态、自动生成 commit 信息。自有仓库可 push，有上游者惟本地 commit。执行前必先征得用户同意
 triggers:
   - "同步配置"
@@ -103,11 +103,13 @@ find ~/My_Dotfiles -not -path '*/.git/*' -not -name '.gitignore' -not -path '*/n
 #### 1.2 Git 仓库审计
 
 ```bash
-# 扫描常见位置 git 仓库（含 ~/ 根层级和 ~/Documents/）
-# 限深度防大目录卡死
-for dir in $(find ~/ ~/works/ ~/Desktop/ ~/Documents/ ~/My_Dotfiles/ -maxdepth 2 -type d -name '.git' 2>/dev/null | sed 's|/.git||' | sort -u | head -50); do
-  [ -d "$dir" ] && echo "$dir"
-done
+# 扫描全部 git 仓库（单起点 ~/ + maxdepth 4 + prune 黑名单防大目录卡死）
+# ⚠️ 必须 -print0 + while read：路径含空格/中文（如 "Obsidian Vault"、"在深渊"）时，
+#    `for dir in $(find ...)` 词分割会把路径拆断 → 仓库静默漏扫（2026-08-06 实测漏 18 个）
+while IFS= read -r -d '' d; do
+  echo "${d%/.git}"
+done < <(find ~ -maxdepth 4 -type d \( -name node_modules -o -name .cache -o -name .local -o -name .venv \) -prune \
+  -o -type d -name .git -print -prune 2>/dev/null | sort -u)
 ```
 
 每仓库：
@@ -115,7 +117,12 @@ done
 ```bash
 cd "$dir"
 git status --porcelain      # 未暂存/未跟踪变更（机器可解析格式）
-git log --oneline @{u}..HEAD 2>/dev/null || echo "(no upstream)"  # 未推送提交
+# ⚠️ 无上游时 @{u}..HEAD 会静默失败 → 先探测 upstream 再数未推提交
+if git rev-parse --verify @{u} >/dev/null 2>&1; then
+    git rev-list --count @{u}..HEAD   # 未推送提交数
+else
+    echo "(no upstream)"              # 无上游 → 本地仓库
+fi
 git remote -v           # 远程仓库 URL
 ```
 
@@ -182,7 +189,8 @@ Phase 1 标记 🟡/🔴/🔵 者（🟢 自动跳过），**逐个确认**：
 ```bash
 cd "$dir"
 remote=$(git remote -v 2>/dev/null | grep -E '^origin' | head -1)
-if echo "$remote" | grep -q 'github.com/xieguaiwu/'; then
+# ⚠️ 同时匹配 https://github.com/xieguaiwu/ 与 git@github.com:xieguaiwu/（冒号分隔）
+if echo "$remote" | grep -qE 'github\.com[:/]xieguaiwu/'; then
     type="own"       # 自有仓库 → 可 push
 elif [ -n "$remote" ]; then
     type="upstream"  # 有上游仓库 → 惟本地 commit
@@ -253,3 +261,5 @@ fi
 9. **自身上游检测** — `github.com/xieguaiwu/` 为自有标准；用户名变则在 inputs 加 `github_user`
 10. **不上传 fork 改动** — 非自有远程，惟本地 commit，绝不 push 上游
 11. **逐项确认不批量** — 每 ask_user 只问一条，禁全选/全跳
+12. **路径含空格/中文** — 仓库路径如 `Documents/Obsidian Vault`、`Desktop/c++/在深渊`；扫描必须 `-print0` + `while read -d ''`，禁 `for dir in $(find ...)` 词分割（2026-08-06 实测漏 18 仓库）
+13. **完整性自检** — 报告须含仓库总数；若已知存在的仓库未出现，先查 maxdepth/prune 是否过严，勿直接下"干净"结论
