@@ -1,27 +1,31 @@
 ---
 name: sat-error-note-generator
-version: 1.1.0
-description: 从SAT答题记录和扫描版试卷中提取错题/标记题，生成单文件Obsidian错题分析笔记
+version: 1.2.0
+description: 从SAT答题记录和试卷PDF中提取错题/标记题，生成或追加 Obsidian 错题分析笔记（整卷分析与单题积累两种模式）
 triggers:
   - "整理SAT错题"
   - "生成SAT错题笔记"
   - "SAT错题分析"
   - "整理阅读语法错题"
+  - "积累SAT错题"
 inputs:
   - name: answer_file
-    description: 答题记录文件路径（如 ~/高一/英语/SAT/25.5-4_answers.md）
-    required: true
+    description: 答题记录文件路径（如 ~/高一/英语/SAT/25.5-4_answers.md）；单题积累模式可省略
+    required: false
   - name: test_pdf
-    description: 扫描版试卷PDF路径
+    description: 试卷/答案解析 PDF 路径（官方题库 PDF 含文本层与 Question ID，优先）
     required: true
+  - name: question_specs
+    description: 单题积累模式的题目指定列表，如 [{"question": 3, "answer": "A", "correct": "D"}, {"id": "5b8f9cf2", "answer": "C", "correct": "B"}]；无 answer_file 时使用
+    required: false
   - name: output_dir
     description: Obsidian Vault 输出目录
     required: false
     default: "~/Documents/Obsidian Vault/SAT/"
   - name: note_title
-    description: 笔记标题（英文Title Case）
+    description: 笔记标题（中文，如 "SAT RW FormStructureSense Hard 错题积累"）
     required: false
-    default: "SAT RW {exam_no} Error Analysis"
+    default: "SAT RW {set_name} 错题积累"
 tools:
   - read
   - write
@@ -33,31 +37,43 @@ tools:
 # SAT 错题笔记生成器
 
 ## 任务目标
-根据学生的 SAT 阅读语法答题记录（含标记的错题/不确定题）和扫描版试卷PDF，自动生成一份**单文件**的 Obsidian 错题分析笔记，遵循以下核心原则：
+根据学生的 SAT 阅读语法答题记录（含标记的错题/不确定题）和试卷 PDF，生成或追加 **Obsidian 错题分析笔记**，遵循以下核心原则：
 
-1. **单文件** — 所有错题合并在一个 `.md` 文件中，用 `---` 分隔 + 目录锚点导航
-2. **无词汇积累** — 不包含词汇表、学术词汇表、同义词/反义词表
-3. **重逻辑分析** — 每道题的重点在：题干还原、选项分析、正确思路、考点说明、解题策略
-4. **可视化** — 优先使用 Mermaid 流程图/思维导图辅助说明推理链条
-5. **符合 vault 标签规范** — 复用已有标签体系
+1. **两种模式** — 「整卷分析」：一次生成一份完整错题笔记；「单题积累」：把指定题目追加进已有积累笔记（检测已有 → 更新计数/目录/汇总 → 追加新节）
+2. **中文分析 + 英文题干** — 题干、选项保留英文原文；考点说明、推理、总结一律中文（跟随 vault 既有笔记惯例）
+3. **无词汇积累** — 不包含词汇表、学术词汇表、同义词/反义词表
+4. **重逻辑分析** — 每道题的重点在：题干还原、选项分析、正确思路、考点说明、解题策略
+5. **可视化** — 优先使用 Mermaid 流程图/思维导图辅助说明推理链条
+6. **Question ID 一等公民** — 记录官方题库题目 ID（便于 Bluebook 回查），并提取官方 rationale 交叉验证
+7. **符合 vault 标签规范** — 复用已有标签体系（SAT / Reading / 错题）
 
 ## 执行流程
 
-### 1. 读取答题记录
+### 1. 读取答题记录（或题目指定）
 
-使用 `read` 读取 `answer_file`，识别：
+优先使用 `read` 读取 `answer_file`；无 answer_file 时解析 `question_specs`（题号或 Question ID + 我的答案 + 正确答案）。识别：
 
 - Section/Module 划分
 - 每道题的作答字母
 - 特殊标记：`(?)` = 不确定, `(?, high difficulty)` = 高难度
+- 纠正标记：`(wrong, correction: X)` = 错选且已核对正确答案
 - 缺失作答的题号（可能为未完成）
+- **学生自注错因**：答案文件底部的 reasons for mistakes / 题旁注释（如"不用冒号，因为……"），原样保留备用
 
-提取所有带有 `(?)` 标记的题目编号，形成**待分析题号列表**。
+形成**待分析题号列表**（整卷模式 = 标记题；积累模式 = question_specs 指定题）。
 
-### 2. 从PDF还原题目内容
+### 2. 从PDF还原题目内容（按优先级）
 
-扫描版PDF需要使用 OCR 处理：
+**官方题库 PDF（首选）**：
+```bash
+pdftotext "{test_pdf}" - > /tmp/sat_pdf.txt
+grep -n "Question ID" /tmp/sat_pdf.txt   # 建立 题号 ↔ Question ID ↔ 页码 索引
+```
+- 每题带 `ID: xxxxxxxx`、`Correct Answer`、`Rationale`、`Question Difficulty`（Hard/Medium/Easy）
+- **提取官方 rationale 与难度**：用于交叉验证自写分析（防幻觉）并记录到笔记
+- 定位方式：`grep -n "ID: {question_id}"` 直接跳转，无需 OCR
 
+**扫描版 PDF（无文本层）→ OCR fallback**：
 ```bash
 # 估算题目所在页码：按~2题/页估算
 # 例：Mod1 Q24 ≈ 第12-13页
@@ -76,10 +92,10 @@ OCR 后手动确认题目编号与答案文件匹配。
 
 ### 3. 分析每道题
 
-对每道标记题，执行以下分析：
+对每道待分析题，执行以下分析：
 
 #### a. 题干提取
-从 OCR 结果中提取完整题干、选项（A/B/C/D）、笔记内容（如有）。
+从 PDF/OCR 结果中提取完整题干、选项（A/B/C/D）、官方 rationale 与难度。**记录 Question ID**。
 
 #### b. 考点识别
 SAT Reading & Writing 常见考点分类：
@@ -88,10 +104,10 @@ SAT Reading & Writing 常见考点分类：
   - Rhetorical Purpose（begin a narrative, emphasize, contrast, etc.）
   - Scientific Reasoning（支持结论/削弱论点/数据匹配）
 - **Transition/Logical Connection** — 逻辑过渡词选择
-- **Standard English Conventions** — 语法/标点/句子结构
+- **Standard English Conventions** — 语法/标点/句子结构（细分到具体考点，如 Subject-Modifier Placement、Subject-Verb Agreement、Boundaries）
 
 #### c. 选项分析
-列出4个选项的逐项分析表，格式：
+列出4个选项的逐项分析表（评价用中文），格式：
 
 ```markdown
 | 选项 | 内容 | 评价 |
@@ -105,26 +121,44 @@ SAT Reading & Writing 常见考点分类：
 - 对 Command of Evidence 题：拆解假说→证据→结论的关系
 - 对 Scientific Reasoning 题：列出关键数据比较，解释推理过程
 
-#### e. 陷阱识别
+#### e. 学生错因校验
+- 若有学生自注错因，**逐条校验归因是否正确**；发现错误归因（如把悬垂修饰语误判为标点题）时，在笔记中显式指出并写明真正考点
+- 与官方 rationale 交叉验证：自写分析与官方解析结论一致才算完成；不一致时以官方为准并标注差异
+
+#### f. 陷阱识别
 标注常见陷阱类型：
 - Cause-Effect Reversal (common in vocab questions)
 - Net Effect Cancellation (common in evidence questions)
 - Correlation ≠ Causation
 - Overgeneralization (beyond the data)
 - Purpose Confusion (summary vs. narrative)
+- 语法专项：虚位主语陷阱、邻近干扰（Proximity Trap）、所有格伪装、人/作品主语混淆等
 
-### 4. 生成单文件笔记
+#### g. 解题策略
+每条 3-5 步可执行的操作步骤（下次遇到同类题怎么做），中文。
 
-遵循 `obsidian_note_generation.md` 格式规范：
+### 4. 生成 / 追加笔记
+
+先检查目标笔记是否已存在（`ls` + `read`）：
+
+- **不存在 → 新建**（`write`）：按下方模板生成完整笔记
+- **已存在 → 追加**（`edit` 精确修改，**禁止 `write` 覆写**）：
+  1. 更新 header 中的「当前积累」题数与「薄弱技能」
+  2. 目录（TOC）追加新条目锚点
+  3. 在「积累小结」之前追加新题分析节（`---` 分隔）
+  4. 更新「积累小结」汇总表（题号/考点/我的答案/正确答案/错误类型）
+  5. 更新「行动项」——合并重复出现的陷阱模式（如多题同犯悬垂修饰语 → 提炼共同对策）
+
+遵循 `Note_Creating/obsidian_note_generation.md` 格式规范：
 
 #### YAML Front Matter
 ```yaml
 ---
-title: SAT RW {exam_no} Error Analysis
+title: SAT RW {set_name} 错题积累
 tags:
   - SAT
   - Reading
-  - Error-Analysis
+  - 错题
 created: {YYYY-MM-DD}
 ---
 ```
@@ -132,91 +166,114 @@ created: {YYYY-MM-DD}
 #### 笔记结构
 
 ```markdown
-# SAT RW {exam_no} Error Analysis
+# SAT RW {set_name} 错题积累
 
-> [!abstract] Exam Info
-> - **Test**: {test name}
-> - **Source**: `{answer_file}`
-> - **Marked Questions**: N
-> - **Weak Areas**: {weak areas}
+> [!abstract] 试卷信息
+> - **试卷**: {test name}
+> - **来源**: `{source pdf}`
+> - **当前积累**: N 题（{question list}）
+> - **薄弱技能**: {weak areas}
 
-## Table of Contents
+---
 
-- [[#1. Module X QX — Question Type]]
-- [[#2. Module X QX — Question Type]]
+> [!danger] 分析原则
+> 详见 [[SAT Reading - Analysis Principles]]。
+
+## 目录
+
+- [[#1. {Q} — 考点（中文）]]
+- [[#2. {Q} — 考点（中文）]]
 ...
 
 ---
 
-# 1. Module X QX — Question Type
+# 1. {Q} — 考点（中文）
 
-> [!info] Marked: `{answer letter} ({marker})`
+> [!info] 我的答案: `{letter}` — 正确答案: **{letter}**
+> Question ID: `{xxxxxxxx}` | 难度: {Hard/Medium/Easy}
 
-## Question Stem
-{complete question stem}
+## 题干
+{英文题干 + 选项}
 
-## Options Analysis
-{options analysis table}
+## 考点
+{中文考点说明}
 
-## Solution Approach
+## 选项分析
+{中文评价表格}
 
-### Skill Tested
-{skill description}
+## 推理过程
+{Mermaid 图（每题最多一个）}
 
-### Reasoning Process
-{detailed analysis + Mermaid diagram (if applicable)}
+### 为什么 {正确选项} 正确
+{中文}
 
-### Why {correct option} Is Correct
-{explanation}
+### 为什么 {错选选项} 错误
+{中文}
 
-### Why {wrong option} Is Wrong
-{explanation}
+## 陷阱识别
+{中文 callout}
 
-> [!warning] Trap Identification
-> {common trap description}
+## 解题策略
+{3-5 步中文操作步骤}
 
 ---
 
-# 2. Module X QX — Question Type
+# 2. {Q} — 考点（中文）
 ...
 
 ---
 
-## Summary: Weak Area Distribution
+## 积累小结
 
-{skill distribution table + priorities + action plan}
+| 题号 | 考点 | 我的答案 | 正确答案 | 错误类型 |
+|:---|:---|:---:|:---:|:---|
+
+**行动项**: {重复陷阱合并后的共同对策}
 ```
 
 #### 关键约束
 1. **不包含**任何形式的词汇积累/学术词汇/同反义词表
 2. **不使用** `---` 水平分割线分隔章节（Front Matter 后唯一可用），章节间靠 `#` 标题层级分隔
-3. 每道题以 `# 序号. Module X QX — 题型` 为二级标题开始
+3. 每道题以 `# 序号. {Q} — 考点` 为二级标题开始
 4. 每道题之间用 `---` 分隔
+5. **中文分析 + 英文题干**：题干/选项保留原文；分析、总结、callout 一律中文
+6. **Question ID**：每题记录官方题库 ID 与难度，便于 Bluebook 回查
 
 ### 5. 验证与清理
 
 - 删除 OCR 生成的临时 PNG 文件
-- 确认笔记文件已写入 `output_dir`
+- 确认笔记文件已写入/更新于 `output_dir`
+- 追加模式下：确认 TOC、header 计数、积累小结表、行动项均已同步更新
+- 与官方 rationale 一致性：每题结论与官方 Correct Answer 一致
 - 验证所有锚点链接正确（标题中的中文括号等特殊字符不会影响 Obsidian 内部跳转）
 
 ## 输出格式
 
-在 `{output_dir}` 下生成一个 `.md` 文件，文件名为 `SAT RW {exam_no} Error Analysis.md`。
+在 `{output_dir}` 下生成/更新一个 `.md` 文件，文件名为 `SAT RW {set_name} 错题积累.md`。
 
-完成后输出：
+**新建**完成后输出：
 ```
-✓ SAT error analysis note generated
-File: {output_dir}/SAT RW {exam_no} Error Analysis.md
+✓ SAT 错题笔记已生成
+File: {output_dir}/SAT RW {set_name} 错题积累.md
 Questions: {question numbers}
+```
+
+**追加**完成后输出：
+```
+✓ SAT 错题笔记已追加
+File: {output_dir}/SAT RW {set_name} 错题积累.md
+追加题目: {question numbers}
+当前积累: N 题
 ```
 
 ## 注意事项
 
 1. **词汇表禁止** — 任何时候都不要添加词汇积累、词汇表、同/反义词、学术词汇等列表。本 skill 的产出是**逻辑分析笔记**，不是词汇本
-2. **单文件原则** — 每次调用只生成一个 `.md` 文件，所有题目合并。如需分次整理不同卷号，每次生成独立的单文件
-3. **OCR 质量** — 扫描版 PDF 的 OCR 可能不完美，如果某题 OCR 结果模糊，应结合上下文合理推测。如果完全无法识别，在笔记中标注 "[OCR 识别不清]"
-4. **标签复用** — 优先使用 vault 中已有的标签。如发现新领域标签（如 `SAT`），则在首次使用时创建，并在后续复用
-5. **客观呈现学生答案** — 标注学生的作答结果，但不预设对错；重点在解释正确的推理过程
-6. **Mermaid 图适度使用** — 仅在有清晰的因果链或流程关系时使用，每道题最多一个
-7. **Git 安全** — 执行 `write` 前检查目标文件是否存在；若已存在先读旧内容，与用户确认是否覆写或追加
-8. **全英文产出** — 笔记内容（题干、选项分析、推理、总结、标签）一律英文，禁止中文。
+2. **单文件原则** — 每次调用只生成/更新一个 `.md` 文件，所有题目合并。整卷分析与单题积累共用同一文件体系
+3. **追加安全** — 笔记已存在时禁止 `write` 覆写：先 `read` 了解现状，再 `edit` 精确追加与更新（计数/目录/汇总/行动项）
+4. **OCR 质量** — OCR 可能不完美，如果某题 OCR 结果模糊，应结合上下文合理推测。如果完全无法识别，在笔记中标注 "[OCR 识别不清]"
+5. **标签复用** — 使用 vault 已有标签（SAT / Reading / 错题）。如发现新领域标签，则在首次使用时创建，并在后续复用
+6. **客观呈现学生答案** — 标注学生的作答结果，但不预设对错；重点在解释正确的推理过程
+7. **Mermaid 图适度使用** — 仅在有清晰的因果链或流程关系时使用，每道题最多一个
+8. **语言** — 题干/选项保留英文原文，分析/总结/callout 一律中文（跟随 vault 既有笔记惯例）
+9. **官方解析优先** — PDF 自带 rationale 时作为 ground truth 交叉验证（防幻觉）；与官方不一致时以官方为准并标注差异

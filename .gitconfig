@@ -1,5 +1,8 @@
 [http]
 	proxy = http://127.0.0.1:7897
+	lowSpeedLimit = 1000
+	lowSpeedTime = 30
+	connectTimeout = 15
 [https]
 	proxy = http://127.0.0.1:7897
 [filter "lfs"]
