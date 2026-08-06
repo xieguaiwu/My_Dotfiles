@@ -109,7 +109,9 @@ find ~/My_Dotfiles -not -path '*/.git/*' -not -name '.gitignore' -not -path '*/n
 while IFS= read -r -d '' d; do
   echo "${d%/.git}"
 done < <(find ~ -maxdepth 4 -type d \( -name node_modules -o -name .cache -o -name .local -o -name .venv \) -prune \
-  -o -type d -name .git -print -prune 2>/dev/null | sort -u)
+  -o -type d -name .git -print0 -prune 2>/dev/null | sort -zu)
+# ⚠️ 两处 NUL 一致性：find 必须 -print0（非 -print），管道必须 sort -zu（非 sort -u）。
+#    -print + sort -zu → 所有路径粘成一条记录；-print0 + sort -u → 整块并成一行 → read 循环失效。
 ```
 
 每仓库：
