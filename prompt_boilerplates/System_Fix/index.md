@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 1.3.0
+version: 1.4.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -25,6 +25,19 @@ triggers:
   - "同步配置"
   - "tor浏览器"
   - "tor连不上"
+  - "VLC"
+  - "vlc 无法播放"
+  - "hevc"
+  - "h265"
+  - "x265"
+  - "无法解码"
+  - "could not decode"
+  - "雪花"
+  - "花屏"
+  - "画面错乱"
+  - "硬解"
+  - "mpv 播不了"
+  - "播放器花屏"
 inputs:
   - name: symptom
     description: 用户描述的症状/报错信息
@@ -146,6 +159,7 @@ journalctl -p err -b --no-pager | tail -20
 |:--|:---|:---:|---|---|
 | 12 | [ghostwriter-math-check-and-fix.md](ghostwriter-math-check-and-fix.md) | 1.1.0 | ghostwriter 预览数学公式不渲染三层自愈（pandoc wrapper / flatpak override / 导出器配置）+ 全链验证 | ghostwriter 公式不渲染、数学显示源码 |
 | 13 | [tor-browser-check-and-fix.md](tor-browser-check-and-fix.md) | 1.0.0 | Tor 浏览器 bootstrap 失败检查+修复（IPv6 bridge / Socks5Proxy 禁，HTTPSProxy + IPv4 bridge 实测可用）+ tor 内核验证 | tor 无法连接、bootstrap 卡 0% |
+| 14 | [video-playback-decode-fix.md](video-playback-decode-fix.md) | 2.1.0 | 视频播放/解码故障修复总集：A 无法解码（ffmpeg-free 禁解码器 → `dnf swap` 换完整 ffmpeg，脚本 [video-decode-ffmpeg-swap.sh](video-decode-ffmpeg-swap.sh)）；B 能播放但雪花/花屏（iHD 弃 Gen9 HEVC → i965 驱动 + VAAPI 硬解 + 环境注入，脚本 [video-playback-vaapi-fix.sh](video-playback-vaapi-fix.sh)）；覆盖 VLC/mpv/ffplay/GStreamer + iHD/i965 驱动层 | VLC/mpv 报 could not decode、播不了、雪花、花屏、画面错乱、播放卡顿、显卡加速异常 |
 
 ---
 
@@ -185,6 +199,12 @@ journalctl -p err -b --no-pager | tail -20
 「tor 连不上 / tor 浏览器用不了 / bootstrap 卡 0%」
   └─ tor-browser-check-and-fix.md ← 须先确认 clash-verge 代理正常
 
+「VLC 无法播放 / could not decode / hevc / h265 / x265 播不了」
+  └─ video-playback-decode-fix.md ← 症状 A：rpm -qa 有 ffmpeg-free → dnf swap 换完整 ffmpeg
+
+「VLC 能播但雪花 / 花屏 / 画面错乱 / 播放卡顿」
+  └─ video-playback-decode-fix.md ← 症状 B：vainfo 无 HEVC + VLC CPU 150%+ → i965 驱动 + VAAPI 硬解（先排除文件损坏：ffmpeg CLI 全片解码 0 错误）
+
 「以上都不是 / 综合症状 / 说不清楚」
   └─ system_diagnostics_and_repair.md（全面诊断）
        └─ 发现具体问题 → 回到上方对应文档
@@ -200,6 +220,7 @@ journalctl -p err -b --no-pager | tail -20
 | `ghostwriter-math-check-and-fix.md` 第三层 | `dotfiles-sync-and-audit.md` | 配置修正后需同步 My_Dotfiles 备份副本 |
 | `clash-verge-diagnose-and-fix.md` | `system_diagnostics_and_repair.md` Phase 1.5 网络 | 网络层诊断先跑通用检查再深入 Clash |
 | `tor-browser-check-and-fix.md` 前置 | `clash-verge-diagnose-and-fix.md` | Tor 经本地代理引导，代理失效时先修 Clash 再修 Tor |
+| `video-playback-decode-fix.md` | `system_diagnostics_and_repair.md` | 播放类故障先查系统 ffmpeg 解码能力，再深入播放器自身；GPU 无硬件加速时驱动安装/VAAPI 能力对照收拢于 video skill |
 | `dotfiles-sync-and-audit.md` | `memory-index-condense.md` | 两者都涉及 pi-agent 配置文件的备份/维护 |
 | 任何 pi-agent 层文档修复后 | `memory-index-condense.md` | 修复后如记忆/索引涉及，需重新浓缩 |
 
@@ -213,6 +234,20 @@ journalctl -p err -b --no-pager | tail -20
 ---
 
 ## 变更日志
+
+### 1.6.0 (2026-08-10)
+- 改名：`vlc-hevc-decode-fix.md` → **`video-playback-decode-fix.md`**（2.0.0 → **2.1.0**，universal 化）；脚本改名 `video-decode-ffmpeg-swap.sh`、`video-playback-vaapi-fix.sh`
+- 更新：目录条目描述（覆盖 VLC/mpv/ffplay/GStreamer + iHD/i965 驱动层）+ 决策树/交叉引用文件名
+- 新增：triggers「mpv 播不了」「播放器花屏」「显卡加速」
+
+### 1.5.0 (2026-08-10)
+- 更新：`vlc-hevc-decode-fix.md` 1.0.0 → **2.0.0**（新增症状 B「能播放但雪花/画面错乱」分支 + 脚本 `vlc-hevc-vaapi-fix.sh`，基于 Prisoners 2013 x265 10bit 实战）
+- 新增：决策树分支「VLC 能播但雪花 / 花屏 / 画面错乱」+ triggers「雪花」「花屏」「画面错乱」「硬解」
+
+### 1.4.0 (2026-08-07)
+- 新增：第五类「应用层」— `vlc-hevc-decode-fix.md` + 脚本 `vlc-hevc-fix.sh`（Fedora ffmpeg-free 禁用 h264/hevc 解码器 → RPM Fusion `dnf swap` 修复，实测 Caligula 1979 x265 10bit）
+- 新增：决策树分支「VLC 无法播放 / could not decode / hevc / h265」+ 交叉引用「播放类故障 → system_diagnostics」
+- 新增：triggers「VLC」「vlc 无法播放」「hevc」「h265」「x265」「无法解码」「could not decode」
 
 ### 1.3.0 (2026-08-05)
 - 新增：第五类「应用层」— `tor-browser-check-and-fix.md`（Tor 浏览器检查+修复，IPv4 bridge + HTTPSProxy 实测组合）
@@ -238,4 +273,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-05（1.2.0 同步 subagent-temperature-fix 2.6.1/21 检查点）*
+*最后更新: 2026-08-10（1.6.0 video-playback-decode-fix 改名 universal 化）*

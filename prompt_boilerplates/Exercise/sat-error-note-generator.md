@@ -47,6 +47,20 @@ tools:
 6. **Question ID 一等公民** — 记录官方题库题目 ID（便于 Bluebook 回查），并提取官方 rationale 交叉验证
 7. **符合 vault 标签规范** — 复用已有标签体系（SAT / Reading / 错题）
 
+### SAT 工具链定位
+
+本 skill 位于 SAT 练习工作流的**中游**——从上游处理好的题目中提取错题，提炼陷阱分类诊断，供下游生成练习卷：
+
+```
+sat-exercise-splitter（上游：拆分官方题库 PDF 为结构化 LaTeX / 错题源）
+    │
+    ▼
+sat-error-note-generator（本 skill — 中游：积累错题到 Obsidian，提炼陷阱分类诊断）
+    │
+    ▼
+mistake-practice-generation（下游：根据陷阱诊断生成同类 AI 练习卷）
+```
+
 ## 执行流程
 
 ### 1. 读取答题记录（或题目指定）

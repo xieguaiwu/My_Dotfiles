@@ -198,7 +198,10 @@ sudo semodule -i fix.pp
 # 检查是否缺少固件
 sudo dnf install mesa-dri-drivers mesa-libGL  # Fedora
 # 或安装对应 Intel/AMD/NVIDIA 驱动
-sudo dnf install intel-media-driver  # Intel VAAPI
+sudo dnf install intel-media-driver  # Intel VAAPI（iHD，新平台）
+# 老平台（Gen9/Gen9.5，如 Kaby Lake）iHD 无 HEVC 硬解 → 需 legacy i965 驱动：
+#   sudo dnf install libva-intel-driver   # RPM Fusion
+# VAAPI 能力对照与播放器硬解修复全流程见 video-playback-decode-fix.md
 ```
 
 **包依赖修复**（类型 B）：
