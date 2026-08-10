@@ -1,10 +1,11 @@
 ---
 name: error-checklist-creator
-version: 1.4.0
-description: 按学科生成全英文超紧凑LaTeX易错点清单——三轨排版：文科轨（liberal_arts，AP_Lang 表格型 + Tip/Rule + Quick Checklist）、理科轨（science，common_necessaties / physics_common 双栏公式速查）、计算机轨（cs，最终CSA易错点整理 代码驱动型）；只积累普遍性易错规律、禁止照搬具体错题；所有轨道产出物一律全英文
+version: 1.5.0
+description: 按学科生成超紧凑LaTeX易错点清单——三轨排版：文科轨（liberal_arts，AP_Lang 表格型 + Tip/Rule + Quick Checklist）、理科轨（science，common_necessaties / physics_common 双栏公式速查）、计算机轨（cs，最终CSA易错点整理 代码驱动型）；新特性：章节分组（grouping=chapters）+ Core Principles 前置、陷阱分类系统（Trap Taxonomy）、双 agent 并行审查（momus+ultrabrain）、SAT 中文分析模式（language=sat_cn）；只积累普遍性易错规律、禁止照搬具体错题
 triggers:
   - "易错点清单"
   - "生成错题清单"
+  - "生成SAT错题清单"
   - "error checklist"
   - "错误清单排版"
   - "学科易错点"
@@ -12,7 +13,7 @@ triggers:
   - "清单排版"
 inputs:
   - name: subject
-    description: 学科名称（如 AP English、AP Physics、German、AP Biology 等）
+    description: 学科名称（如 AP English、AP Physics、German、AP Biology、SAT Reading & Writing 等）
     required: true
   - name: topics
     description: 需覆盖的主题列表（逗号分隔）
@@ -30,6 +31,14 @@ inputs:
     description: 排版轨道（liberal_arts=文科表格型[默认] / science=理科公式速查型 / cs=计算机代码型 / biology=9pt错题表格型[文科变体]；ap_lang、physics 为兼容别名）
     required: false
     default: "liberal_arts"
+  - name: grouping
+    description: 大型清单的分组方式（flat=平铺 Part [默认] / chapters=章节分组，含 Core Principles 前置 + 按章节分 Part；仅文科轨适用）
+    required: false
+    default: "flat"
+  - name: language
+    description: 输出语言（en=全英文[默认] / sat_cn=SAT 中文分析模式：题干/选项/示例保留英文，分析/表头/callout/Quick Checklist 用中文）
+    required: false
+    default: "en"
 tools:
   - read
   - write
@@ -51,7 +60,7 @@ tools:
 - **理科轨 `science`**：模仿 `~/高一/数学/common_necessaties.tex` 与 `~/高一/物理/physics_common.tex`（双栏公式速查，`\sect/\subsect` 分节，7-8pt 极限密度）
 - **计算机轨 `cs`**：模仿 `~/高一/ap计算机/最终CSA易错点整理.tex`（8pt 单栏代码驱动：lstlisting 代码块 + itemize + 对比表 + `\imp` 红字强调）
 
-**所有轨道产出物一律全英文，禁止任何中文**（含代码注释、易错点描述、表头、Tip/Rule）——CS 模板原稿为中英混合，生成时必须全部英文化，并删除 fontspec/XeTeX 中文依赖。
+**所有轨道产出物默认全英文**（`language=sat_cn` 时中文分析+英文题干，见执行要点）；禁止在 `language=en` 模式下出现任何中文（含代码注释、易错点描述、表头、Tip/Rule）——CS 模板原稿为中英混合，生成时必须全部英文化，并删除 fontspec/XeTeX 中文依赖。
 
 确保：
 
@@ -85,6 +94,8 @@ tools:
 | 数学排版 | 仅行内 `$...$` | amsmath 全量 + mathtools + `\thinmuskip` 等收紧 |
 | 图表 | 无 | tikz 可选（物理示意图） |
 | 页眉 | `\pagestyle{empty}` | 数学版 fancyhdr 页眉 / 物理版 empty |
+| 分组方式 | `flat`（默认）：平铺 `\section*{Part X}` 不分组；`chapters`：章节分组 + Core Principles 前置（见 C.1 节） | N/A |
+| 语言模式 | `en`（默认）：全英文；`sat_cn`：中文分析 + 英文题干（见执行要点） | N/A |
 
 > 计算机轨 `cs` 与上述两轨差异较大（8pt extarticle 单栏 + lstlisting 代码块 + `\imp` 红字强调），单独成节，详见 H 节。
 
@@ -149,6 +160,58 @@ tools:
 
 **理科轨变体标题宏**（`style=science` 时用，完整前导码见 F 节）：`\sect{编号. 主题}` 大分区 + `\subsect{子节}` 小分节，`\sect` 自带 `\hrule` 分隔线
 
+#### C.1 Core Principles 前置（`grouping=chapters` 模式）
+
+当 `grouping=chapters` 时，文档结构从平铺 Part 改为 **Core Principles 前置 + Chapter 分组**。这是 v3 重构的最重要结构改进——大型 checklist（50+ 模式）先确立顶层方法论，避免用户陷入细节规则而遗忘根本。
+
+**结构模板**：
+
+```latex
+% —— 前置元原则（在所有具体 Part 之前）——
+\section*{Core Principles}
+\begin{enumerate}[nosep, leftmargin=1.8em]
+  \item \textbf{Text-Based Reasoning}: Every answer must be directly supported
+        by textual evidence --- never infer from outside knowledge or
+        common sense.
+  \item \textbf{Logic First}: When evidence is insufficient to disprove an
+        option, that option remains viable; eliminate \textbf{only} when the
+        text explicitly contradicts.
+\end{enumerate}
+
+% —— Chapter 分组 ——
+\section*{Chapter A: Grammar}
+\addcontentsline{toc}{section}{Chapter A: Grammar}
+\subsection*{Part 1: Subject-Verb Agreement}
+...
+\subsection*{Part 2: Pronoun-Antecedent Agreement}
+...
+
+\section*{Chapter B: Expression of Ideas}
+...
+
+\section*{Chapter C: Craft \& Structure (Reading)}
+...
+
+\section*{Chapter D: Information \& Ideas (Evidence)}
+...
+```
+
+**Chapter 分组建议**（SAT 场景，4 章涵盖所有题型）：
+- **Chapter A: Grammar** — 语法规则类：主谓一致、代词指代、修饰语、标点、时态/平行结构
+- **Chapter B: Expression of Ideas** — 表达类：过渡词/逻辑连接、修辞合并题、简洁性/冗余
+- **Chapter C: Craft \& Structure** — 阅读理解：Words in Context、功能/目的题、结构题、双篇关系
+- **Chapter D: Information \& Ideas** — 证据推理：Command of Evidence（文本/数据证据）、推断题、支持/削弱题
+
+其他学科可类比：按技能大类分组（如物理 "Chapter A: Mechanics / B: E\&M / C: Waves / D: Modern Physics"）。
+
+**与 `flat` 模式对比**：
+| 维度 | `flat`（默认） | `chapters` |
+|------|---------------|-----------|
+| 适用规模 | ≤30 条模式、单一学科 | 50+ 条模式、跨题型 SAT |
+| 顶层 | 无（直接 Part I） | Core Principles 前置 |
+| 分组 | `\section*{Part X}` 平铺 | Chapter 大分组 → Part 子分区 |
+| Quick Checklist | 单一 itemize | 按 Chapter 分 4 组（见 E.1） |
+
 ### D. 文科轨数据呈现 —— 核心表格（booktabs + center + footnotesize）
 
 **D1. 四列表（AP_Lang Part I 风格，最常用）** — 术语/概念清单
@@ -209,9 +272,44 @@ Rather than [X], the author [Y] & ``Rather than lecturing the audience, Cronon l
 ### E. 文科轨内容要素（AP_Lang 独有，必须模仿）
 
 1. **Quick Checklist**（Part 末尾，勾选式清单）：
+
+**`flat` 模式（默认）**——单一平铺 itemize：
 ```latex
 \begin{itemize}[nosep, leftmargin=2.2em, label=$\square$]
   \item \textbf{Appeals}: Identify Ethos / Pathos / Logos balance --- which dominates and why?
+\end{itemize}
+```
+
+**`grouping=chapters` 模式**——按 Chapter 分 4 组，每组独立 itemize + 标签：
+```latex
+\texttt{\noindent\textbf{[Grammar]}}
+\begin{itemize}[nosep, leftmargin=2.2em, label=$\square$]
+  \item \textbf{Subject-Verb}: Check for intervening prepositional phrases before deciding agreement.
+  \item \textbf{Pronouns}: Verify a clear, unambiguous antecedent for every pronoun.
+  \item \textbf{Modifiers}: Scan for dangling / misplaced modifiers.
+  \item \textbf{Verb Tense}: Confirm tense consistency across the sentence.
+  \item \textbf{Punctuation}: Semicolons join independent clauses; commas do not.
+\end{itemize}
+
+\texttt{\noindent\textbf{[Expression]}}
+\begin{itemize}[nosep, leftmargin=2.2em, label=$\square$]
+  \item \textbf{Transitions}: Does the connector match the logical relationship (contrast / cause / addition)?
+  \item \textbf{Concision}: Eliminate redundant pairs (e.g. ``each and every'').
+  \item \textbf{Synthesis}: Does the combined sentence preserve all key information without distortion?
+\end{itemize}
+
+\texttt{\noindent\textbf{[Reading]}}
+\begin{itemize}[nosep, leftmargin=2.2em, label=$\square$]
+  \item \textbf{Vocabulary in Context}: Predict meaning from context before checking options.
+  \item \textbf{Function}: What role does this sentence / paragraph play?
+  \item \textbf{Structure}: Identify overall passage organization (problem-solution / claim-evidence / narrative).
+\end{itemize}
+
+\texttt{\noindent\textbf{[Evidence]}}
+\begin{itemize}[nosep, leftmargin=2.2em, label=$\square$]
+  \item \textbf{Command of Evidence}: Underline the exact line(s) supporting your answer.
+  \item \textbf{Inferences}: Is the inference \textit{necessary} (must be true) or merely \textit{possible}?
+  \item \textbf{Data}: Check axes labels, units, and trends before interpreting.
 \end{itemize}
 ```
 2. **词汇/术语银行**（多栏压缩，可选）：
@@ -381,6 +479,61 @@ calm yet penetrating\par
 
 ---
 
+### I. 陷阱分类系统（Trap Taxonomy）设计指导
+
+当 checklist 要覆盖某个**容易出错的技能**时，不应只列单条规则（如"注意修饰语"），而应建立该技能的**陷阱分类表**——枚举该技能下所有子类型陷阱，每种子类型给出典型错例与纠正逻辑。
+
+**核心理念**：一个技能之所以反复出错，是因为它内部有**多种不同的失败模式**。把每种失败模式独立命名、配独立示例，用户才能精准定位自己的薄弱子类型。
+
+**示例：SAT 修饰语陷阱分类表**（8 行 × 4 列）
+
+```latex
+\subsection*{A1.1 Modifier Traps --- 8 Subtypes}
+
+\begin{center}
+\footnotesize
+\begin{tabular}{p{2.2cm}p{3.0cm}p{4.0cm}p{4.5cm}}
+\toprule
+\textbf{Trap Type} & \textbf{What the Modifier Says} &
+\textbf{Wrong Distractor} & \textbf{Right Subject} \\
+\midrule
+Opening -ing phrase & Action performed by subject &
+Inanimate noun doing action & Person / agent performing action \\
+Opening -ed phrase & Subject receives the action &
+Wrong receiver & Correct receiver of passive action \\
+Opening to-infinitive & Purpose / intention &
+Wrong agent of purpose & Correct agent (usually person) \\
+Appositive at start & Identity / description &
+Nearby but wrong noun & The described noun \\
+Opening prepositional & Location / time / manner &
+Nearby noun that doesn't fit & The located / timed entity \\
+Mid-clause \texttt{,which} & Non-restrictive clause &
+Distant / wrong antecedent & Immediately preceding noun \\
+Comparison with \texttt{like/unlike} & Comparison frame &
+Wrong comparison subject & Logically comparable entity \\
+Dangling at sentence end & Loose description &
+Ambiguous subject & Clear, intended subject \\
+\bottomrule
+\end{tabular}
+\end{center}
+```
+
+**设计原则**：
+1. **枚举所有子类型**：不要停留在"修饰语陷阱"层面，进一步拆分为 opening -ing / opening -ed / appositive / comparison 等子类型
+2. **每行独立可读**：陷阱名 + 定义 + 错例模式 + 正确模式，四列完整
+3. **列结构统一**：`Trap Type | What It Says | Wrong Distractor | Right Subject`（视领域可调，如语法 → `Wrong Form | Right Form | Rule`）
+4. **普遍性优先**：示例不引用具体考题，用可复现的模式描述
+
+**适用场景**：
+- SAT 文法：修饰语陷阱、代词指代歧义、时态混用、平行结构断裂
+- AP 英语修辞：诉诸方式混淆（Ethos/Pathos/Logos 边界题）、反讽识别、Tone shift
+- 物理：受力分析陷阱（遗漏分量、混淆作用力/反作用力）、符号约定陷阱
+- 数学：积分上下限方向、级数收敛判别混淆、极限形式误判
+
+**与普通表格的区别**：普通 Part 表格列举"知识点"（是什么），Trap Taxonomy 表格列举"出错方式"（怎么错 → 为什么错）。两者互补——知识点表建立认知，陷阱表预防错误。
+
+---
+
 ## 执行流程
 
 ### 阶段 1：理解需求与学科分析
@@ -425,10 +578,30 @@ calm yet penetrating\par
 5. 以 `\end{document}` 结尾（理科轨内容须包在 `multicols*` 内）
 6. **普遍性检查**：逐条自检——若某条必须依赖具体题目上下文才能成立/理解（题干、题号、专有数字链、人名情境），则泛化重写；示例不得超过一行数字演示
 
-### 阶段 5：编译与验证
+### 阶段 5：内容审查（大型清单推荐双 agent 并行）
+
+对于大型 checklist（40+ 条目 / `grouping=chapters` 模式），推荐在编译前进行**双 agent 并行审查**：
+
+- **momus**（准确性）：逐条核查规则/公式/语法的正确性，标记存疑条目
+- **ultrabrain**（完整性）：检查题型覆盖是否完整、Chapter 分组是否合理、是否有遗漏子类型
+
+**示例 workflowScript**（并行 subagent 调用）：
+
+```
+subagent({ tasks: [
+  { name: "momus", prompt: "审查 {output_name}.tex 中每条规则/公式的正确性，标记存疑条目并给出修正建议。重点：语法规则是否准确、公式符号是否正确、陷阱分类是否完备。" },
+  { name: "ultrabrain", prompt: "审查 {output_name}.tex 的题型覆盖完整性：是否遗漏该学科核心模块？Chapter 分组是否合理？Quick Checklist 是否覆盖所有关键检查点？给出遗漏项清单。" }
+]})
+
+# 合成修复：汇总两 agent 反馈 → 修正 .tex → 重新编译验证
+```
+
+小清单（≤30 条目）可跳过并行审查，仅做阶段 6 的自我核查。
+
+### 阶段 6：编译与验证
 
 ```bash
-# 仅使用 tectonic（产出全英文，无中文依赖）
+# 仅使用 tectonic
 tectonic {output_name}.tex
 ```
 
@@ -439,7 +612,7 @@ rm -f {output_name}.aux {output_name}.bbl {output_name}.blg {output_name}.log {o
 
 验证清单（须全部通过）：
 - [ ] LaTeX 编译无报错（tectonic）
-- [ ] **全英文：产出物无任何中文**（标题、表头、内容、Tip/Rule、示例、代码注释——所有轨道统一）
+- [ ] **语言合规**：`language=en` 时无任何中文（标题、表头、内容、Tip/Rule、示例、代码注释——所有轨道统一）；`language=sat_cn` 时题干/选项/示例保留英文，分析/表头/callout 用中文
 - [ ] 易错点覆盖完整（无遗漏核心模块）
 - [ ] 每条易错点都有错例+正例+说明（三要素）
 - [ ] 表格对齐正确，未溢出页面（列宽合计 ≤ 可用宽；理科轨双栏每栏内容不超栏宽）
@@ -448,7 +621,7 @@ rm -f {output_name}.aux {output_name}.bbl {output_name}.blg {output_name}.log {o
 - [ ] 正例/规则逐条正确性核查：有疑虑的条目查阅资料确认，无法确认的标注"Verify"（建议核实）
 - [ ] 中间文件已清理，只留 `.tex` 与 `.pdf`
 
-**正确性核查**：清单中的「正确形式」「说明」属知识性内容，生成后须逐条过一遍（可委托 subagent：`momus`/`oracle`）；任何存疑条目不得凭记忆硬写，标注 "Verify" 或查资料确认。
+**正确性核查**：清单中的「正确形式」「说明」属知识性内容。大型清单推荐阶段 5 的双 agent 并行审查（momus+ultrabrain）；小清单至少逐条自检一遍（或委托单个 subagent：`momus`/`oracle`）。任何存疑条目不得凭记忆硬写，标注 "Verify" 或查资料确认。
 
 ---
 
@@ -554,13 +727,13 @@ System.out.println(s1.equals(s2));   // true (contents equal)
 - 文科轨按内容量选择密度级（10pt 单栏 / 9pt 紧凑），**紧凑优先**；内容量极大且以公式为主时改走理科轨
 - 每条易错点都配 **错例 + 正例 + 说明**（三要素）
 - 理科轨公式必须使用 LaTeX 命令（G 节），数学间距收紧（`\thinmuskip` 等），行内公式优先
-- 产出物**全英文**：表头、内容、Tip、Rule、示例、**代码注释**一律英文，禁止任何中文（所有轨道统一；计算机轨原稿中英混合，生成时必须全部英文化并删除 fontspec/XeTeX 中文依赖）
+- 产出物**默认全英文**：`language=en` 时表头、内容、Tip、Rule、示例、**代码注释**一律英文，禁止任何中文（所有轨道统一；计算机轨原稿中英混合，生成时必须全部英文化并删除 fontspec/XeTeX 中文依赖）；`language=sat_cn` 时题干/选项/示例保留英文，分析/表头/callout/Quick Checklist 用中文
 - 编译**仅用 tectonic**；编译后**删除中间文件**，只留 `.tex` 与 `.pdf`
 - 编译后检查 PDF 输出是否超页、表格/公式是否溢出（理科轨双栏尤其要查）
 - 对「正确答案」有疑虑时，先查资料确认，不要硬写
 
 ### 禁止做
-- 不要在产出物中出现任何中文（CJK 字符）
+- 不要在 `language=en` 模式下出现任何中文（CJK 字符）；`language=sat_cn` 仅允许分析/表头/callout 含中文，题干/选项/示例/公式必须保留英文
 - 不要用 xelatex 或其他引擎编译（仅 tectonic）
 - **不要混淆轨道**：文科轨不用 `\sect`/`multicols*` 公式流；理科轨不用 `\section*{Part}` + Tip/Rule + Quick Checklist；计算机轨不用 booktabs 概念表 / multicols 词库
 - **禁止照搬具体错题**：不粘贴题目题干/选项、不保留题号、不保留专有数字链与人名情境；任何条目必须脱离原题可独立成立

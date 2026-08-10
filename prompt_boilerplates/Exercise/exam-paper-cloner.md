@@ -1,7 +1,7 @@
 ---
 name: exam-paper-cloner
-version: 1.0.0
-description: 阅读现有试卷作为模板和/或根据知识点描述，生成全英文LaTeX试卷，使用tectonic编译，极致节省纸张
+version: 1.1.0
+description: 阅读现有试卷作为模板和/或根据知识点描述，生成全英文LaTeX试卷，使用tectonic编译，极致节省纸张。支持扫描版PDF作为模板（§0.3a Vision OCR 流水线）
 triggers:
   - "clone exam"
   - "生成试卷"
@@ -104,7 +104,7 @@ read "{template_path}"
 |----------|----------|
 | `.tex`（LaTeX 源码） | 直接解析文档类、宏包、`\\begin{document}` 内的结构 |
 | `.md`（Markdown） | 先识别 YAML front matter（如有），再分析 Markdown 标题层级推断结构；将 Markdown 格式映射为等效 LaTeX 结构 |
-| `.pdf` | 不可直接解析——终止并提示用户提供 `.tex` 或 `.md` 格式的模板 |
+| `.pdf` | 先 `pdftotext` 逐页检测文字层；文本页直接解析，扫描页自动走 §0.3a 视觉 OCR 流水线（需 vision API key） |
 
 **从 LaTeX 模板提取的以下特征：**
 
@@ -121,6 +121,161 @@ read "{template_path}"
 | 难度分布 | 简单/中等/困难的比例 |
 
 **提取后记录为结构特征清单**，后续生成严格遵循。
+
+##### 0.3a Scanned PDF Processing via Vision OCR
+
+当模板 PDF 存在无法通过 `pdftotext` 提取文字层的扫描/图片页时，自动启动以下流水线。
+
+###### 0.3a.1 Detect Scanned vs Text Pages
+
+```bash
+for p in $(seq 1 $(pdfinfo "$pdf" | awk '/Pages/{print $2}')); do
+  chars=$(pdftotext -f $p -l $p "$pdf" - 2>/dev/null | wc -c)
+  echo "p$p: $chars $( [ $chars -lt 10 ] && echo 'SCANNED' || echo 'TEXT' )"
+done
+```
+
+< 10 字符 = 扫描页；> 100 字符 = 文本层可用。混合型 PDF（部分文字层+部分扫描）常见于用户手工拼装的文件。
+
+###### 0.3a.2 Vision Model Selection & Pre-flight
+
+**不可用的模型（已知坑，跳过）：**
+- `opencode-go/qwen3.6-plus` → 月度额度耗尽 (429)
+- `nvidia/meta/llama-4-maverick-17b-128e-instruct` → 410 Gone（已下架）
+
+**可用模型（按推荐顺序）：**
+
+| 模型 | Provider | 质量 | 备注 |
+|---|---|---|---|
+| `doubao-seed-2-0-pro-260215` | volcengine | ★★★★★ | 数学/表格 OCR 最准，中英文均好 |
+| `doubao-seed-1-6-vision-250815` | volcengine | ★★★★ | 专用 vision，性价比高 |
+| `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` | nvidia | ★★★ | 免费额度足，偶有漏读 |
+| `kimi-k3` | moonshot | ★★★★ | 1M ctx，易触发 429 限频 |
+
+**Pre-flight**：正式转录前，取一张典型页用候选模型各试一次，对照已知答案键比较准确度，选最佳模型。
+
+###### 0.3a.3 Probe Document Structure
+
+正式转录前先探测关键页的元信息（只问 3 个问题，不转录全文）：
+
+```python
+PROMPT = """
+Scanned exam page. Answer EXACTLY:
+HEADER: <section name> | BOOKLET_PAGE: <number> | QUESTIONS: <list> |
+HAS_TABLES: yes/no | HAS_FIGURES: yes/no |
+FIRST_WORDS: <first 12 words>
+"""
+```
+
+产出 **页面-内容映射表**（PDF 页码 ↔ booklet 页码 ↔ 题目号 ↔ 章节类型），用于：
+- 定位 Section 边界（No Calculator vs Calculator）
+- 发现缺失页面（对照答案键，答案覆盖的题号是否都有对应扫描页）
+- 排除重复前页（混合 PDF 常有前后重复的内容页）
+
+###### 0.3a.4 Page Rendering
+
+```bash
+pdftoppm -png -r 200 -f {start} -l {end} "$pdf" pages/
+# 200 DPI 是质量/文件大小的平衡点；数学文本需 ≥ 150 DPI
+```
+
+###### 0.3a.5 Transcription Script
+
+写 Python 脚本逐页调用 vision API。关键模板：
+
+```python
+PROMPT = """Transcribe with 100% fidelity.
+PAGE: <filename>
+HEADER: <section header, directions, calculator/no-calc icon>
+Q<num>: <full problem text verbatim>
+  A) <choice>  B) <choice>  C) <choice>  D) <choice>
+MATH: exponents as ^, fractions as (a)/(b), sqrt(), absolute |...|
+TABLES: pipe format | col1 | col2 |
+FIGURES: description + FIGURE_BBOX_Q<num>: <x1-x2%, y1-y2%>
+FOOTER: <page number, CONTINUE/STOP>
+"""
+
+payload = {"model": MODEL, "temperature": 0.1, "max_tokens": 6000}
+# 重试：exponential backoff 15s, 30s, 60s, 120s（vision API 偶发 429/5xx）
+# 限频：每页间 sleep(1-2s)
+```
+
+###### 0.3a.6 Answer Key Cross-Validation
+
+**这是整个流程中最重要的质量保证步骤。**
+
+转录完成后，对每道题用答案键验证：
+- MC 题：重新解算，确认 transcribed choice = key answer
+- Grid-in 题：解算验证
+- 若矛盾 → 该题可能有 OCR 错误 → 裁剪该区域单独重读 → 修复
+
+本项目 58 道题全部通过此步验证（30+28），0 错误。此步骤**本质是用数学逻辑修复 OCR 不确定性**。
+
+###### 0.3a.7 Figure Cropping — Two Pass
+
+**Pass 1**（初裁）：用转录中返回的 FIGURE_BBOX 百分比裁剪：
+
+```python
+from PIL import Image
+img = Image.open(f"pages/pg-{page}.png")
+W, H = img.size
+box = (int(W*x1/100), int(H*y1/100), int(W*x2/100), int(H*y2/100))
+img.crop(box).save(f"figs/{name}.png")
+```
+
+**Pass 2**（精修）：将初裁图片送入 vision 模型自检：
+
+```python
+prompt = "Any partial/cut-off TEXT in this crop? If yes, where exactly (top/bottom/left/right)?"
+# 根据反馈收紧对应边 2-6%
+```
+
+**常见杂字来源**：图上方问题文本末行、图下方选项/页脚行、双栏邻栏溢出、页眉/页码。
+
+**大长图防溢出**：裁剪后计算渲染高度：
+```
+height_in_pt = desired_width * crop_px_height / crop_px_width
+if height_in_pt > 0.75 * textheight: reduce width
+```
+本项目中 Q15 四联选项图 0.42\textwidth → 735pt → 缩小至 0.24 解决 overfull vbox。
+
+###### 0.3a.8 Two-Column Layout Awareness
+
+SAT / ACT 等标准化考试的数学页常用**双栏布局**（如左栏 Q11、右栏 Q12）。若整页转录可能将两栏问题混排。
+
+**检测**：某页 probe 返回 N 题但文本提取只出现 N/2 题的选项 → 双栏。
+
+**对策**：转录时显式提示 "this page may have a two-column layout"；验证时逐栏裁剪重读确认。
+
+###### 0.3a.9 Bilingual / CJK Content
+
+若试卷含中英文混排注释，**需用 xelatex**（tectonic 中文不稳定）：
+
+```latex
+% 1. 必须静态 TTF，不可用可变 TTC（xdvipdfmx fatal: Invalid TTC index）
+\newfontfamily\cnfont[Path=/path/to/fonts/,
+  BoldFont=NotoSansSC-Bold.ttf]{NotoSansSC-Regular.ttf}
+\newcommand{\cn}[1]{{\cnfont #1}}
+
+% 2. 中日韩换行
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+
+% 3. PDF 书签禁用中文命令
+\pdfstringdefDisableCommands{\renewcommand{\cn}[1]{#1}}
+
+% 4. 所有中文字符必须在 \cn{...} 内，否则 Latin Modern 缺字
+```
+
+###### 0.3a.10 Glossary
+
+| 术语 | 含义 |
+|---|---|
+| booklet 页码 | 原印刷册子的页码（≠ PDF 页码），通常印在页面底部 |
+| QAS | College Board Question-and-Answer Service，付费获取完整试卷+答案 |
+| Section 3/4 | SAT 数学两部分：3=不可用计算器 25min 20题，4=可用 55min 38题 |
+| grid-in | SAT 填空题（输入数字答案而非选 ABCD） |
+| bbox | bounding box，图中图形区域的百分比坐标 (x1-x2%, y1-y2%) |
 
 #### 0.4 混合模式：模板 + 知识点协同
 

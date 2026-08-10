@@ -59,6 +59,22 @@ tools:
 
 试卷与答案**强制二分**为两个独立文件：`[Name]_Practice_N.tex`（纯题目）和 `[Name]_Practice_N_Answers.tex`（正确答案 + 逐项解析）。
 
+### SAT 工具链定位
+
+本 skill 位于 SAT 练习工作流的**最下游**——接收错题诊断后生成练习卷。完整工具链：
+
+```
+sat-exercise-splitter（上游：拆分官方题库 PDF 为结构化 LaTeX）
+    │
+    ▼
+sat-error-note-generator（中游：积累错题到 Obsidian，提炼陷阱分类诊断）
+    │
+    ▼
+mistake-practice-generation（本 skill — 下游：根据陷阱诊断生成 AI 练习卷）
+```
+
+三个 skill 形成完整闭环：拆分题库 → 积累错题 → 诊断陷阱 → 生成练习。
+
 ## 入口路由
 
 ```

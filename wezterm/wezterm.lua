@@ -60,12 +60,12 @@ local config = {
     -- 其它可选项有：Block, BlinkingBlock, SteadyBlock, Underline, SteadyUnderline, BlinkingUnderline
     force_reverse_video_cursor = true,
     check_for_updates = false,
-    font_size = 16,
-    -- font = wezterm.font("JetBrains MonoNL Font Mono", { weight = "Regular" }),
-    -- font = wezterm.font("Hack Nerd Font", { weight = "Regular" }),
+    font_size = 17,
+    font = wezterm.font("JetBrains MonoNL Font Mono", { weight = "Regular" }),
+    font = wezterm.font("Hack Nerd Font", { weight = "Regular" }),
     font = wezterm.font_with_fallback({
-        { family = "JetBrains Mono", weight = "Medium" },
-        "Noto Sans Mono CJK SC",  -- 中文 fallback
+         { family = "JetBrains Mono", weight = "Medium" },
+         "Noto Sans Mono CJK SC",  -- 中文 fallback
     }),
     line_height = 1.1,
     -- COLOR SCHEME
