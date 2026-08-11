@@ -158,7 +158,7 @@ rm -f /run/user/1000/.wtest
 
 ## 预防
 
-1. **进程生命周期管理**：headless 浏览器（chromedp/chrome 等）泄漏是 tmpfs+内存压力的头号来源。给 bridge/daemon 加超时回收；定期 `ps -ef | awk '$3==1'` 检查孤儿。
+1. **进程生命周期管理**：headless 浏览器（chromedp/chrome 等）泄漏是 tmpfs+内存压力的头号来源。给 bridge/daemon 加超时回收；定期 `ps -ef | awk '$3==1'` 检查孤儿。chrome 泄漏的完整排查/修复（含 reaper 看门狗、flatpak scope 拆树、zygote 误杀、restart 残留）见 [chrome-leak-reaper.md](chrome-leak-reaper.md)。
 2. **日志轮转**：`/run/user/1000` 上的日志（coc-nvim-*.log、speech-dispatcher 等）会无限增长。给日志加 logrotate 或按日清理。
 3. **监控阈值**：`df -h /run/user/1000` 超过 85% 时告警；swap 使用率 >90% 时告警。
 4. **快速自检命令**（写进 shell alias）：
@@ -176,4 +176,5 @@ rm -f /run/user/1000/.wtest
 6. **删日志前先处理持有者**：直接 `rm` 进程正在写的日志文件不会释放空间（fd 仍指向 inode）。先杀进程/重启服务，再删。
 7. **btrfs 挂载点 inode 显示 0**：btrfs 无固定 inode 上限，`df -i` 显示 0/0 是正常现象，不代表 inode 耗尽。
 8. **容器内 `/dev/shm` 默认只有 64M**：Docker/Podman 容器里 ENOSPC 常因 /dev/shm 太小，`docker run --shm-size=2g` 解决；先 `df -h /dev/shm` 确认。
-9. **本文档属于 System_Fix 技能集**：入口与症状决策树见 [index.md](index.md)；opencli/chromedp 泄漏与搜索管道的关联见 [piagent-search-pipeline-fix.md](piagent-search-pipeline-fix.md)。
+9. **本文档属于 System_Fix 技能集**：入口与症状决策树见 [index.md](index.md)；opencli/chromedp 泄漏与搜索管道的关联见 [piagent-search-pipeline-fix.md](piagent-search-pipeline-fix.md)；chrome 泄漏（含 headless 实例堆积）的排查与修复见 [chrome-leak-reaper.md](chrome-leak-reaper.md)。
+10. **判断 chrome 实例归属不能只看 scope 内有无主进程**：flatpak 会把 zygote/renderer 树拆到独立 scope（与主树分离），scope 内无主进程 ≠ 孤儿——须追 PPID 链确认是否挂在受管实例（如 systemd bridge）下：链通则保护，链断才杀。误杀合法子树会引发重启-误杀恶性循环（详见 chrome-leak-reaper.md）。
