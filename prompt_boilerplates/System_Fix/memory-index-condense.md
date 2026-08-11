@@ -1,6 +1,6 @@
 ---
 name: memory-index-condense
-version: 1.3.0
+version: 1.3.1
 description: 调查 ~/.pi/agent/memory/，使用多个 reader agent 并行分析 MEMORY.md、SCRATCHPAD.md 和每日日志，合成浓缩的 MEMORY_INDEX.md 快速索引，并添加偏好指引 agents 自动使用。平衡内容压缩与精准关键词提炼。
 triggers:
   - "整理记忆"
@@ -195,10 +195,10 @@ For agents: 1) MEMORY_INDEX.md → 2) memory_read(long_term) → 3) daily log �
 
 ### 4. 添加记忆偏好
 
-在 `MEMORY.md` 中添加偏好 ⑮（或下一个编号），指引 agents 自动使用索引：
+在 `MEMORY.md` 中添加偏好 ⑭（或下一个编号），指引 agents 自动使用索引：
 
 ```markdown
-### ⑮ 内存索引优先
+### ⑭ 内存索引优先
 
 - **当需要快速了解项目状态/服务器/历史时，先读 `MEMORY_INDEX.md`**（~7KB 浓缩索引），再按需搜索每日日志
 - 索引结构：活跃服务器 → 运行中任务 → 偏好速查 → 项目关键词→日志映射 → 文件路径 → 搜索指南 → 命令参考
@@ -313,13 +313,19 @@ done
 ```bash
 # 专注模式：只在 session 日志中搜索，不碰其他文件
 cd ~/.pi/agent/sessions/
+# ⚠️ 不要用 `ls -td */`：本机目录名以 `--` 开头（如 --home-xieguiawu-works-记录--），
+# ls 会把它当成命令行选项解析 → 报错且循环恒为空（假阴性）。
+# 用 find 列出目录（结果以 ./ 开头，无选项冲突）：
 # 只搜索最近 10 个活跃 session（防止大目录卡死；如有需要可加大 head 行数）
-for d in $(ls -td */ 2>/dev/null | head -10); do
-    # 每个 session 只搜 .jsonl，加 timeout 防卡死
-    find "$d" -maxdepth 2 -name "*.jsonl" -type f 2>/dev/null | while read f; do
+find . -maxdepth 1 -mindepth 1 -type d -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -10 | cut -d' ' -f2- | while read d; do
+    # ⚠️ 不要用 -maxdepth 2：子目录深层有 run-N/session.jsonl（subagent 运行），
+    # 实测 maxdepth 2 只覆盖 230/1920 个文件，会漏掉真实命中（假阴性）。
+    # 正确做法：直接搜全部 *.jsonl（全深度），逐文件 timeout 防卡死。
+    # 实测全量 192 会话 / ~2000 文件扫描 <5 分钟。
+    find "$d" -name "*.jsonl" -type f 2>/dev/null | while read f; do
         if timeout 30 grep -q "$SEARCH_QUERY" "$f" 2>/dev/null; then
-            session_dir=$(basename "$d")
-            session_code=$(echo "$session_dir" | grep -oP '[a-f0-9-]{36}$' || echo "$session_dir")
+            # ⚠️ session code 从匹配的 jsonl 文件名提取（目录名是 cwd 分组，无 UUID）
+            session_code=$(basename "$f" | grep -oP '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' || echo "$f")
             echo "$session_code"
         fi
     done
@@ -380,7 +386,7 @@ done
 | 文件 | 大小目标 | 更新频率 | 内容 |
 |------|---------|---------|------|
 | `MEMORY_INDEX.md` | ≤7KB | 每周或重大项目变更后 | 活跃服务器、运行任务、偏好速查、项目→日志映射、搜索指南、命令参考 |
-| `MEMORY.md` 偏好 ⑮ | ~10 行 | 仅首次添加 | 告知 agents 先读索引再搜日志 |
+| `MEMORY.md` 偏好 ⑭ | ~10 行 | 仅首次添加 | 告知 agents 先读索引再搜日志 |
 
 成功标准：
 - [ ] 索引 ≤7KB
@@ -402,8 +408,8 @@ done
 
 #### 搜索性能
 - session 目录可能极大（GB 级），**不要全量 grep**。按以下策略限制：
-  - `head -20` 限制最新 session 数
-  - 每个 session 只搜 `session.jsonl` 不搜所有子文件
+  - `head -10` 限制最新 session 目录数（用 find+sort，勿用 `ls -td */`——目录名以 `--` 开头会被 ls 当选项）
+  - 每个 session 搜全部 `*.jsonl`（**必须全深度**，subagent 运行在深层 `run-N/session.jsonl`；`-maxdepth 2` 会漏 ~90% 文件）
   - 用 `timeout 30` 防止 grep 卡死
   - 优先搜索 `skills/` 和 `agents/`（小文件，快），session 作为最后手段
 - session JSONL 文件含大量 token，grep 匹配行时应只输出前 200 字符：`grep -o "$SEARCH_QUERY\|.\{0,100\}$SEARCH_QUERY.\{0,100\}"` 或 `head -c 200`
@@ -419,7 +425,7 @@ done
 - 如果 `pi-resmon` 建议 `serialize_only`，改用单个 agent + 分批读取 + 累加输出
 
 ### 名称约定
-- 索引文件必须为 `MEMORY_INDEX.md`（agents 通过偏好 ⑮ 自动查找此文件名）
+- 索引文件必须为 `MEMORY_INDEX.md`（agents 通过偏好 ⑭ 自动查找此文件名）
 - 不要创建多个索引文件，维护单一事实来源
 
 ### 安全

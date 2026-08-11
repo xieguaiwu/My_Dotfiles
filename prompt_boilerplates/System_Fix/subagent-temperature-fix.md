@@ -1,7 +1,7 @@
 ---
 name: subagent-temperature-fix
-version: 2.10.0
-description: 验证并修复 pi-agent subagent 的 temperature 配置链。v2.5.0 起采用双保险架构：① 传递链补丁（pi-subagents 解析→buildPiArgs→env）② 消费点 YAML 兜底（sdk.js 在 env 缺失时直读 ~/.pi/agent/agents/<name>.md frontmatter）——即使上游 pi-subagents 再次删除 temperature 支持，温度依然生效。v2.6.0 适配 pi-subagents v0.40.0（第 4 次删除）并修复 str.replace 子串误伤 spawnRunner 的静默污染 bug（heal + 锚定正则 + 完整性断言）。v2.7.0 适配 pi-subagents v0.41.0 + pi-coding-agent v0.84.0（第 5 次删除）：agents.ts 全面改为 spread 语法，修复 reapply.sh 假阳性 bug（双锚点回退 + 变更检测）。v2.8.0 适配 pi-subagents v0.42.1 + pi-coding-agent v0.84.1（第 6 次删除）：锚点未漂移（21/21 直接命中），但发现并修复 **CRITICAL bug**——sdk.js 的 readFileSync import 检查在插入后执行且用子串匹配（插入块本身含 readFileSync 字样），导致 import 永不添加，YAML 兜底路径运行时抛 ReferenceError；修复为精确匹配 import 行，并顺手消除 Python SyntaxWarning（\s/\g 无效转义）。v2.9.0 适配 pi-subagents v0.43.0（第 7 次删除）：v0.43.0 仅新增 refinement overlays/missions/steer/gate 等功能，未动 temperature 结构，锚点与 v0.42.1 完全一致，21/21 一次重打成功，运行时断链模拟三场景验证通过。v2.10.0 适配 pi-subagents v0.45.0（第 8 次删除）：v0.44.0（mission/schedule）+ v0.45.0（subagent_wait completions）均未触碰 temperature 结构，锚点与 v0.43.0 完全一致，21/21 一次重打成功（无漂移警告、无完整性断言失败），运行时三场景验证通过。共 21 个检查点（含 spawnRunner 6-tab 专用 + serializer 输出 + YAML 兜底），补丁集成在 ~/.pi/patches/temperature/reapply.sh（postinstall 自动重打）。⚠️ 补丁后必须重启 pi 主进程才生效（tsx 模块缓存，见注意事项 #7）。
+version: 2.11.0
+description: 验证并修复 pi-agent subagent 的 temperature 配置链。v2.5.0 起采用双保险架构：① 传递链补丁（pi-subagents 解析→buildPiArgs→env）② 消费点 YAML 兜底（sdk.js 在 env 缺失时直读 ~/.pi/agent/agents/<name>.md frontmatter）——即使上游 pi-subagents 再次删除 temperature 支持，温度依然生效。v2.6.0 适配 pi-subagents v0.40.0（第 4 次删除）并修复 str.replace 子串误伤 spawnRunner 的静默污染 bug（heal + 锚定正则 + 完整性断言）。v2.7.0 适配 pi-subagents v0.41.0 + pi-coding-agent v0.84.0（第 5 次删除）：agents.ts 全面改为 spread 语法，修复 reapply.sh 假阳性 bug（双锚点回退 + 变更检测）。v2.8.0 适配 pi-subagents v0.42.1 + pi-coding-agent v0.84.1（第 6 次删除）：锚点未漂移（21/21 直接命中），但发现并修复 **CRITICAL bug**——sdk.js 的 readFileSync import 检查在插入后执行且用子串匹配（插入块本身含 readFileSync 字样），导致 import 永不添加，YAML 兜底路径运行时抛 ReferenceError；修复为精确匹配 import 行。v2.9.0 适配 pi-subagents v0.43.0（第 7 次删除）：锚点与 v0.42.1 完全一致，21/21 一次重打成功。v2.10.0 适配 pi-subagents v0.45.0（第 8 次删除）：v0.44.0（mission/schedule）+ v0.45.0（subagent_wait completions）均未触碰 temperature 结构，锚点与 v0.43.0 完全一致，21/21 一次重打成功。v2.11.0 适配 pi-subagents v0.45.2（第 9 次删除）：v0.45.1/0.45.2 重构 async-execution.ts 的 thinking 计算（effectiveThinking/thinkingOverrides 新机制），但 v2.10.0 的 resolveEffectiveThinking 锚点全部命中，21/21 一次重打成功（无漂移警告）。共 21 个检查点（含 spawnRunner 6-tab 专用 + serializer 输出 + YAML 兜底），补丁集成在 ~/.pi/patches/temperature/reapply.sh（postinstall 自动重打）。⚠️ 补丁后必须重启 pi 主进程才生效（tsx 模块缓存，见注意事项 #7）。
 triggers:
   - "subagent温度修复"
   - "temperature fix"
@@ -380,9 +380,11 @@ echo -n "Agent createLoop:    "; grep -q "temperature: this.temperature" "$AGENT
 
 ---
 
-## ✅ 当前状态（2026-08-09）
+## ✅ 当前状态（2026-08-10）
 
-温度链已全部修复并验证通过 ✅ （**21/21 检查点**，pi-coding-agent **v0.84.1**，pi-subagents **v0.45.0**）。
+温度链已全部修复并验证通过 ✅ （**21/21 检查点**，pi-coding-agent **v0.84.1**，pi-subagents **v0.45.2**）。
+
+**2026-08-10 v0.45.2/v0.84.1 适配（v2.11.0，第 9 次删除）**：pi-subagents 经 `pi update --extensions` 升至 v0.45.2，再次删除 temperature 支持（13 个 pi-subagents 检查点全缺，dist 层 8 个完好）。v0.45.1/0.45.2 重构了 async-execution.ts 的 thinking 计算（引入 `effectiveThinking` / `thinkingOverridesByFlatIndex` / `applyThinkingSuffix` 新机制，buildSeqStep 与 spawnRunner 的 thinking 行改为 `thinking: resolveEffectiveThinking(model, effectiveThinking),`），但 **v2.10.0 的锚点全部命中**——`resolveEffectiveThinking` 3-tab 裸行、spawnRunner 6-tab 裸行、recoveryDescriptor 2-tab spread 均无漂移，`--apply` 一次重打 21/21 成功，幂等复跑 ✅，无 ⚠️ 漂移警告。插入点核验：buildSeqStep 3-tab `temperature: a.temperature,`（thinking 与 launchResolvedExtensions 之间）、recoveryDescriptor spread `...(agentConfig.temperature !== undefined ? { temperature: agentConfig.temperature } : {}),`、spawnRunner 6-tab `temperature: agentConfig.temperature,`（thinking 与 modelCandidates 之间）全部正确。reapply.sh 版本声明已更新（v2.11.0 / `pi-subagents <= v0.45.x`）。
 
 **2026-08-09 v0.45.0/v0.84.1 适配（v2.10.0，第 8 次删除）**：pi-subagents v0.45.0 再次删除 temperature 支持（13 个 pi-subagents 检查点全缺，dist 层 8 个完好）。CHANGELOG 显示 v0.44.0（自动 mission/durable workflow state/schedule storeRoot）与 v0.45.0（subagent_wait completions 结构化载荷、PowerShell 前缀、reads 路径展开等）均未触碰 temperature 结构——**锚点与 v0.43.0 完全一致，reapply.sh 既有模式一次重打 21/21 成功**，幂等复跑 ✅，无 ⚠️ 漂移警告、无完整性断言失败。插入点人工核验：buildSeqStep 3-tab（`a.temperature`，在 thinking 与 launchResolvedExtensions 之间）、recoveryDescriptor 2-tab spread（`...(agentConfig.temperature !== undefined ? ...)`）、spawnRunner 6-tab（`agentConfig.temperature,`，在 thinking 与 modelCandidates 之间）、agents.ts frontmatter/cloneOverrideBase spread、Pick 列表、override 函数体、subagent-runner 两处（1336 buildPiArgs / 2092 状态存储）全部正确。运行时断链模拟三场景全部验证通过（临时 [TEMP] 日志，测后移除）：① 无 env → YAML 兜底读 explore.md = **0.1** ✅ ② `PI_SUBAGENT_TEMPERATURE=0.7` → **0.7** 优先于 YAML ✅ ③ CLI `--temperature 0.3` → **0.3** 最高优先 ✅。优先级链：CLI > env > YAML 兜底。reapply.sh 版本声明已更新（v2.10.0 / `pi-subagents <= v0.45.x`）。
 
@@ -508,7 +510,7 @@ npm update / pi update
 
 **幂等性**：所有补丁操作均为幂等——已修复项自动跳过，多次运行安全。
 
-**版本兼容**：脚本对 0.82.x 自动修复，对 0.83+ 尝试修复并报告，对未知版本输出诊断。**v0.45.0/v0.84.1 已实测（v2.10.0）**；v0.43.0/v0.84.1 已实测（v2.9.0）；v0.42.1/v0.84.1 已实测（v2.8.0）。
+**版本兼容**：脚本对 0.82.x 自动修复，对 0.83+ 尝试修复并报告，对未知版本输出诊断。**v0.45.2/v0.84.1 已实测（v2.11.0）**；v0.45.0/v0.84.1 已实测（v2.10.0）；v0.43.0/v0.84.1 已实测（v2.9.0）；v0.42.1/v0.84.1 已实测（v2.8.0）。
 
 ## ⚠️ 注意事项
 

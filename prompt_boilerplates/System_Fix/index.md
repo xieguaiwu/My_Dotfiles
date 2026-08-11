@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 1.4.0
+version: 1.8.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -38,6 +38,12 @@ triggers:
   - "硬解"
   - "mpv 播不了"
   - "播放器花屏"
+  - "chrome 内存泄漏"
+  - "chrome 内存泄露"
+  - "chrome 吃内存"
+  - "chrome 进程多"
+  - "DidStartWorkerFail"
+  - "chromedp"
 inputs:
   - name: symptom
     description: 用户描述的症状/报错信息
@@ -134,6 +140,8 @@ journalctl -p err -b --no-pager | tail -20
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
 | 3 | [enospc-tmpfs-check.md](enospc-tmpfs-check.md) | 1.0.0 | ENOSPC/tmpfs 满排查：磁盘 vs 内存盘区分、换出页占配额、孤儿进程清理 | 任何 "no space left"、写入失败、tmpfs 满 |
+| 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.1.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足 |
+| 3.6 | [chrome-leak-reaper.md](chrome-leak-reaper.md) | 1.0.0 | Chrome 内存泄漏排查与 chrome-reaper 维护：chromedp/桥实例/zygote 误杀（PPID 链）/restart 残留/profile 锁冲突 | chrome 吃内存、chrome 进程多、DidStartWorkerFail、bridge 反复重启 |
 | 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.2.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅） | 代理失效、无法上网、订阅失败 |
 | 5 | [fcitx5_punctuation_fix.md](fcitx5_punctuation_fix.md) | 1.0.0 | fcitx5 中文标点问题（半角标点、顿号书名号打不出） | 输入法标点异常 |
 | 6 | [cleanup_shutdown_issue.sh](cleanup_shutdown_issue.sh) | — (脚本) | 关机/重启清理脚本（systemd 守卫、ABRT 处理） | 关机慢、关机报错 |
@@ -168,6 +176,12 @@ journalctl -p err -b --no-pager | tail -20
 ```
 「no space left / ENOSPC / 磁盘满」
   └─ enospc-tmpfs-check.md ← 先看 df -h 全部挂载点，别只看根盘
+
+「死机 / 冻结 / 卡死 / 没响应 / 内存不足」
+  └─ freeze-oom-protection.md ← 先看 journalctl -b -1 尾部：Purging GPU memory = 内存 thrash；装 earlyoom + oomd 加固；泄漏源先查 chrome
+
+「chrome 内存泄漏 / chrome 吃内存 / chrome 进程多 / DidStartWorkerFail / bridge 反复重启」
+  └─ chrome-leak-reaper.md ← 进程画像 + reaper 日志 + scope/PPID 链判定 + v3 修复；致死机/ENOSPC 时配合 freeze-oom-protection / enospc-tmpfs-check
 
 「代理不工作 / 无法上网 / 订阅失败」
   └─ clash-verge-diagnose-and-fix.md
@@ -215,6 +229,10 @@ journalctl -p err -b --no-pager | tail -20
 | 当前文档 | 应参阅 | 原因 |
 |:---|:---|:---|
 | `system_diagnostics_and_repair.md` Phase 1.2 硬件资源 | `enospc-tmpfs-check.md` | 发现内存/swap 压力或 tmpfs 问题时用 ENOSPC 流程深挖 |
+| `system_diagnostics_and_repair.md` Phase 1.2 硬件资源 | `freeze-oom-protection.md` | 发现内存压力/死机/冻结时用 OOM thrash 流程深挖并加固 |
+| `freeze-oom-protection.md` 死机元凶排查 | `chrome-leak-reaper.md` | chrome 泄漏是死机/OOM 头号元凶，先修泄漏再谈防护 |
+| `enospc-tmpfs-check.md` 预防/注意事项 | `chrome-leak-reaper.md` | headless 浏览器泄漏同源（chromedp/桥/scope 误杀），实例归属判定看 PPID 链 |
+| `chrome-leak-reaper.md` | `freeze-oom-protection.md` / `enospc-tmpfs-check.md` | chrome 泄漏引爆死机或 tmpfs/swap 压力时互相配合 |
 | `enospc-tmpfs-check.md` Phase 4.2 | `cleanup_shutdown_issue.sh` | 清理任务可复用其 systemd 守卫模式 |
 | `enospc-tmpfs-check.md` 预防 | `piagent-search-pipeline-fix.md` | opencli/chromedp 泄漏是搜索管道与 tmpfs 满的共同隐患 |
 | `ghostwriter-math-check-and-fix.md` 第三层 | `dotfiles-sync-and-audit.md` | 配置修正后需同步 My_Dotfiles 备份副本 |
@@ -234,6 +252,18 @@ journalctl -p err -b --no-pager | tail -20
 ---
 
 ## 变更日志
+
+### 1.8.0 (2026-08-10)
+- 新增：系统层 — `chrome-leak-reaper.md`（Chrome 内存泄漏排查 + chrome-reaper v3 维护：chromedp/桥实例/zygote 误杀 PPID 链修复/restart 残留/profile 锁冲突，基于 2026-08-10 第三次泄漏实战）
+- 更新：`freeze-oom-protection.md` 1.0.0 → **1.1.0**（新增死机元凶排查：chrome 泄漏排查命令 + 交叉引用；front matter triggers「内存被吃光」）
+- 更新：`enospc-tmpfs-check.md` 预防/注意事项（补充 chrome-leak-reaper 交叉引用 + PPID 链判定注意事项）
+- 新增：决策树分支「chrome 内存泄漏 / chrome 吃内存 / DidStartWorkerFail」+ 交叉引用 3 条 + triggers 6 个
+- 修正：front matter version 滞后（1.4.0 → 1.8.0 对齐变更日志）
+
+### 1.7.0 (2026-08-10)
+- 新增：系统层 — `freeze-oom-protection.md` + 脚本 `freeze-oom-protect.sh`（2026-08-10 20:09 死机实战：内存 thrash 冻结，Purging GPU memory 判定 + earlyoom/oomd 三层防线）
+- 新增：决策树分支「死机 / 冻结 / 卡死 / 内存不足」+ 交叉引用「诊断发现内存压力 → freeze-oom-protection」
+- 新增：triggers「死机」「冻结」「卡死」「freeze」「内存不足」「OOM」「Purging GPU memory」
 
 ### 1.6.0 (2026-08-10)
 - 改名：`vlc-hevc-decode-fix.md` → **`video-playback-decode-fix.md`**（2.0.0 → **2.1.0**，universal 化）；脚本改名 `video-decode-ffmpeg-swap.sh`、`video-playback-vaapi-fix.sh`
@@ -273,4 +303,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-10（1.6.0 video-playback-decode-fix 改名 universal 化）*
+*最后更新: 2026-08-10（1.8.0 新增 chrome-leak-reaper.md；freeze-oom-protection 1.1.0 加泄漏源排查）*

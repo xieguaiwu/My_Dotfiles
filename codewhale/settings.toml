@@ -23,10 +23,10 @@ context_panel = false
 cost_currency = "usd"
 max_input_history = 100
 default_provider = "deepseek"
-default_model = "deepseek-v4-pro"
+default_model = "deepseek-v4-flash"
 status_indicator = "whale"
 synchronized_output = "auto"
 prefer_external_pdftotext = false
 
 [provider_models]
-deepseek = "deepseek-v4-pro"
+deepseek = "deepseek-v4-flash"

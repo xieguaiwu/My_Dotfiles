@@ -352,6 +352,34 @@ journalctl -u <service> | grep -i "memory"        # 应用层日志
 - 备份策略和更新策略全量统一
 - 灾备演习至少一季度一次
 
+#### 8.1 多服务器训练协同 — train-watch CLI（2026-08-10 落地，2026-08-10 加固版）
+
+> ML 训练多服务器场景的现成工具链，**优先于手写 ssh 命令**。任何涉及远程训练服务器的操作先看这里。
+
+**安装/配置**：`train-watch` 已在 PATH（`~/.local/bin/train-watch`，Go 单二进制）；配置 `~/.config/train-watch/servers.json`（0600，含密码）是**服务器唯一事实源**（host/port/password/project/logfile/procPattern/conda_path）。
+
+| 命令 | 用途 |
+|:---|:---|
+| `train-watch status [--watch] [-s gpu36] [--no-header]` | 多服务器监控：step/GPU/平均ETA/瞬时ETA/最后活动(日志活性)/systemd unit/内存告警（available<1GB → DEGRADED，日志静止>180s → STUCK） |
+| `train-watch start <srv> --unit <name> -- <cmd>` | systemd-run 启动训练（自动封装 OMP/OPENBLAS/MKL=1 + PYTHONUNBUFFERED + PATH=anaconda3[conda_path 可配]，unit 冲突预检，--wait 秒数可配） |
+| `train-watch stop <srv> --unit <name>` | 停止训练单元 |
+| `train-watch sync <srv>` | rsync 部署代码（调 sync_to_server.sh [server_name]，密码经环境变量不落 cmdline） |
+| `train-watch exec <srv> -- <cmd>` | 任意远程命令 |
+| `train-watch collect <srv>` | 拉取 train.log 到 downloads/<srv>/ |
+| `train-watch config show <srv>` | 打印解析后配置（密码脱敏 ***） |
+
+**安全基线（2026-08-10 加固）**：
+- SSH TOFU 主机密钥验证（~/.config/train-watch/known_hosts, 0600）— 首次连接记录指纹，后续校验
+- 密码仅经 SSHPASS 环境变量传递（sshpass -e），不出现于 /proc/cmdline
+- ⚠️ gpu36 与 gpu11-27024 为**克隆镜像**（SSH 主机密钥相同）— 一台被攻破则另一台可被 MITM，长期建议重建其一
+
+**关键背景知识（勿忘）**：
+- 训练必须 systemd-run 启动（SSH+setsid+nohup 会在 SSH 断开时被 sshd session 清理连带杀死 — 实测教训）
+- systemd-run 必须显式 PATH 含 `/root/anaconda3/bin`（systemd 默认 PATH 无 torch；可用 servers.json conda_path 覆盖）
+- CPU-only 模式每任务 RSS ~7.3GB（torch CPU tensor 双份）— 并行任务数 = 内存预算 ÷ 8GB
+- 密码集中在 servers.json（0600）后可 `${\VAR}` 环境变量化
+- 源码：`~/Desktop/go-projects/train-watch`（README 有完整命令参考）
+
 ### 九、生产环境部署 Checklist
 
 每次上生产前逐项确认：
