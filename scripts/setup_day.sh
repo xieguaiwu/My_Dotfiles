@@ -407,24 +407,18 @@ else
 fi
 
 echo ">>> Installing cyber-tui (cyberspace.online terminal client, Go)..."
-# cyber-tui: Go + charmbracelet 写的 cyberspace.online 复古文字社交网络客户端
-# https://github.com/ragnar/cyber-tui （v0.8.x，构建日期 2026-08-08）
+# cyber-tui: Go + Bubble Tea 写的 cyberspace.online 复古文字社交网络客户端
+# https://github.com/ArmadilloBrillo/cyber-tui （MIT，v0.8.x）——注意不是 digital-grease/cs-tui (Rust 版)
+# 官方安装: install.sh 下载预编译二进制 + SHA256SUMS 校验，回退 go build
 # 配套脚本: ~/.local/bin/cyber-audio（下载附件音频到 cmus）
-if command -v go &>/dev/null; then
-    if ! command -v cyber-tui &>/dev/null; then
-        go install github.com/ragnar/cyber-tui@latest
-        if [ -x "$(go env GOPATH)/bin/cyber-tui" ]; then
-            mkdir -p ~/.local/bin
-            ln -sf "$(go env GOPATH)/bin/cyber-tui" ~/.local/bin/cyber-tui
-            echo ">>> cyber-tui installed. Run 'cyber-tui' to enter cyberspace.online"
-        else
-            echo ">>> cyber-tui 构建产物未找到，请检查: go install github.com/ragnar/cyber-tui@latest"
-        fi
-    else
-        echo ">>> cyber-tui 已存在，跳过（版本: $(cyber-tui -version 2>/dev/null || echo '?')）"
-    fi
+if command -v cyber-tui &>/dev/null; then
+    echo ">>> cyber-tui 已存在，跳过（版本: $(cyber-tui -version 2>/dev/null || echo '?')）"
+elif command -v curl &>/dev/null; then
+    curl -fsSL https://raw.githubusercontent.com/ArmadilloBrillo/cyber-tui/dev/install.sh | sh \
+        && echo ">>> cyber-tui installed. Run 'cyber-tui' to enter cyberspace.online" \
+        || echo ">>> install.sh 安装失败，可重试: curl -fsSL https://raw.githubusercontent.com/ArmadilloBrillo/cyber-tui/dev/install.sh | sh"
 else
-    echo ">>> go 不可用，跳过 cyber-tui（先安装 Go: sudo dnf install golang / apt install golang）"
+    echo ">>> curl 不可用，跳过 cyber-tui"
 fi
 # 配套 cyber-audio 从备份部署
 if [ -f ~/My_Dotfiles/scripts/cyber-audio ] && [ ! -f ~/.local/bin/cyber-audio ]; then
