@@ -406,17 +406,32 @@ else
     echo ">>> pipx 不可用，跳过 rdt-cli。手动安装: pip install --user pipx && pipx install rdt-cli"
 fi
 
-echo ">>> Installing cs-tui (cyberspace.online terminal client)..."
-# cs-tui: Rust+ratatui 写的 cyberspace.online 复古文字社交网络客户端
-# https://github.com/digital-grease/cs-tui （Apache-2.0/MIT，需要 Rust 1.81+）
-if command -v cargo &>/dev/null; then
-    if ! command -v cs-tui &>/dev/null; then
-        cargo install --git https://github.com/digital-grease/cs-tui --locked 2>&1 | tail -3 || echo ">>> cs-tui 构建失败，可重试: cargo install --git https://github.com/digital-grease/cs-tui --locked"
+echo ">>> Installing cyber-tui (cyberspace.online terminal client, Go)..."
+# cyber-tui: Go + charmbracelet 写的 cyberspace.online 复古文字社交网络客户端
+# https://github.com/ragnar/cyber-tui （v0.8.x，构建日期 2026-08-08）
+# 配套脚本: ~/.local/bin/cyber-audio（下载附件音频到 cmus）
+if command -v go &>/dev/null; then
+    if ! command -v cyber-tui &>/dev/null; then
+        go install github.com/ragnar/cyber-tui@latest
+        if [ -x "$(go env GOPATH)/bin/cyber-tui" ]; then
+            mkdir -p ~/.local/bin
+            ln -sf "$(go env GOPATH)/bin/cyber-tui" ~/.local/bin/cyber-tui
+            echo ">>> cyber-tui installed. Run 'cyber-tui' to enter cyberspace.online"
+        else
+            echo ">>> cyber-tui 构建产物未找到，请检查: go install github.com/ragnar/cyber-tui@latest"
+        fi
     else
-        echo ">>> cs-tui 已存在，跳过"
+        echo ">>> cyber-tui 已存在，跳过（版本: $(cyber-tui -version 2>/dev/null || echo '?')）"
     fi
 else
-    echo ">>> cargo 不可用，跳过 cs-tui（先运行上面 rdict 段的 rustup 安装）"
+    echo ">>> go 不可用，跳过 cyber-tui（先安装 Go: sudo dnf install golang / apt install golang）"
+fi
+# 配套 cyber-audio 从备份部署
+if [ -f ~/My_Dotfiles/scripts/cyber-audio ] && [ ! -f ~/.local/bin/cyber-audio ]; then
+    mkdir -p ~/.local/bin
+    cp -f ~/My_Dotfiles/scripts/cyber-audio ~/.local/bin/cyber-audio
+    chmod +x ~/.local/bin/cyber-audio
+    echo ">>> cyber-audio deployed from backup"
 fi
 
 echo ">>> Deploying rdts (rdt search 融合助手) from My_Dotfiles backup..."

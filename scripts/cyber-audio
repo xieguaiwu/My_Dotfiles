@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# cyber-audio — 下载音频 URL 并加入 cmus 播放队列
+# 用法: cyber-audio <URL>   （从 cyber-tui 的 [AUDIO] 附件复制 URL）
+# 依赖: curl, file, cmus, cmus-remote, tmux
+set -u
+
+URL="${1:-}"
+if [ -z "$URL" ]; then
+  echo "用法: cyber-audio <音频URL>" >&2
+  echo "提示: 在 cyber-tui 中看到 [AUDIO] 徽章时，把附件 URL 复制出来传给本脚本" >&2
+  exit 1
+fi
+
+# ── 1. 下载 ──
+OUT="/tmp/cyber-audio-$(date +%s)"
+echo "↓ 下载中: $URL"
+if ! curl -sL --max-time 180 -o "$OUT" "$URL"; then
+  echo "✗ 下载失败: $URL" >&2
+  rm -f "$OUT"
+  exit 1
+fi
+SIZE=$(stat -c%s "$OUT" 2>/dev/null || echo 0)
+if [ "$SIZE" -lt 1000 ]; then
+  echo "✗ 文件过小 ($SIZE 字节)，可能不是有效音频" >&2
+  rm -f "$OUT"
+  exit 1
+fi
+
+# ── 2. 探测真实类型，补扩展名（cmus 按扩展名选插件）──
+MIME=$(file -b --mime-type "$OUT" 2>/dev/null)
+case "$MIME" in
+  audio/mpeg)            EXT="mp3" ;;
+  audio/flac)            EXT="flac" ;;
+  audio/x-wav|audio/wav) EXT="wav" ;;
+  audio/ogg)             EXT="ogg" ;;
+  audio/opus)            EXT="opus" ;;
+  audio/mp4|audio/x-m4a) EXT="m4a" ;;
+  audio/aac)             EXT="aac" ;;
+  *)                     EXT="mp3" ;;
+esac
+mv "$OUT" "$OUT.$EXT"
+
+# ── 3. 确保 cmus 运行（tmux 会话承载）──
+if ! pgrep -x cmus >/dev/null 2>&1; then
+  if ! tmux has-session -t cmus 2>/dev/null; then
+    tmux new-session -d -s cmus -x 200 -y 50 'exec cmus'
+  else
+    tmux send-keys -t cmus 'cmus' Enter
+  fi
+  for _ in $(seq 1 10); do
+    pgrep -x cmus >/dev/null 2>&1 && break
+    sleep 0.5
+  done
+  sleep 1
+fi
+
+# ── 4. 直接播放 ──
+if cmus-remote -f "$OUT.$EXT" 2>/dev/null; then
+  echo "▶ 已在 cmus 播放: $URL"
+  echo "  界面: tmux attach -t cmus"
+else
+  echo "✗ 失败：cmus 未就绪。请打开终端运行 cmus，或重试。" >&2
+  exit 1
+fi
