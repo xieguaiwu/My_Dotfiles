@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+rdts — rdt search 融合助手（精进版）
+  先看「完整格式化列表 + ID 对照」，再按序号读帖。
+
+用法:
+  rdts "关键词" [-n N] [其他 rdt search 参数]
+      搜索并显示融合列表（序号 | ID | 标题 | 子版块 | 作者 | 分数 | 评论 | 时间 | 摘要）
+      结果自动缓存到 ~/.cache/rdts/last.json (权限 600)
+  rdts                       无参数 → 显示缓存列表并进入交互模式（输序号读帖）
+  rdts --list                只显示缓存列表，不进入交互
+  rdts --fresh "关键词"      忽略缓存强制重新搜索
+  rdts --read N [-n 30] [-s top]
+                             读取第 N 条帖子（额外参数透传给 rdt read）
+  rdts --id N                只输出第 N 条的 ID（管道友好）
+  rdts --open N              用浏览器打开第 N 条（仅 http/https 校验后）
+  rdts --raw N               显示第 N 条的完整 JSON 元数据
+
+示例:
+  rdts "Carl Schmitt Stasi"
+  rdts --read 3 -n 50 -s top
+  rdts --id 2 | xargs rdt upvote
+"""
+import argparse
+import datetime
+import json
+import os
+import subprocess
+import sys
+
+CACHE = os.path.expanduser("~/.cache/rdts/last.json")
+CACHE_MODE = 0o600
+RUN_TIMEOUT = 120          # rdt 子进程超时（秒）
+READ_TIMEOUT = 180
+MAX_TITLE = 90             # 标题截断宽度
+MAX_SUMMARY = 160          # 摘要截断宽度
+
+
+class RdtError(RuntimeError):
+    """rdt 命令失败或输出不可解析。"""
+
+
+def run_rdt(args, timeout=RUN_TIMEOUT):
+    """以参数列表（无 shell）调用 rdt，返回 stdout。超时/非零退出抛 RdtError。"""
+    try:
+        r = subprocess.run(["rdt", *args], capture_output=True, text=True,
+                           timeout=timeout)
+    except FileNotFoundError:
+        raise RdtError("未找到 rdt 命令。请先安装: pipx install rdt-cli && pipx inject rdt-cli socksio")
+    except subprocess.TimeoutExpired:
+        raise RdtError(f"rdt 命令超时(>{timeout}s): {' '.join(args[:4])}...")
+    if r.returncode != 0:
+        err = (r.stderr or r.stdout or "").strip()
+        raise RdtError(f"rdt 失败 (exit {r.returncode}): {err[:300]}")
+    return r.stdout
+
+
+def parse_json(out):
+    """解析 rdt --json 输出。兼容:
+       1) -c 模式: data 为扁平 list [{id, title, ...}]
+       2) 完整模式: data 为 Listing dict {kind, data:{children:[{kind, data:{...}}]}}
+       3) 尾部可能带 "▸ More: ..." 提示行
+    """
+    raw = out.strip()
+    try:
+        d = json.loads(raw)
+    except json.JSONDecodeError:
+        # 剥离尾部提示行后重试
+        lines = raw.splitlines()
+        for cut in range(len(lines) - 1, -1, -1):
+            try:
+                d = json.loads("\n".join(lines[:cut + 1]))
+                break
+            except json.JSONDecodeError:
+                continue
+        else:
+            raise RdtError("rdt 输出不是合法 JSON，可能接口已变更")
+    if not isinstance(d, dict) or not d.get("ok"):
+        raise RdtError("rdt 返回 ok:false，可能 cookie 过期。运行 rdt status 检查")
+    data = d.get("data")
+    if isinstance(data, dict) and data.get("kind") == "Listing":
+        posts = []
+        for child in data.get("data", {}).get("children", []):
+            p = dict(child.get("data", {})) if isinstance(child, dict) else {}
+            if "id" not in p and str(p.get("name", "")).startswith("t3_"):
+                p["id"] = p["name"][3:]
+            posts.append(p)
+        return posts
+    if isinstance(data, list):
+        return [p for p in data if isinstance(p, dict)]
+    raise RdtError("rdt 输出结构异常")
+
+
+def fmt_time(ts):
+    try:
+        if not ts:
+            return "?"
+        return datetime.datetime.fromtimestamp(float(ts)).strftime("%Y-%m-%d")
+    except (TypeError, ValueError, OSError):
+        return "?"
+
+
+def clean(text, width=MAX_SUMMARY):
+    if not text:
+        return ""
+    s = " ".join(str(text).split())
+    return s[:width] + ("…" if len(s) > width else "")
+
+
+def load_cache(required=True):
+    if not os.path.exists(CACHE):
+        if required:
+            print('无缓存。先运行: rdts "关键词"', file=sys.stderr)
+            sys.exit(1)
+        return None
+    try:
+        with open(CACHE, encoding="utf-8") as f:
+            c = json.load(f)
+        if not isinstance(c, dict) or not isinstance(c.get("posts"), list):
+            raise ValueError("结构错误")
+        return c
+    except (json.JSONDecodeError, ValueError, OSError) as e:
+        if required:
+            print(f"缓存损坏 ({e})，已删除。请重新搜索。", file=sys.stderr)
+            os.unlink(CACHE)
+            sys.exit(1)
+        return None
+
+
+def save_cache(posts, query):
+    os.makedirs(os.path.dirname(CACHE), exist_ok=True)
+    tmp = CACHE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump({"query": query, "posts": posts}, f, ensure_ascii=False, indent=2)
+    os.chmod(tmp, CACHE_MODE)
+    os.replace(tmp, CACHE)   # 原子替换，避免读到半截缓存
+
+
+def mark(p):
+    """帖子标记：NSFW / 置顶 / 视频 / 图片 / 外链"""
+    m = []
+    if p.get("over_18"):
+        m.append("🔞NSFW")
+    if p.get("stickied"):
+        m.append("📌置顶")
+    if p.get("is_video"):
+        m.append("🎬视频")
+    elif str(p.get("url", "")).endswith((".jpg", ".jpeg", ".png", ".gif")):
+        m.append("🖼图")
+    elif p.get("is_self") is False and p.get("url"):
+        m.append("🔗外链")
+    return " ".join(m)
+
+
+def render(posts, query=""):
+    head = f"📡 搜索: {query}" if query else "📋 缓存列表"
+    print(head)
+    print("─" * 104)
+    for i, p in enumerate(posts, 1):
+        title = str(p.get("title", "(无标题)"))[:MAX_TITLE]
+        tags = mark(p)
+        print(f"[{i:>2}] {p.get('id', '?')}  {title}{('  ' + tags) if tags else ''}")
+        meta = (f"     r/{p.get('subreddit', '?')} · u/{p.get('author', '?')} · "
+                f"⬆{p.get('score', '?')} · 💬{p.get('num_comments', '?')} · "
+                f"{fmt_time(p.get('created_utc'))}")
+        print(meta)
+        st = clean(p.get("selftext"))
+        if st:
+            print(f"     📄 {st}")
+        print("─" * 104)
+    print(f"共 {len(posts)} 条。下一步: rdts --read N / --id N / --open N，或无参数进入交互")
+
+
+def interactive(posts, query):
+    """交互模式：输序号读帖，q 退出。"""
+    render(posts, query)
+    while True:
+        try:
+            ans = input("输入序号读帖 (q 退出): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+        if ans.lower() in ("q", "quit", "exit", ""):
+            break
+        if not ans.isdigit():
+            print("请输入数字序号或 q")
+            continue
+        n = int(ans)
+        if not 1 <= n <= len(posts):
+            print(f"序号超出范围 (1-{len(posts)})")
+            continue
+        pid = posts[n - 1]["id"]
+        try:
+            out = run_rdt(["read", pid, "-n", "30"], timeout=READ_TIMEOUT)
+        except RdtError as e:
+            print(f"⚠️ {e}")
+            continue
+        print(out)
+
+
+def pick(posts, n, what="序号"):
+    if not 1 <= n <= len(posts):
+        print(f"{what}超出范围 (1-{len(posts)})", file=sys.stderr)
+        sys.exit(1)
+    return posts[n - 1]
+
+
+def parse_args(argv):
+    """手动解析：只认 rdts 自己的选项，其余原样透传给 rdt。
+    解决 argparse 把 '-n 5' 的 5 误当 position 的问题。"""
+    mode, idx, sort = None, None, None
+    query, rest = [], []
+    i = 0
+    VALUE_OPTS = {"-n", "--limit", "-s", "--sort", "--after", "-o", "--output"}
+    while i < len(argv):
+        a = argv[i]
+        if a in ("-h", "--help"):
+            print(__doc__)
+            sys.exit(0)
+        if a in ("--read", "--id", "--open", "--raw"):
+            if i + 1 >= len(argv) or not argv[i + 1].isdigit():
+                print(f"{a} 需要一个数字序号", file=sys.stderr)
+                sys.exit(2)
+            mode, idx = a[2:], int(argv[i + 1])
+            i += 2
+        elif a == "--list":
+            mode = "list"
+            i += 1
+        elif a == "--fresh":
+            mode = "fresh"
+            i += 1
+        elif a == "--sort":
+            if i + 1 >= len(argv):
+                print("--sort 需要一个值", file=sys.stderr)
+                sys.exit(2)
+            sort = argv[i + 1]
+            i += 2
+        elif a == "--":
+            rest += argv[i + 1:]
+            break
+        elif a.startswith("-"):
+            # 未知选项：带值的一起透传，不带值的单独透传
+            if a in VALUE_OPTS and i + 1 < len(argv) and not argv[i + 1].startswith("-"):
+                rest += [a, argv[i + 1]]
+                i += 2
+            else:
+                rest.append(a)
+                i += 1
+        else:
+            query.append(a)
+            i += 1
+    return mode, idx, sort, query, rest
+
+
+def main():
+    mode, idx, sort, query, rest = parse_args(sys.argv[1:])
+
+    if mode == "read":
+        posts = load_cache()["posts"]
+        pid = pick(posts, idx)["id"]
+        cmd = ["read", pid]
+        if sort:
+            cmd += ["-s", sort]
+        cmd += rest
+        try:
+            print(run_rdt(cmd, timeout=READ_TIMEOUT))
+        except RdtError as e:
+            print(f"⚠️ {e}", file=sys.stderr)
+            sys.exit(1)
+        sys.exit(0)
+
+    if mode == "id":
+        print(pick(load_cache()["posts"], idx)["id"])
+        sys.exit(0)
+
+    if mode == "open":
+        p = pick(load_cache()["posts"], idx)
+        url = p.get("url") or ("https://www.reddit.com" + p.get("permalink", ""))
+        if not url.startswith(("http://", "https://")):
+            print(f"⚠️ 拒绝打开非 http(s) URL: {url}", file=sys.stderr)
+            sys.exit(1)
+        subprocess.run(["xdg-open", url])
+        print(f"已打开: {url}")
+        sys.exit(0)
+
+    if mode == "raw":
+        print(json.dumps(pick(load_cache()["posts"], idx),
+                         ensure_ascii=False, indent=2))
+        sys.exit(0)
+
+    # 有查询词 → 搜索；--fresh 强制重搜；否则看缓存
+    if query or mode == "fresh":
+        if not query:
+            c = load_cache()
+            q = c.get("query", "")
+            if not q:
+                print("--fresh 需要关键词或已有缓存查询", file=sys.stderr)
+                sys.exit(1)
+            query = [q]
+        q = " ".join(query)
+        try:
+            out = run_rdt(["search", q, "--json", *rest])
+        except RdtError as e:
+            print(f"⚠️ {e}", file=sys.stderr)
+            sys.exit(1)
+        posts = parse_json(out)
+        if not posts:
+            print("无结果")
+            sys.exit(1)
+        save_cache(posts, q)
+        interactive(posts, q)
+        sys.exit(0)
+
+    # 无参数：缓存存在 → 交互；不存在 → 帮助
+    c = load_cache(required=False)
+    if c and c.get("posts"):
+        interactive(c["posts"], c.get("query", ""))
+        sys.exit(0)
+    print(__doc__)
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
