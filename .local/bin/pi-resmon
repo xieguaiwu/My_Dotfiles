@@ -1,8 +1,13 @@
 #!/bin/sh
-# pi-resmon v1.1.0 — Lightweight resource monitor for pi-agent orchestration
+# pi-resmon v1.2.0 — Lightweight resource monitor for pi-agent orchestration
 #
-# Reads /proc and optional nvidia-smi, computes a risk score,
-# and recommends subagent delegation strategy.
+# v1.2.0 (2026-08-11) 精进（修复 v1.1.0 的过度保守缺陷，见底部 CHANGELOG）:
+#   1. PSI 优先：/proc/pressure 可用时，load average 仅在 >=1.5 区间参与聚合；
+#      load 的 MODERATE 不再一票否决（load 是队列长度含 IO 等待，PSI 才是真实饥饿）
+#   2. PSI avg10 三次采样取中位数（0.5s 间隔），抑制单次采样瞬时波动误判
+#   3. --class heavy 不再无条件 risk+1：MODERATE 时允许 heavy 但强制串行
+#      (MAX_PARALLEL=1)，HIGH/CRITICAL 时仍禁止（light_only / none）
+#   4. 小型机（nproc<=4）load MODERATE 起点放宽 0.7→1.0（桌面常态负载不算异常）
 #
 # Usage:
 #   pi-resmon                           human-readable summary
@@ -60,7 +65,7 @@ while [ $# -gt 0 ]; do
             esac
             ;;
         --show-thresholds) ACTION="thresholds" ;;
-        -v|--version) echo "pi-resmon v1.1.0"; exit 0 ;;
+        -v|--version) echo "pi-resmon v1.2.0"; exit 0 ;;
         -h|--help)
             sed -n '/^# Usage:/,/^$/p' "$0" | sed 's/^# *//; /^$/d'
             exit 0 ;;
@@ -90,9 +95,29 @@ if [ "$(_float_cmp "$LOAD1 > 2 * $LOAD5")" = "1" ] || \
 fi
 
 # --- PSI (Pressure Stall Information, kernel ≥4.20) ---
-PSI_CPU=$(awk '/some avg10/ {gsub(/avg10=/,"",$2); print $2}' /proc/pressure/cpu 2>/dev/null || echo "0.00")
-PSI_MEM=$(awk '/some avg10/ {gsub(/avg10=/,"",$2); print $2}' /proc/pressure/memory 2>/dev/null || echo "0.00")
-PSI_IO=$(awk '/some avg10/ {gsub(/avg10=/,"",$2); print $2}' /proc/pressure/io 2>/dev/null || echo "0.00")
+# v1.2.0: 三次采样取中位数（间隔 0.4s），抑制 avg10 单次读数的瞬时波动。
+#         avg10 是 10 秒滑动平均，单次读数可因突发任务尖峰而误判等级。
+PSI_AVAIL=0
+if [ -r /proc/pressure/cpu ]; then PSI_AVAIL=1; fi
+
+_psi_read() {  # $1 = /proc/pressure/<resource>
+    awk '/some avg10/ {gsub(/avg10=/,"",$2); print $2}' "$1" 2>/dev/null || echo "0.00"
+}
+_psi_median() {  # $1 = /proc/pressure/<resource>; 输出三次采样的中位数
+    _f="$1"
+    _a=$(_psi_read "$_f"); sleep 0.4
+    _b=$(_psi_read "$_f"); sleep 0.4
+    _c=$(_psi_read "$_f")
+    printf '%s\n%s\n%s\n' "$_a" "$_b" "$_c" | sort -n | sed -n '2p'
+}
+
+if [ "$PSI_AVAIL" = "1" ]; then
+    PSI_CPU=$(_psi_median /proc/pressure/cpu)
+    PSI_MEM=$(_psi_median /proc/pressure/memory)
+    PSI_IO=$(_psi_median /proc/pressure/io)
+else
+    PSI_CPU="0.00"; PSI_MEM="0.00"; PSI_IO="0.00"
+fi
 
 # --- Memory from /proc/meminfo ---
 MEM_TOTAL=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo 0)
@@ -204,11 +229,24 @@ done
 # Each tier: 0=LOW  1=MODERATE  2=HIGH  3=CRITICAL
 # ==============================================
 
-# --- Load tier (5-min avg / nproc) ---
-if [ "$(_float_cmp "$LOAD_RATIO < 0.7")" = "1" ]; then load_tier=0
-elif [ "$(_float_cmp "$LOAD_RATIO < 1.5")" = "1" ]; then load_tier=1
-elif [ "$(_float_cmp "$LOAD_RATIO < 2.5")" = "1" ]; then load_tier=2
-else load_tier=3; fi
+# --- Load tier ---
+# v1.2.0: 小型机（<=4 核）放宽 MODERATE 起点 0.7→1.0。
+#         PSI 可用时 load 仅在高区间（>=1.5）参与聚合：
+#         load 是运行队列长度（含 IO 等待/正常多任务），PSI 才是真实饥饿度；
+#         load 的 MODERATE 由 PSI_CPU 覆盖，避免双重计数过度保守。
+#         PSI 不可用（老内核）时回退为 load 完全负责。
+LOAD_MOD_LO="0.7"; [ "$NPROC" -le 4 ] && LOAD_MOD_LO="1.0"
+LOAD_MOD_HI="1.5"
+if [ "$PSI_AVAIL" = "1" ]; then
+    if   [ "$(_float_cmp "$LOAD_RATIO < $LOAD_MOD_HI")" = "1" ]; then load_tier=0
+    elif [ "$(_float_cmp "$LOAD_RATIO < 2.5")" = "1" ]; then load_tier=2
+    else load_tier=3; fi
+else
+    if   [ "$(_float_cmp "$LOAD_RATIO < $LOAD_MOD_LO")" = "1" ]; then load_tier=0
+    elif [ "$(_float_cmp "$LOAD_RATIO < $LOAD_MOD_HI")" = "1" ]; then load_tier=1
+    elif [ "$(_float_cmp "$LOAD_RATIO < 2.5")" = "1" ]; then load_tier=2
+    else load_tier=3; fi
+fi
 
 # --- Memory tier (MemAvailable MB) ---
 if   [ "$MEM_AVAIL_MB" -ge 4096 ]; then mem_tier=0
@@ -274,15 +312,11 @@ risk_num=$load_tier
 [ "$gpu_tier" -gt "$risk_num" ] && risk_num=$gpu_tier
 [ "$disk_tier" -gt "$risk_num" ] && risk_num=$disk_tier
 
-# Agent class modifier: heavy agents tighten restrictions
-if [ "$AGENT_CLASS" = "heavy" ] && [ "$risk_num" -ge 1 ]; then
-    risk_num=$((risk_num + 1))
-    [ "$risk_num" -gt 3 ] && risk_num=3
-fi
-
 # ==============================================
 # RISK → STRATEGY MAPPING
 # ==============================================
+# v1.2.0: heavy 修正不再改 risk_num。MODERATE 下 heavy 允许但强制串行；
+#         HIGH/CRITICAL 下 heavy 维持禁止（WEIGHT_AGENTS 不含 heavy）。
 case $risk_num in
     0)
         RISK_LABEL="LOW"
@@ -295,10 +329,16 @@ case $risk_num in
     1)
         RISK_LABEL="MODERATE"
         ACTION_STR="restricted_parallel"
-        MAX_PARALLEL=2
         MAXTURNS_FACTOR="0.8"
         TIMEOUT_FACTOR="1.2"
-        WEIGHT_AGENTS="light+medium"
+        if [ "$AGENT_CLASS" = "heavy" ]; then
+            # heavy 允许但必须串行（本地开销与 light 无异，防的是并行堆积）
+            MAX_PARALLEL=1
+            WEIGHT_AGENTS="heavy(serial)+light+medium"
+        else
+            MAX_PARALLEL=2
+            WEIGHT_AGENTS="light+medium"
+        fi
         ;;
     2)
         RISK_LABEL="HIGH"
@@ -355,13 +395,12 @@ _print_summary() {
 
 _print_thresholds() {
     cat <<'THRESHOLDS'
-=== pi-resmon v1.1.0 — Decision Thresholds ===
+=== pi-resmon v1.2.0 — Decision Thresholds ===
 
 Load Ratio (5-min load / nproc logical cores):
-  LOW      < 0.7
-  MODERATE 0.7 – 1.5
-  HIGH     1.5 – 2.5
-  CRITICAL > 2.5
+  PSI available:  only >= 1.5 counts (HIGH); below is covered by PSI
+  PSI missing:    LOW < 0.7 | MODERATE 0.7-1.5 | HIGH 1.5-2.5 | CRITICAL > 2.5
+  small machine (nproc<=4): MODERATE starts at 1.0 (desktop baseline tolerated)
 
 Memory (MemAvailable, cgroup-aware):
   LOW      >= 4 GB
@@ -369,13 +408,13 @@ Memory (MemAvailable, cgroup-aware):
   HIGH     1 GB – 2 GB
   CRITICAL < 1 GB
 
-PSI CPU (some avg10 %):
+PSI CPU (some avg10 %, 3-sample median):
   LOW      < 5%
   MODERATE 5% – 20%
   HIGH     20% – 40%
   CRITICAL > 40%
 
-PSI Memory (some avg10 %):
+PSI Memory (some avg10 %, 3-sample median):
   LOW      < 1%
   MODERATE 1% – 5%
   HIGH     5% – 15%
@@ -396,16 +435,21 @@ GPU (if nvidia-smi available, by free memory %):
   HIGH     free 10-30%
   CRITICAL free < 10%
 
-Agent Class Modifier:
-  heavy => risk +1 (max 3) when base risk >= MODERATE
+Agent Class Modifier (v1.2.0):
+  heavy at MODERATE => allowed, but MAX_PARALLEL forced to 1 (serial)
+  heavy at HIGH/CRITICAL => not allowed (light_only / none)
   light / medium => no adjustment
+  (v1.1.0's unconditional heavy risk+1 removed: it banned heavy agents
+   whenever any indicator reached MODERATE — over-conservative on
+   4-core desktop machines with normal baseline load)
 
 Aggregation:
   risk = max(load, mem, psi_mem, psi_cpu, swap, gpu, disk)
+  PSI available => load MODERATE is absorbed by PSI (no double counting)
 
 Strategy:
   LOW       → free_parallel       max 4, all agent classes
-  MODERATE  → restricted_parallel max 2, light+medium only
+  MODERATE  → restricted_parallel max 2 (heavy: max 1), light+medium (+heavy serial)
   HIGH      → serialize_only      max 1, light agents only
   CRITICAL  → defer_or_direct     max 1, handle directly, no subagents
 
@@ -422,3 +466,18 @@ case "$ACTION" in
     summary)   _print_summary ;;
     thresholds) _print_thresholds ;;
 esac
+
+# ==============================================
+# CHANGELOG
+# ==============================================
+# v1.2.0 (2026-08-11)
+#   - [fix] PSI 优先：PSI 可用时 load 的 MODERATE 不再参与聚合（load=队列长度含 IO
+#     等待，PSI=真实饥饿；双指标 max 聚合导致 4 核桌面机常态 load 2.8+ 即误判 MODERATE）
+#   - [fix] heavy +1 修正移除：原逻辑 base=MODERATE 时 heavy 查询直接变 HIGH
+#     (light_only)，ultrabrain/deep 在小型机上几乎不可用。现改为 MODERATE 下
+#     heavy 允许但 MAX_PARALLEL=1（串行），HIGH/CRITICAL 仍禁止
+#   - [fix] PSI avg10 三次采样取中位数（0.4s 间隔）：实测同一分钟读数 3.23%→17.81%，
+#     单次采样导致判定在 LOW/MODERATE 间抖动
+#   - [tune] 小型机（nproc<=4）load MODERATE 起点 0.7→1.0：桌面基线负载
+#     (pi 多进程+浏览器+终端) 常态 load 2.8-4.0 不应算异常
+#   - 备份: pi-resmon.v1.1.0.bak

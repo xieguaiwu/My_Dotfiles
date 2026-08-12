@@ -1,17 +1,12 @@
 auto_compact = false
-auto_compact_threshold_percent = 80.0
 calm_mode = false
 low_motion = false
 fancy_animations = false
 bracketed_paste = true
 paste_burst_detection = true
-mention_menu_limit = 128
-mention_walk_depth = 10
-mention_menu_behavior = "fuzzy"
 show_thinking = true
 show_tool_details = true
 locale = "en"
-theme = "system"
 composer_density = "comfortable"
 composer_border = true
 composer_vim_mode = "normal"
@@ -22,11 +17,4 @@ sidebar_focus = "auto"
 context_panel = false
 cost_currency = "usd"
 max_input_history = 100
-default_provider = "deepseek"
 default_model = "deepseek-v4-flash"
-status_indicator = "whale"
-synchronized_output = "auto"
-prefer_external_pdftotext = false
-
-[provider_models]
-deepseek = "deepseek-v4-flash"
