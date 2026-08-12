@@ -391,4 +391,42 @@ ln -sf "$PWD/target/release/rdict" ~/.local/bin/rdict
 ln -sf "$PWD/target/release/rdict-telegram" ~/.local/bin/rdict-telegram
 echo ">>> rdict installed successfully! Run 'rdict --help' to use."
 
+echo ">>> Installing rdt-cli (Reddit terminal CLI, cookie auth)..."
+# 依赖 pipx；没有则装
+if ! command -v pipx &>/dev/null; then
+    pip3 install --user pipx 2>/dev/null || python3 -m pip install --user pipx
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+if command -v pipx &>/dev/null; then
+    pipx install rdt-cli 2>/dev/null || pipx upgrade rdt-cli
+    # socks5 代理支持（GFW 环境必须，否则 ALL_PROXY=socks5 会报 ImportError）
+    pipx inject rdt-cli socksio
+    echo ">>> rdt-cli installed. 首次使用: rdt status (自动提取浏览器 cookie, 需先登录 reddit)"
+else
+    echo ">>> pipx 不可用，跳过 rdt-cli。手动安装: pip install --user pipx && pipx install rdt-cli"
+fi
+
+echo ">>> Installing cs-tui (cyberspace.online terminal client)..."
+# cs-tui: Rust+ratatui 写的 cyberspace.online 复古文字社交网络客户端
+# https://github.com/digital-grease/cs-tui （Apache-2.0/MIT，需要 Rust 1.81+）
+if command -v cargo &>/dev/null; then
+    if ! command -v cs-tui &>/dev/null; then
+        cargo install --git https://github.com/digital-grease/cs-tui --locked 2>&1 | tail -3 || echo ">>> cs-tui 构建失败，可重试: cargo install --git https://github.com/digital-grease/cs-tui --locked"
+    else
+        echo ">>> cs-tui 已存在，跳过"
+    fi
+else
+    echo ">>> cargo 不可用，跳过 cs-tui（先运行上面 rdict 段的 rustup 安装）"
+fi
+
+echo ">>> Deploying rdts (rdt search 融合助手) from My_Dotfiles backup..."
+mkdir -p ~/.local/bin
+if [ -f ~/My_Dotfiles/scripts/rdts ]; then
+    cp -f ~/My_Dotfiles/scripts/rdts ~/.local/bin/rdts
+    chmod +x ~/.local/bin/rdts
+    echo ">>> rdts deployed: ~/.local/bin/rdts (用法: rdts --help)"
+else
+    echo ">>> 未找到 My_Dotfiles/scripts/rdts 备份，跳过（手动: cp ~/.local/bin/rdts ~/My_Dotfiles/scripts/rdts）"
+fi
+
 echo ">>> Finished! 🚀 Now remember to download JetBrain Mono, calibre... Then move config files in My_Dotfiles to your local position."
