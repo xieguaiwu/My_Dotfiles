@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 1.8.0
+version: 1.9.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -44,6 +44,11 @@ triggers:
   - "chrome 进程多"
   - "DidStartWorkerFail"
   - "chromedp"
+  - "钱包备份"
+  - "sparrow"
+  - "备份验证"
+  - "恢复演练"
+  - "助记词备份"
 inputs:
   - name: symptom
     description: 用户描述的症状/报错信息
@@ -169,6 +174,12 @@ journalctl -p err -b --no-pager | tail -20
 | 13 | [tor-browser-check-and-fix.md](tor-browser-check-and-fix.md) | 1.0.0 | Tor 浏览器 bootstrap 失败检查+修复（IPv6 bridge / Socks5Proxy 禁，HTTPSProxy + IPv4 bridge 实测可用）+ tor 内核验证 | tor 无法连接、bootstrap 卡 0% |
 | 14 | [video-playback-decode-fix.md](video-playback-decode-fix.md) | 2.1.0 | 视频播放/解码故障修复总集：A 无法解码（ffmpeg-free 禁解码器 → `dnf swap` 换完整 ffmpeg，脚本 [video-decode-ffmpeg-swap.sh](video-decode-ffmpeg-swap.sh)）；B 能播放但雪花/花屏（iHD 弃 Gen9 HEVC → i965 驱动 + VAAPI 硬解 + 环境注入，脚本 [video-playback-vaapi-fix.sh](video-playback-vaapi-fix.sh)）；覆盖 VLC/mpv/ffplay/GStreamer + iHD/i965 驱动层 | VLC/mpv 报 could not decode、播不了、雪花、花屏、画面错乱、播放卡顿、显卡加速异常 |
 
+## 六、资产/数据备份类
+
+| # | Skill | 版本 | 用途 | 触发场景 |
+|:--|:---|:---:|---|---|
+| 15 | [sparrow-wallet-backup-test.md](sparrow-wallet-backup-test.md) | 1.0.0 | Sparrow 钱包备份完整性体检：自动定位钱包文件、明文种子检查、rbw 条目存在性 + bw 附件哈希比对、GUI 恢复演练指引（脚本 [sparrow-wallet-backup-test.sh](sparrow-wallet-backup-test.sh)） | 钱包备份验证、恢复演练、备份完整性检查 |
+
 ---
 
 ## 症状 → 文档决策树
@@ -218,6 +229,9 @@ journalctl -p err -b --no-pager | tail -20
 
 「VLC 能播但雪花 / 花屏 / 画面错乱 / 播放卡顿」
   └─ video-playback-decode-fix.md ← 症状 B：vainfo 无 HEVC + VLC CPU 150%+ → i965 驱动 + VAAPI 硬解（先排除文件损坏：ffmpeg CLI 全片解码 0 错误）
+
+「钱包备份 / 备份验证 / sparrow / 恢复演练 / 助记词备份」
+  └─ sparrow-wallet-backup-test.md ← 先解锁 rbw；bw 附件比对需解锁 bw 后重跑；哈希不一致=备份过期需重新上传
 
 「以上都不是 / 综合症状 / 说不清楚」
   └─ system_diagnostics_and_repair.md（全面诊断）

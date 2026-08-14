@@ -100,6 +100,8 @@ tesseract ocr_temp-{page}.png stdout -l eng+chi_sim 2>/dev/null
 2. 扫描版（无文本层）：**整本低分辨率 OCR 一遍**（`pdftoppm -r 150` 全页 + tesseract），grep 题号标记建立「题号→页码」索引
 3. 仅对目标页高分辨率重扫（`pdftoppm -r 300`）用于精确转录
 
+> ⚠️ **tesseract 仅限“建立题号索引”这一步**（低质量但快）；精确转录（题干/选项/解析原文）必须走 vision 模型流水线——见 `exam-paper-cloner.md` §0.3a（模型可用性/fallback 链/服务器端扫描 §0.3a.11）。tesseract 对数学/排版符号质量不够，直接用它转录会污染错题笔记。
+
 > 不建议按"每页约 2 题"线性估算——SAT 阅读长文一页常只覆盖 1-2 题甚至跨页，线性估算会漏题或定位错页。
 
 OCR 后手动确认题目编号与答案文件匹配。

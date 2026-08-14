@@ -33,7 +33,7 @@ tools:
 请按照以下步骤整理题目：
 
 1. **读取源文件**
-   - 如果是图片，使用具有视觉能力的 subagent 提取题目内容（推荐 doubao-seed-2-0-pro-260215 或 nvidia/nemotron-3-nano-omni-30b；avoid opencode-go 模型——月度额度常耗尽返回 429）
+   - 如果是图片，使用具有视觉能力的 subagent 提取题目内容（推荐 `doubao-seed-2-0-pro-260215`（volcengine，数学 OCR 最准）或 `nvidia/nemotron-nano-12b-v2-vl`（nvidia，免费可用）作为 fallback；avoid opencode-go 模型——月度额度常耗尽返回 429；注意 doubao-pro 有账号级配额上限，触发 `SetLimitExceeded`（429）时立即换 nemotron-nano-vl，勿傻等）
    - 如果是文档，使用 read 工具读取内容
 
 2. **提取题目信息**
