@@ -133,6 +133,23 @@ tools:
 
 > 注：tectonic 下 `\usepackage[utf8]{inputenc}` 会提示已过时（无害警告），可删；`hyperref` 首次编译会自动拉取宏包（需联网）。
 
+### A.1 中文模式（`language=sat_cn` 或含中文注释）—— CJK 前导码补充（实测 2026-08-13）
+
+在 A 节前导码基础上，追加以下内容（tectonic 可编译，无需切 xelatex）：
+
+```latex
+% fontspec + 静态 TTF 全局中文主字体（不依赖 ctex；可变 TTC 会 xdvipdfmx fatal）
+\usepackage{fontspec}
+\setmainfont{Noto Sans SC}          % ~/.fonts/NotoSansSC-Regular.ttf
+\XeTeXlinebreaklocale "zh"          % ← 缺这两行 = 中文不换行
+\XeTeXlinebreakskip = 0pt plus 1pt
+```
+
+- **缺断行设置的症状**：中文长句在表格 `p{}` 列 / 段落中整串不换行 → Overfull hbox 大超宽（>10pt，实测 36pt）
+- **诊断铁律**：Overfull hbox 大超宽 + 中文内容 → **先查断行设置，不要先调列宽**（列变窄溢出更多，实测调窄后 19pt→36pt 恶化）
+- **控制序列后紧跟中文**：`\dots`/`\ldots` 后直接写中文 → `Undefined control sequence`（CJK 字符被并入控制序列名），必须 `\dots{}` 空组隔离
+- 英文与中文同字体（Noto Sans SC 含拉丁字形，全文档统一黑体）；`language=en` 全英文文档不需要本节
+
 ### B. 文科轨页面与字号 —— 密度分级
 
 | 密度级 | 字号 | 边距 | 布局 | 适用场景 |
@@ -523,6 +540,7 @@ Ambiguous subject & Clear, intended subject \\
 2. **每行独立可读**：陷阱名 + 定义 + 错例模式 + 正确模式，四列完整
 3. **列结构统一**：`Trap Type | What It Says | Wrong Distractor | Right Subject`（视领域可调，如语法 → `Wrong Form | Right Form | Rule`）
 4. **普遍性优先**：示例不引用具体考题，用可复现的模式描述
+5. **陷阱升级阶梯**：如需基于陷阱表设计"由浅入深"的练习（配合 mistake-practice-generation 出卷），按 `difficulty-escalation-framework.md` 的维度矩阵升级——同陷阱更难的子类型 = 更深的维度（文科：句法复杂度/推理层级；理科：边界情况/推理链），禁止靠加计算量/加长句堆难度
 
 **适用场景**：
 - SAT 文法：修饰语陷阱、代词指代歧义、时态混用、平行结构断裂
@@ -615,7 +633,7 @@ rm -f {output_name}.aux {output_name}.bbl {output_name}.blg {output_name}.log {o
 - [ ] **语言合规**：`language=en` 时无任何中文（标题、表头、内容、Tip/Rule、示例、代码注释——所有轨道统一）；`language=sat_cn` 时题干/选项/示例保留英文，分析/表头/callout 用中文
 - [ ] 易错点覆盖完整（无遗漏核心模块）
 - [ ] 每条易错点都有错例+正例+说明（三要素）
-- [ ] 表格对齐正确，未溢出页面（列宽合计 ≤ 可用宽；理科轨双栏每栏内容不超栏宽）
+- [ ] 表格对齐正确，未溢出页面（列宽合计 ≤ 可用宽；理科轨双栏每栏内容不超栏宽；⚠️ 中文内容 Overfull hbox 大超宽时先查 `\XeTeXlinebreaklocale "zh"` 断行设置，再查列宽）
 - [ ] **普遍性：无任何题干/题号照搬**——每条均为脱离原题也可成立的普遍规律，示例 ≤1 行数字演示
 - [ ] 「正确」内容精确无误（有疑虑时查阅资料确认）
 - [ ] 正例/规则逐条正确性核查：有疑虑的条目查阅资料确认，无法确认的标注"Verify"（建议核实）

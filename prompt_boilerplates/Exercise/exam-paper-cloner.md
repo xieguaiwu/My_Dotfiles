@@ -1,7 +1,7 @@
 ---
 name: exam-paper-cloner
-version: 1.1.0
-description: 阅读现有试卷作为模板和/或根据知识点描述，生成全英文LaTeX试卷，使用tectonic编译，极致节省纸张。支持扫描版PDF作为模板（§0.3a Vision OCR 流水线）
+version: 1.3.0
+description: 阅读现有试卷作为模板和/或根据知识点描述，生成全英文LaTeX试卷，使用tectonic编译，极致节省纸张。支持扫描版PDF作为模板（§0.3a Vision OCR 流水线）。v1.2.0 新增难度升级专项（§1.7）：按学科分轨（数理禁堆计算量/文科允许句法复杂度），12+10 维度矩阵与反堆料检查清单，难度档案标注（规范见 difficulty-escalation-framework.md）。v1.3.0 更新 §0.3a：vision 模型可用性实测表+fallback 链+增量保存+rationale 缺失检测+新增 §0.3a.11 服务器端扫描（资源确认/SSH 不稳应对/RapidOCR 版本坑）
 triggers:
   - "clone exam"
   - "生成试卷"
@@ -38,6 +38,14 @@ inputs:
     description: 试卷类型标签（如 Practice_Test、Quiz_Midterm），用于文件命名
     required: false
     default: "Practice"
+  - name: difficulty
+    description: 难度模式（standard=30/50/20[默认] / hard=15/40/45 / max=0/30/70 / auto=沿用模板难度分布）。升级维度选择见 §1.7 与 difficulty-escalation-framework.md
+    required: false
+    default: "auto"
+  - name: escalation_focus
+    description: 难度升级维度清单（可选，逗号分隔，如 "D1,D6" 或 "L2,L3"；维度编码见 §1.7 / difficulty-escalation-framework.md §3-4）
+    required: false
+    default: ""
   - name: output_dir
     description: 输出目录（默认当前工作目录）
     required: false
@@ -142,17 +150,24 @@ done
 **不可用的模型（已知坑，跳过）：**
 - `opencode-go/qwen3.6-plus` → 月度额度耗尽 (429)
 - `nvidia/meta/llama-4-maverick-17b-128e-instruct` → 410 Gone（已下架）
+- `doubao-seed-2-0-pro-260215` → **账号级 429 `SetLimitExceeded`**（错误消息含 "Safe Experience Mode"，模型服务被暂停）。这是**账号配额**问题，换 IP/代理无用；恢复时间不定（分钟~小时级），触发后立即降级到备选模型，勿傻等
+- `doubao-seed-1-6-vision-250815` → 404（**账号未开通**该模型；volcengine 部分模型需在控制台激活后才能按名调用）
+- `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` → 503 Service Unavailable（已不可用）
 
-**可用模型（按推荐顺序）：**
+**可用模型（按推荐顺序，2026-08 实测）：**
 
 | 模型 | Provider | 质量 | 备注 |
 |---|---|---|---|
-| `doubao-seed-2-0-pro-260215` | volcengine | ★★★★★ | 数学/表格 OCR 最准，中英文均好 |
-| `doubao-seed-1-6-vision-250815` | volcengine | ★★★★ | 专用 vision，性价比高 |
-| `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` | nvidia | ★★★ | 免费额度足，偶有漏读 |
+| `doubao-seed-2-0-pro-260215` | volcengine | ★★★★★ | 数学/表格 OCR 最准，中英文均好；**有账号级配额上限，超限 429** |
+| `nvidia/nemotron-nano-12b-v2-vl` | nvidia | ★★★ | 实测可用（9s/页），免费；**偶发漏读**——rationale 段报 "Not answerable" / "not provided in the image"，需补扫 |
 | `kimi-k3` | moonshot | ★★★★ | 1M ctx，易触发 429 限频 |
 
-**Pre-flight**：正式转录前，取一张典型页用候选模型各试一次，对照已知答案键比较准确度，选最佳模型。
+**Pre-flight（必做）**：
+1. **模型 ID 探测**——正式转录前，用 1 张典型页对候选链每个模型各发一次 100-token 请求：
+   - 200 → 可用；**404 → 该账号未开通，永久跳过**；**429 SetLimitExceeded → 账号配额耗尽，降级**；503/5xx → 暂不可用，可稍后重试
+   - 单次调用超时上限 60-120s，卡住即判失败（部分 provider 配额挂起时请求会**静默挂起**而非报错，urllib 必须设 timeout）
+2. **fallback 链**——脚本内按序尝试多个模型：`[doubao-pro, nemotron-nano-vl, kimi-k3]`；429/5xx 退避重试（15s/30s/60s），**4xx（非限流）立即换下一个模型**；每页记录实际所用模型（便于质量回溯）
+3. 取一张典型页用候选模型各试一次，对照已知答案键比较准确度，选最佳模型。
 
 ###### 0.3a.3 Probe Document Structure
 
@@ -198,7 +213,13 @@ FOOTER: <page number, CONTINUE/STOP>
 payload = {"model": MODEL, "temperature": 0.1, "max_tokens": 6000}
 # 重试：exponential backoff 15s, 30s, 60s, 120s（vision API 偶发 429/5xx）
 # 限频：每页间 sleep(1-2s)
+# fallback 链：429/5xx 退避重试；404/410 等 4xx 立即换下一个模型
+# 每页必须强制输出 FOOTER：模型自报的 Q<num> 不可信，题号以 FOOTER/页面序为准
 ```
+
+**增量保存（防中断全丢）**：每页转录完成立即写入 `raw.json`（key=页码），并另存 `models.json` 记录每页所用模型；进程被杀/断网后可断点续跑（跳过已存页）。
+
+**rationale 缺失检测**：转录完成后 `grep -l "Not answerable\|not provided in the image\|Not answerable" raw.json`——漏读页用**另一模型**重扫，或裁剪解析区域单独重读；仍缺失则后续自写解析（结论必须与答案一致）。
 
 ###### 0.3a.6 Answer Key Cross-Validation
 
@@ -251,13 +272,15 @@ SAT / ACT 等标准化考试的数学页常用**双栏布局**（如左栏 Q11�
 
 若试卷含中英文混排注释，**需用 xelatex**（tectonic 中文不稳定）：
 
+> 注（2026-08-13 实测）：tectonic 也可编译中文——fontspec + 静态 TTF 全局 `\setmainfont{Noto Sans SC}` 方案（不依赖 ctex）已跑通；xelatex 仅在不便改字体方案时使用。
+
 ```latex
 % 1. 必须静态 TTF，不可用可变 TTC（xdvipdfmx fatal: Invalid TTC index）
 \newfontfamily\cnfont[Path=/path/to/fonts/,
   BoldFont=NotoSansSC-Bold.ttf]{NotoSansSC-Regular.ttf}
 \newcommand{\cn}[1]{{\cnfont #1}}
 
-% 2. 中日韩换行
+% 2. 中日韩换行（缺这两行 = 中文整串不换行；症状：Overfull hbox 大超宽（>10pt）且误判为列宽问题 → 先查此处，别调列宽）
 \XeTeXlinebreaklocale "zh"
 \XeTeXlinebreakskip = 0pt plus 1pt
 
@@ -266,6 +289,41 @@ SAT / ACT 等标准化考试的数学页常用**双栏布局**（如左栏 Q11�
 
 % 4. 所有中文字符必须在 \cn{...} 内，否则 Latin Modern 缺字
 ```
+
+###### 0.3a.11 Server-side OCR（服务器优先，本机 API 限流时）
+
+当本机 vision API 限流/不可用，或任务量大时，**优先在运行中的服务器上做扫描**（避免与正在运行的训练/任务抢资源，先确认）。
+
+**0.3a.11.1 服务器资源确认（必做，防干扰现有任务）**
+```bash
+uptime; free -h; df -h /; ps aux --sort=-%cpu | head -8   # 已有训练/任务进程
+nvidia-smi 2>/dev/null || echo "no GPU driver"            # 无 GPU 时用 CPU OCR
+```
+- 有训练任务占 N 核 → OCR 线程数 ≤ 剩余核数 - 1；内存可用 < 2GB 时放弃该机
+- 磁盘 < 5GB 放弃；GPU 驱动不可用 ≠ 不能跑（CPU 版 RapidOCR 可用）
+
+**0.3a.11.2 SSH 不稳定应对（kex reset / 连接频率限制）**
+- 现象：`kex_exchange_identification: read: Connection reset by peer`；连上一次后短时间再连必 reset（疑似 fail2ban/频率限制）
+- 对策：
+  - **重试包装**：连接/命令/传输统一走重试循环（8 次，间隔 4s×i 递增），直到成功
+  - **单会话完成多步**：传脚本+启动+验证合并为一次 SSH 调用（`ssh host 'cmd1 && cmd2'`），避免二次连接
+  - 连上一次后若需再连，间隔 ≥ 40-90s；连续失败时停止重试 5 分钟防封禁
+  - 小文件用 `echo {b64} | base64 -d > file` 传输（防引号转义）；大文件用 scp（同样套重试）
+  - 后台任务：`setsid nohup python3 script.py > log 2>&1 < /dev/null &`，随后**必须**检查日志文件已生成+进程存在
+
+**0.3a.11.3 远程进程排查防自匹配**
+- `pgrep -f pattern` / `pkill -f pattern` 在远程 `bash -c "..."` 环境下会**匹配到自己的包装进程**（cmdline 含完整命令）→ 误判"进程在跑"
+- 正确：`ps aux | grep "[s]erver_ocr"`（方括号技巧）；kill 用 `ps aux | grep [x]xx | awk '{print $2}' | xargs -r kill`
+
+**0.3a.11.4 RapidOCR 版本格式坑（2026-08 实测）**
+- `rapidocr-onnxruntime` 1.4.x 返回结构剧变：`(items, scores)` 二元组，且 items 内**混合** `[box, text]` 与 `[box, text, score]` 两种元素——旧版 `[box, text, score]` 解包写法全部报错（`too many values to unpack` / `float() ... not 'list'`）
+- **铁律：写解析代码前先探针**——打印 `type(out)`、`len(out)`、元素类型与长度，确认后再写 normalize
+- 兼容写法：tuple 取 `out[0]`；每元素按长度取 `box=it[0], text=it[1], score=it[2] if len(it)>2 else 0.0`；score 是 list 时取首元素
+- 需要稳定旧格式可 pin：`pip install rapidocr_onnxruntime==1.3.24`（清华镜像可能不提供旧版，装完用 `pip show` 验证版本）
+- 每页 1-2s（CPU 4 线程，200DPI 页面），57 页约 2-5 分钟
+
+**0.3a.11.5 双路交叉验证**
+vision 转录与本地 OCR 是两条独立管道：OCR 行文本+坐标可验证 vision 转录的题目/选项文字，vision 可补 OCR 缺的解析语义。两路结果不一致时以 vision 转录为准并人工复核。
 
 ###### 0.3a.10 Glossary
 
@@ -434,6 +492,49 @@ SAT / ACT 等标准化考试的数学页常用**双栏布局**（如左栏 Q11�
 
 > 修改后必须验证新数值是否保持数学/物理/逻辑合理性。
 
+#### 1.7 难度升级专项（Difficulty Escalation）⚠️ 核心能力
+
+> 完整规范见 `difficulty-escalation-framework.md`（同目录）。本节为强制执行浓缩版。
+
+**铁律：难度 = 认知负荷的类型与深度，不是任务量。** 升级难度必须改变"考什么能力"，而不是延长"做什么"。
+
+**学科分轨（先分类，再选维度）：**
+
+| 轨 | 学科 | 允许的升级方式 | 严禁 |
+|----|------|--------------|------|
+| 数理轨 | 数学/物理/化学/统计/CS | D1-D12 维度（下表） | **堆砌计算量**：长多项式展开、超大数运算、连环代入、更多层循环、超长代码追踪 |
+| 文科轨 | 语言/阅读/写作/历史 | L1-L10 维度（下表） | 生僻词堆砌、故意晦涩、超纲背景知识、信息重复的长句 |
+| 混合轨 | 数学文字题/SAT数学/经济 | 两轨维度按需组合（每题 ≤ 2 个） | 两轨禁止项均生效 |
+
+**数理轨维度速查**（矩阵见框架 §3）：
+`D1` 概念辨别（考定义边界）｜`D2` 逆向推理（给结果求条件）｜`D3` 边界情况（n=0/1、退化、参数=0）｜`D4` 参数化（具体数→一般公式）｜`D5` 概念迁移（陌生情境应用）｜`D6` 多步推理链（每步心算可完成，难在链条组织）｜`D7` 反例构造（证伪命题）｜`D8` 错误诊断（找错+修正）｜`D9` 约束优化（多约束求最优）｜`D10` 估算与合理性（数量级、量纲）｜`D11` 证明与论证（为何成立）｜`D12` 信息充分性（条件多余/缺失）
+
+**文科轨维度速查**（矩阵见框架 §4）：
+`L1` 句法复杂度（嵌套/插入/长距依赖——长度必须伴随结构层次，信息不重复）｜`L2` 语义精度（近义词 connotation/register 甄别）｜`L3` 推理层级（定位→推断→评价）｜`L4` 结构意识（段落功能/论证结构）｜`L5` 多文本关联（双篇互答）｜`L6` 修辞细腻（反讽/轻描淡写/tone shift）｜`L7` 证据权衡（冲突证据/数据匹配）｜`L8` 隐含信息（言外之意/预设）｜`L9` 逻辑论证（谬误识别/支持削弱）｜`L10` 语境词汇（生词精确义）
+
+**升级操作规则：**
+1. 每道题只升级一个维度（诊断性）；Hard 题最多组合 2 个维度
+2. 同卷 Easy→Medium→Hard 沿同一维度递进，或每次只加一个新维度
+3. 数理轨 Hard 题干扰项 = 错误概念/常见误解，**不是计算错误**
+4. 文科轨 Hard 题所有选项自身语法正确，仅语义/逻辑区分；至少 2 个选项"表面正确"
+5. 每个升级必须对应明确能力目标（理解/分析/评价/创造），无目标不升级
+
+**反堆料检查清单（生成后逐条自检）：**
+- [ ] 数理轨：Hard 题计算量 ≤ Easy 题 3 倍？超过 → 砍计算、换维度
+- [ ] 难题不是"更多步骤的同类机械运算"？
+- [ ] 文科轨：长句信息不重复（长度 = 结构层次，非形容词堆砌）？
+- [ ] 每题只升级一个维度（Hard ≤ 2 个）？
+- [ ] 每个升级对应明确能力目标（理解/分析/评价/创造）？无目标不升级
+- [ ] Hard 题答案可证明/可验证？不可验证 → 删除或改题
+- [ ] 学生做完能提炼可迁移策略？纯堆料题 → 重设计
+
+**难度档案标注（每卷强制）：**
+- 试卷源码头部加注释：`% Difficulty Profile` + 分布比例 + 使用维度（见框架 §7 模板）
+- 每题源码注释标注 `% diff: easy|medium|hard [D#/L#]`（如 `% diff: hard D6+D3`）
+- 答案文件解析末尾标注该题考察维度与能力目标
+
+---
+
 #### 1.6 克隆模式：题目替换策略
 
 **不要直接照搬模板题目！** 克隆结构而非内容：
@@ -450,7 +551,7 @@ SAT / ACT 等标准化考试的数学页常用**双栏布局**（如左栏 Q11�
 
 - [ ] 保留题型分布（选择题 n 题 + 简答题 m 题）
 - [ ] 保留各部分占比
-- [ ] 保留难度比例（简单:中等:困难 ≈ 3:5:2）
+- [ ] 保留难度比例（简单:中等:困难 ≈ 3:5:2，**除非 `difficulty` 参数显式覆盖**——见 §1.7）
 - [ ] 保留每个小题的子题数量（如 FRQ 的 a/b/c/d）
 - [ ] 全部替换为新的具体内容
 
@@ -867,11 +968,15 @@ Q3: A → 验证: ... ❌ 计算错误，应为 B（已修复）
 
 ### 6.3 难度分配
 
-| 难度 | 占比 | 特征 |
-|------|------|------|
-| Easy | 30% | 单一概念，直接计算，直接识别 |
-| Medium | 50% | 两步骤推理，涉及概念组合 |
-| Hard | 20% | 多步骤推理，需要策略选择，综合多个知识点 |
+难度分布由 `difficulty` 参数决定（默认 auto 沿用模板分布或 standard）：
+
+| 难度模式 | Easy | Medium | Hard | 适用 |
+|----------|------|--------|------|------|
+| standard（默认） | 30% | 50% | 20% | 常规练习 |
+| hard | 15% | 40% | 45% | 强化/考前冲刺 |
+| max | 0% | 30% | 70% | 竞赛/拔尖选拔 |
+
+**难度升级的维度选择、操作规则与禁止项见 §1.7 与 `difficulty-escalation-framework.md`**。数理轨严禁以堆砌计算量提升难度；文科轨可用句法复杂度（L1）等维度提升难度。
 
 ---
 
@@ -885,6 +990,15 @@ Q3: A → 验证: ... ❌ 计算错误，应为 B（已修复）
 - [ ] 无 "All of the above" / "None of the above"
 - [ ] 无重复或相似的题目
 - [ ] 答案分布均衡（偏差 ≤ 1）
+
+### 难度升级（§1.7 强制）
+- [ ] 难度档案已标注（分布比例 + 使用维度，源码头部注释）
+- [ ] 每题注释标注难度与维度（`% diff: hard D6+D3`）
+- [ ] 数理轨未通过堆砌计算量提升难度（Hard 计算量 ≤ Easy 的 3 倍）
+- [ ] 文科轨难度通过句法复杂度/推理层级等维度升级（长句信息不重复）
+- [ ] 每题只升级一个维度（Hard ≤ 2 个）
+- [ ] Hard 题干扰项对应概念错误（数理轨）/全部语法正确仅语义区分（文科轨）
+- [ ] Hard 题答案可验证，解析含完整推理链 + 维度标注
 
 ### 排版
 - [ ] 使用 9pt 或 10pt 字号
@@ -947,5 +1061,16 @@ Q3: A → 验证: ... ❌ 计算错误，应为 B（已修复）
 2. 用 `find` 或 `read` 检查目标文件是否已存在
 3. 文件已存在时优先用 `edit` 修改，不用 `write` 覆写
 4. 确需覆写时先告知用户
+
+## 变更日志
+
+### 1.3.0 (2026-08-12)
+- §0.3a.2：模型可用性表实测更新——doubao-pro 账号级 429（Safe Experience Mode）移入不可用表；doubao-1.6-vision 404、nemotron-omni 503 标记不可用；新增 nemotron-nano-12b-v2-vl 实测可用（漏读 rationale 需补扫）
+- §0.3a.2：Pre-flight 强化——模型 ID 探测（200/404/429/503 分类处理）、fallback 链（4xx 立即换模型）、单次调用必须设 timeout（限流时请求会静默挂起）
+- §0.3a.5：新增增量保存（raw.json 断点续跑 + models.json 记录）、模型报题号不可信（以 FOOTER 为准）、rationale 缺失检测与补扫
+- §0.3a.11（新增）：服务器端扫描——资源确认防干扰训练、SSH kex reset/频率限制应对（重试包装/单会话多步/base64 传脚本/setsid 后台）、远程 pgrep/pkill 自匹配坑、RapidOCR 1.4.x 返回格式剧变（先探针再写解析）、双路交叉验证
+
+### 1.2.0
+- 新增难度升级专项（§1.7）：学科分轨 + 12+10 维度矩阵 + 反堆料检查清单
 
 

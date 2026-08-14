@@ -1,6 +1,6 @@
 ---
 name: sat-exercise-splitter
-version: 1.0.2
+version: 1.0.3
 description: 识别多个SAT专题练习文件，按难度分section生成题目与答案+解析两个LaTeX文件，各section题号自 1 重排，tectonic编译。位于 SAT 工具链上游——下游可接入 sat-error-note-generator（Obsidian 错题笔记）或 mistake-practice-generation（AI 练习卷）
 triggers:
   - "拆分SAT专题练习"
@@ -283,23 +283,39 @@ Easy: 12 题 | Medium: 12 题 | Hard: 6 题
    - **不要用 tesseract**——数学/表格 OCR 质量不够用。
    - 正确路径：指向 `exam-paper-cloner.md` §0.3a 的 Vision OCR 完整流水线（doubao / nemotron-nano 视觉模型 + 图形裁剪两轮 + 答案交叉验证）。
    - tesseract 仅在无 vision API key 且用户接受低质量结果的纯文本题时作为降级方案。
+   - **整卷扫描版**（如手机拍照的全套题 PDF，57 页级）：见 §0.3a.11 服务器端扫描（RapidOCR 或 vision API）；先确认服务器资源再部署，勿在本机硬跑。
 3. **难度以题内标记为准**：文件名与 `Question Difficulty` 不符时，以题内为准并报告
 4. **同 ID 去重**：跨文件重复题仅保留先者，报告重复数
 5. **Unicode 禁入正文**：所有符号须转 LaTeX 命令，不确定先查证
 6. **中文内容**：SAT 文本本为英文；若解析或注释需含中文（如学生订正批注），注意：
-   - tectonic 的中文路径不可靠（ctex.sty 可能缺包，且带中文字体依赖问题）。**改用 xelatex**。
-   - XeLaTeX CJK 正确姿势（常见坑）：
+   - **tectonic 实测可行（2026-08-13）**：fontspec + 静态 TTF 全局方案（不依赖 ctex），不必切 xelatex：
+     ```latex
+     \usepackage{fontspec}
+     \setmainfont{Noto Sans SC}           % 全局中文主字体（中文含量高时最简单）
+     \XeTeXlinebreaklocale "zh"           % ← 缺这两行 = 中文不换行
+     \XeTeXlinebreakskip = 0pt plus 1pt
+     ```
+     - 只有 `ctex.sty` 方案才需 xelatex（tectonic 缺包）；fontspec 直连方案 tectonic 可编译
+     - **缺断行设置的典型症状**：中文长句（表格 `p{}` 列 / 段落）整串不换行 → Overfull hbox 大超宽（>10pt，实测 36pt）
+     - **诊断铁律**：Overfull hbox 大超宽 + 中文内容 → 先查断行设置，**别急着调列宽**（列变窄溢出更多，实测 19pt→36pt 恶化）
+   - XeLaTeX CJK 常见坑（沿用）：
      - **必须用静态 TTF**（如 `NotoSansSC-Regular.ttf`），不可用可变 TTC（`NotoSansCJK-VF.ttc` → `xdvipdfmx fatal: Invalid TTC index`）
-     - 启用中日韩换行：`\XeTeXlinebreaklocale "zh"` + `\XeTeXlinebreakskip = 0pt plus 1pt`
      - PDF 书签防崩溃：`\pdfstringdefDisableCommands{\let\cn\@firstofone}`
      - 所有中文字符必须包在 fontspec 字体命令组内（如 `\cn{...}`），否则 Latin Modern 缺字
+     - **控制序列后紧跟中文**：`\dots`/`\ldots` 后直接写中文 → `Undefined control sequence`（CJK 字符被并入控制序列名）；必须 `\dots{}` 空组隔离
    - 若完全不用中文，直接用 tectonic 切 9pt twocolumn 最省纸。
 7. **答案一致性**：rationale 原文照录；自写解析须与 Correct Answer 一致，不可臆造
 8. **源文件只读**：不修改、不移动输入文件
 9. **compile=false 时**：仍须报告两 `.tex` 路径，提示用户可自行 tectonic 编译
 10. **QID 注释**：每题保留 `% QID: xxxxxxxx`，便于 Bluebook 回查与去重核对
+11. **题号以页面序/FOOTER 为准**：vision 转录时模型自报的 `Q<num>` 不可信（实测报 Q1 实为 Q16）；解析阶段按 PDF 页面顺序编号，用转录的 FOOTER/页码交叉验证
+12. **转录增量保存**：整卷转录时每页完成即写入 raw.json，中途失败可断点续跑；rationale 缺失（"Not answerable"/"not provided in the image"）的页面标记待补扫（换模型或裁剪重读），不得静默留空
 
 ## 变更日志
+
+### 1.0.3 (2026-08-12)
+- 注意 #2：补充整卷扫描版处理路径（指向 exam-paper-cloner §0.3a.11 服务器端扫描）
+- 新增注意 #11/#12：题号以页面序为准（模型报号不可信）、转录增量保存与 rationale 缺失补扫
 
 ### 1.0.2 (2026-08-06)
 - 注意 #2：废弃 tesseract OCR 建议，改为指向 exam-paper-cloner §0.3a 的 vision 模型流水线（tesseract 数学质量不够）

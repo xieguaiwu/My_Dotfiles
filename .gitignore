@@ -32,3 +32,6 @@ fcitx/log/
 
 # pi 运行时目录
 .pi-subagents/
+
+# Python 缓存
+__pycache__/

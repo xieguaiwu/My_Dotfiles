@@ -128,6 +128,11 @@ factor: timeoutMs ×1.5 → 1350000,  maxTurns ×0.6 → 18
 apply:  subagent({ agent:"hephaestus", timeoutMs: 1350000, turnBudget: { maxTurns: 18 } })
 ```
 
+> ⚠️ **pi-resmon v1.2.0 语义变更**（2026-08-11）：
+> - `--class heavy` 不再触发 risk+1 修正：**MODERATE 下 heavy 允许但强制串行**（`MAX_PARALLEL=1`，`WEIGHT_AGENTS=heavy(serial)+light+medium`）；HIGH/CRITICAL 下仍禁止
+> - PSI 可用时 load 的 MODERATE 不参与聚合（load=队列长度，PSI=真实饥饿）；PSI 不可用时回退 load 全权判定
+> - PSI avg10 为三次采样中位数；小型机（nproc≤4）load MODERATE 起点 0.7→1.0
+
 #### 4.3 WARNINGS 响应
 
 - `disk_usage > 90%` → 避免写入大文件（日志、缓存、生成物）；优先用 `edit` 而非 `write`

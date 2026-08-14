@@ -1,7 +1,7 @@
 ---
 name: chrome-leak-reaper
-version: 1.0.0
-description: Chrome/chromium 内存泄漏排查与 chrome-reaper 看门狗维护——覆盖 chromedp 下载实例、opencli 桥实例、flatpak scope 拆树（zygote 误杀）、restart 残留、共享 profile 锁冲突。基于 2026-08-02 三层根治 + 2026-08-10 v3 PPID 链修复实战
+version: 1.1.0
+description: Chrome/chromium 内存泄漏排查与 chrome-reaper 看门狗维护——覆盖 chromedp 下载实例、opencli 桥实例、flatpak scope 拆树（zygote 误杀）、restart 残留、共享 profile 锁冲突、用户手动 kill vs systemd restart 拉锯战。基于 2026-08-02 三层根治 + 2026-08-10 v3 PPID 链修复 + 2026-08-11 手动杀循环实战
 triggers:
   - "chrome 内存泄漏"
   - "chrome 内存泄露"
@@ -48,17 +48,22 @@ tools:
 | **DidStartWorkerFail 错误码 3** | opencli-extension service worker 启动失败。根因：zygote 缺失（渲染能力没了）或共享 profile 锁冲突（多实例并存）→ 扩展 storage 读不了。**不是扩展本体坏了**（干净 profile 实测 `[opencli] OpenCLI extension initialized` 正常） |
 | **bridge 死亡周期 3-6 分钟 = zygote 被杀特征** | 正常代际应 >30 分钟。每 ~6 分钟 137 死一次 + 每 3 分钟 reaper 杀一个 scope = 误杀循环的铁证 |
 | **restart 杀不干净** | KillMode=control-group 对 flatpak 移出 cgroup 的 chrome 失效 → `systemctl restart` 后旧树残留 → 与共享 profile(~/.config/chromium) 锁冲突 → 更多 worker 失败。需 ExecStopPost 或 reaper 兜底清理 |
-| **status=137 的三种可能** | ① TimeoutStopSec 超时 SIGKILL（Type=simple 主进程挂死时 `systemctl stop` 会触发）② cgroup OOM ③ zygote 被杀后主 chrome 崩溃。**137 + 无 Stopping 日志 = 意外死亡（failure）→ 触发 Restart=on-failure 循环** |
+| **status=137 的四种可能** | ① TimeoutStopSec 超时 SIGKILL（Type=simple 主进程挂死时 `systemctl stop` 会触发）② cgroup OOM ③ zygote 被杀后主 chrome 崩溃 ④ **外部手动 SIGKILL**（用户/脚本 `kill -9`/`pkill`，2026-08-11 实测）。**137 + 无 Stopping 日志 = 意外死亡（failure）→ 触发 Restart=on-failure 循环**；先问用户是否手动杀过，再怀疑 reaper/泄漏 |
+| **用户手动杀 vs systemd 拉锯战** | 用户 `pkill -9 -f chrom`（或 kill bwrap）→ systemd 10s 后（RestartSec）拉起新 chrome → 用户看到"不断冒出的 chrome"再杀 → 循环。**特征：journal 全是 137/9 且间隔 ≈ RestartSec 倍数、无 reaper KILLED、无 DidStartWorkerFail、用户确认动过手**。正确止血：先 `systemctl --user stop zlibrary-bridge` 再清理，绝不能边杀边让 systemd 拉起 |
 
 ## 本机架构（防线的正确形态）
 
+> **⚠️ 2026-08-11 状态变更：zlibrary-bridge 已永久禁用**（用户决策：机器性能差，bridge 常驻 1.1GB RSS 是累赘）。
+> service 文件已改名 `~/.config/systemd/user/zlibrary-bridge.service.bak-disabled`，unit 不存在 → 任何 `systemctl --user start` 都会失败，bookfetch 的 zlibrary 功能随之不可用。
+> **恢复**：`mv` 回原名 → `systemctl --user daemon-reload` → `systemctl --user enable --now zlibrary-bridge`。
+> **reaper 行为变化**：无 bridge → 没有 protected 树 → 所有 `--headless` + `~/.config/chromium` 实例一律按非受管清理（这是预期行为，不是误杀）。
+
 ```
 泄漏源                                 防线
-─────────────────────────────────────────────────────────────
+─────────────────────────────────────────────
 chromedp（bookdl 下载，/tmp/chromedp-  → reaper 必杀整树（bookdl 运行时跳过）
 runner* 特征）                           + bookdl wrapper systemd-run（KillMode + MemoryMax）
-opencli 桥（systemd zlibrary-bridge）   → reaper 保护（PPID 链：主树+zygote 树）
-                                        + bridge service（Restart + ExecStopPost 清残留）
+opencli 桥（systemd zlibrary-bridge）   → 【已永久禁用 2026-08-11】
 GUI 浏览器（用户在用）                   → reaper 永不碰（无 --headless）
 ```
 
@@ -106,6 +111,7 @@ free -h
 | **reaper 日志每 3 分钟 KILLED 一个 8 进程 scope + bridge 每 6 分钟 137 死** | **zygote 误杀循环**（v2 老逻辑特征）→ 升级/检查 v3 PPID 链保护 |
 | bridge 活着但 `DidStartWorkerFail` 每 24 秒一次 + CPU 高 | 多实例共享 profile 锁冲突 或 zygote 已被杀 → 查 scope 数量 + 残留树 |
 | 多个 `--headless` + `~/.config/chromium` 实例并存 | restart 残留（KillMode 失效）→ ExecStopPost/手动清 |
+| **journal 间隔 ≈ RestartSec(10s) 的连环 137/9 + 用户/外部可能动过手** | 手动杀 vs restart 拉锯战 → **先 `systemctl --user stop zlibrary-bridge` 止血**，问用户是否杀过，确认后再 start（start 前先跑一次 `chrome-reaper` 清残留） |
 | reaper 日志 `WARN low memory: <2GB` | 内存告急时间点 → 反查该时刻泄漏源（配合 journal） |
 
 ### Phase 3: 定位根因（误杀循环的确认方法）
@@ -116,7 +122,8 @@ journalctl --user --since "1小时前" --no-pager | grep -E "KILLED|Started app-
 # 模式：KILLED(zygote scope) → DidStartWorkerFail 循环 → status=137 → Scheduled restart → 重复
 
 # 2. 当前 bridge 的树结构（确认 PPID 链：zygote bwrap 的父 = 主树内层 bwrap）
-main=$(systemctl --user show zlibrary-bridge -p MainPID --value)
+pstree -p $(systemctl --user show zlibrary-bridge -p MainPID --value) | head -20
+# 或逐行看（含 bwrap 包装层）:
 ps -eo pid,ppid,args | grep -E "/app/chromium/chrome|/usr/bin/bwrap" | grep -v grep | cut -c1-160
 
 # 3. 扩展本体健康验证（干净 profile 实验——排除扩展/浏览器版本问题）
@@ -177,8 +184,8 @@ ps -o etime= -p $(systemctl --user show zlibrary-bridge -p MainPID --value)
 # 2. worker 失败停止（修复前每 24 秒一次）
 journalctl --user --since "修复时间点" --no-pager | grep -c "DidStartWorkerFail"   # 应为 0（或仅修复前的残留）
 
-# 3. CPU 正常（修复前 42-91%，正常 <5%）
-ps -o %cpu= -p $(systemctl --user show zlibrary-bridge -p MainPID --value | xargs -I{} pgrep -P {} | head -1) 2>/dev/null
+# 3. CPU 正常（修复前 42-91%，正常 <5%）：bridge 树总 CPU
+ps aux | grep -iE "chrom(e|ium)" | grep -v grep | awk '{s+=$3} END {printf "chrome 总 CPU: %.1f%%\n", s}'
 
 # 4. reaper 每 3 分钟巡检无误杀（连续 2-3 个周期无 KILLED）
 tail -10 ~/.local/state/chrome-reaper.log
@@ -197,6 +204,9 @@ free -h | head -2
 
 ## 注意事项（踩过的坑）
 
+0. **先 stop 再手动清，别和 systemd 拔河**：`systemctl --user stop zlibrary-bridge` 会触发 ExecStopPost 自动清残留；直接 `kill`/`pkill` chrome 只会让 Restart=on-failure 在 RestartSec 后拉起新实例——你杀一个它冒一个，看起来像"杀不完的泄漏"（2026-08-11 实例：用户手动杀 6 次、systemd 拉 6 次、restart counter 到 9）。
+0b. **连环 137 先问用户**：看到 137/9 连环死亡且无 reaper KILLED 时，第一件事是问用户是否手动 kill 过 chrome，再排查 reaper/泄漏——误判会把人引向错误的修复方向。
+
 1. **scope 是实例单位，但"实例"判定必须看 PPID 链**：flatpak 拆 scope 的粒度是进程树（zygote 树独立 scope），不是实例。scope 内无主进程 ≠ 孤儿——先追 PPID 链到受管实例（bridge MainPID 树），链通 = 合法附属，链断 = 孤儿。
 2. **`kill -9 /proc/PID` 无效**：kill 不接受路径（静默失败）。必须用纯数字 PID。
 3. **`pkill -f 'pattern'` 会自杀**：bash 命令行含 pattern → 用 `[r]` 技巧或 `pgrep | grep -v $$`。
@@ -205,4 +215,4 @@ free -h | head -2
 6. **systemctl stop 挂死服务的 137 陷阱**：Type=simple 主进程（bwrap）不响应 SIGTERM → TimeoutStopSec 超时 SIGKILL(137) → 若同时满足 on-failure 条件会意外触发 Restart 循环。用户手动 stop 前先确认服务状态。
 7. **MemoryHigh/MemoryMax/TasksMax 对 bridge 形同虚设**：chrome 在 flatpak scope 里不在 bridge cgroup（Tasks: 0）→ 限制只作用于 bwrap 本体。别指望 cgroup 限流管住 chrome。
 8. **profile 锁冲突的判定**：多个实例共用 `~/.config/chromium` → 后者报 `IO error: .../LOCK` + `DidStartWorkerFail`（扩展 storage 读不了）。单实例化后错误消失 = 锁冲突确认。
-9. **本文档属于 System_Fix 技能集**：入口与症状决策树见 [index.md](index.md)；chrome 泄漏导致死机时配合 [freeze-oom-protection.md](freeze-oom-protection.md)；tmpfs/ENOSPC 场景配合 [enospc-tmpfs-check.md](enospc-tmpfs-check.md)。
+10. **本文档属于 System_Fix 技能集**：入口与症状决策树见 [index.md](index.md)；chrome 泄漏导致死机时配合 [freeze-oom-protection.md](freeze-oom-protection.md)；tmpfs/ENOSPC 场景配合 [enospc-tmpfs-check.md](enospc-tmpfs-check.md)。

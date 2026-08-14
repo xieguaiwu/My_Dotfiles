@@ -226,12 +226,16 @@ Pi-agent 扩展的 `package.json` 包含 postinstall 脚本：
 
 2. **"Unknown type 1 charstring command" 警告**：此警告来自 PDF.js 的 Type 1 字体解析器，与 CMap 加载无关。CMap 加载失败可能导致字体回退到 Type 1 解析路径，间接触发此警告。修复 CMap 后此警告通常会减少，但若 PDF 本身包含非标准 Type 1 指令，仍可能出现残留警告——这是正常的，不影响文本提取。
 
-3. **版本兼容性**：本修复适用于 `unpdf@1.8.0` + `pdfjs-dist@5.7.284` 组合。修复前先确认版本：
+3. **版本兼容性**：本修复适用于 `unpdf@1.8.0` + `pdfjs-dist@6.2.108` 组合（2026-08-12 从 5.7.284 升级，修复 GHSA-hq66-cqwq-w95j 恶意 PDF 任意 JS 执行漏洞；unpdf 无版本约束、6.x 实测兼容）。修复前先确认版本：
    ```bash
    node -e "console.log(require('./node_modules/unpdf/package.json').version)"
    ```
    如果版本不匹配，检查新版本 `getDocumentProxy` 是否已内置此修复（搜索 `fileURLToPath`）。若未内置，重新生成补丁。
 
 4. **替代修复方案**：也可以修改 `pdfjs-dist` 的 `node_utils_fetchData` 函数，在 `fs.readFile` 前添加 `fileURLToPath` 转换。但修改 unpdf 更简单、更局部化，且不会影响其他 pdfjs-dist 消费者。
+
+5. **⚠️ unpdf 传参坑（2026-08-12 实测）**：`extractText('/path/to.pdf')` 传 **path string** 在 Node 下必报 `Invalid PDF structure`（InvalidPDFException）——pdfjs 把 string 当 URL 处理，Node 的 fetch 不支持 `file://` 协议，解析必然失败。**必须传 `Uint8Array` / `ArrayBuffer`**（`readFileSync` + `new Uint8Array(buf)`）。此坑与版本无关（5.x/6.x 均如此），排查 `Invalid PDF structure` 时先检查传参方式，勿误判为版本兼容性问题或 CMap 问题。
+
+6. **验证脚本传参方式**：本 skill 的 Phase 2.3 验证脚本已使用 `new Uint8Array(buf)`（正确）；若自行编写验证，一律用 Uint8Array，不要用 path string。
 
 5. **修复后需重启 Pi-agent**：已运行的 Pi-agent 进程不会自动加载修改后的模块，需要重启 TUI。

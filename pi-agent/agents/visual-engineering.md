@@ -1,7 +1,7 @@
 ---
 name: visual-engineering
 description: Vision-capable agent for UI/UX analysis, design review, screenshot analysis, and visual content tasks.
-model: nvidia/meta/llama-4-maverick-17b-128e-instruct
+model: opencode-go/qwen3.6-plus
 fallbackModels: nvidia/qwen/qwen3.5-397b-a17b, nvidia/moonshotai/kimi-k2-instruct
 thinking: low
 temperature: 0.4
