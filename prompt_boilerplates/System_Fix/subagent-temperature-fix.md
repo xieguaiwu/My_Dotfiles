@@ -1,7 +1,7 @@
 ---
 name: subagent-temperature-fix
-version: 2.14.0
-description: 验证并修复 pi-agent subagent 的 temperature 配置链。v2.5.0 起采用双保险架构：① 传递链补丁（pi-subagents 解析→buildPiArgs→env）② 消费点 YAML 兜底（sdk.js 在 env 缺失时直读 ~/.pi/agent/agents/<name>.md frontmatter）——即使上游 pi-subagents 再次删除 temperature 支持，温度依然生效。v2.6.0 适配 pi-subagents v0.40.0（第 4 次删除）并修复 str.replace 子串误伤 spawnRunner 的静默污染 bug（heal + 锚定正则 + 完整性断言）。v2.7.0 适配 pi-subagents v0.41.0 + pi-coding-agent v0.84.0（第 5 次删除）：agents.ts 全面改为 spread 语法，修复 reapply.sh 假阳性 bug（双锚点回退 + 变更检测）。v2.8.0 适配 pi-subagents v0.42.1 + pi-coding-agent v0.84.1（第 6 次删除）：锚点未漂移（21/21 直接命中），但发现并修复 **CRITICAL bug**——sdk.js 的 readFileSync import 检查在插入后执行且用子串匹配（插入块本身含 readFileSync 字样），导致 import 永不添加，YAML 兜底路径运行时抛 ReferenceError；修复为精确匹配 import 行。v2.9.0 适配 pi-subagents v0.43.0（第 7 次删除）：锚点与 v0.42.1 完全一致，21/21 一次重打成功。v2.10.0 适配 pi-subagents v0.45.0（第 8 次删除）：v0.44.0（mission/schedule）+ v0.45.0（subagent_wait completions）均未触碰 temperature 结构，锚点与 v0.43.0 完全一致，21/21 一次重打成功。v2.11.0 适配 pi-subagents v0.45.2（第 9 次删除）：v0.45.1/0.45.2 重构 async-execution.ts 的 thinking 计算（effectiveThinking/thinkingOverrides 新机制），但 v2.10.0 的 resolveEffectiveThinking 锚点全部命中，21/21 一次重打成功（无漂移警告）。v2.12.0 适配 pi-subagents v0.46.0（第 10 次删除）：v0.46.0（prompts.render/project-panes API/guide）未触碰 temperature 结构，v2.11.0 锚点全部命中，21/21 一次重打成功（无漂移警告，插入点人工核验通过）。v2.13.0 适配 pi-subagents v0.47.0（第 11 次删除）：v0.47.0（模型 scope 强制/storage 迁移 .pi/subagents/）未触碰 temperature 结构，v2.12.0 锚点全部命中，21/21 一次重打成功（无漂移警告）。v2.14.0 适配 pi-subagents v0.48.0（第 12 次删除）：v0.48.0（fan-out budget 上限/异步会话 cap/Prompt Audit drawer/全局 timeoutMs/PI_SUBAGENT_TASK_DELIVERY env/LLM intent arbiter）未触碰 temperature 结构，v2.13.0 锚点全部命中，postinstall 自动重打 21/21 成功；另修复 reapply.sh 标题计数错误（source files (12) → (13)）。共 21 个检查点（含 spawnRunner 6-tab 专用 + serializer 输出 + YAML 兜底），补丁集成在 ~/.pi/patches/temperature/reapply.sh（postinstall 自动重打）。⚠️ 补丁后必须重启 pi 主进程才生效（tsx 模块缓存，见注意事项 #7）。
+version: 2.15.0
+description: 验证并修复 pi-agent subagent 的 temperature 配置链。v2.5.0 起采用双保险架构：① 传递链补丁（pi-subagents 解析→buildPiArgs→env）② 消费点 YAML 兜底（sdk.js 在 env 缺失时直读 ~/.pi/agent/agents/<name>.md frontmatter）——即使上游 pi-subagents 再次删除 temperature 支持，温度依然生效。v2.6.0 适配 pi-subagents v0.40.0（第 4 次删除）并修复 str.replace 子串误伤 spawnRunner 的静默污染 bug（heal + 锚定正则 + 完整性断言）。v2.7.0 适配 pi-subagents v0.41.0 + pi-coding-agent v0.84.0（第 5 次删除）：agents.ts 全面改为 spread 语法，修复 reapply.sh 假阳性 bug（双锚点回退 + 变更检测）。v2.8.0 适配 pi-subagents v0.42.1 + pi-coding-agent v0.84.1（第 6 次删除）：锚点未漂移（21/21 直接命中），但发现并修复 **CRITICAL bug**——sdk.js 的 readFileSync import 检查在插入后执行且用子串匹配（插入块本身含 readFileSync 字样），导致 import 永不添加，YAML 兜底路径运行时抛 ReferenceError；修复为精确匹配 import 行。v2.9.0 适配 pi-subagents v0.43.0（第 7 次删除）：锚点与 v0.42.1 完全一致，21/21 一次重打成功。v2.10.0 适配 pi-subagents v0.45.0（第 8 次删除）：v0.44.0（mission/schedule）+ v0.45.0（subagent_wait completions）均未触碰 temperature 结构，锚点与 v0.43.0 完全一致，21/21 一次重打成功。v2.11.0 适配 pi-subagents v0.45.2（第 9 次删除）：v0.45.1/0.45.2 重构 async-execution.ts 的 thinking 计算（effectiveThinking/thinkingOverrides 新机制），但 v2.10.0 的 resolveEffectiveThinking 锚点全部命中，21/21 一次重打成功（无漂移警告）。v2.12.0 适配 pi-subagents v0.46.0（第 10 次删除）：v0.46.0（prompts.render/project-panes API/guide）未触碰 temperature 结构，v2.11.0 锚点全部命中，21/21 一次重打成功（无漂移警告，插入点人工核验通过）。v2.13.0 适配 pi-subagents v0.47.0（第 11 次删除）：v0.47.0（模型 scope 强制/storage 迁移 .pi/subagents/）未触碰 temperature 结构，v2.12.0 锚点全部命中，21/21 一次重打成功（无漂移警告）。v2.14.0 适配 pi-subagents v0.48.0（第 12 次删除）：v0.48.0（fan-out budget 上限/异步会话 cap/Prompt Audit drawer/全局 timeoutMs/PI_SUBAGENT_TASK_DELIVERY env/LLM intent arbiter）未触碰 temperature 结构，v2.13.0 锚点全部命中，postinstall 自动重打 21/21 成功；另修复 reapply.sh 标题计数错误（source files (12) → (13)）。v2.15.0 适配 pi-subagents v0.49.0 + pi-coding-agent v0.84.2（第 13 次删除）：v0.49.0（单 child 运行/debug.run/tools inherit/终端示例）未触碰 temperature 结构但再次删除全部 13 个 src 检查点（npm pack 原始 tarball 验证 0 引用），src 层由 postinstall 自动重打 13/13；dist 层被 pi update 0.84.2（--ignore-scripts 不触发 postinstall）覆盖 → 8 检查点全缺，手动 --apply 一次重打 21/21，运行时断链模拟三场景全部通过。共 21 个检查点（含 spawnRunner 6-tab 专用 + serializer 输出 + YAML 兜底），补丁集成在 ~/.pi/patches/temperature/reapply.sh（postinstall 自动重打）。⚠️ 补丁后必须重启 pi 主进程才生效（tsx 模块缓存，见注意事项 #7）。
 triggers:
   - "subagent温度修复"
   - "temperature fix"
@@ -380,9 +380,11 @@ echo -n "Agent createLoop:    "; grep -q "temperature: this.temperature" "$AGENT
 
 ---
 
-## ✅ 当前状态（2026-08-12）
+## ✅ 当前状态（2026-08-14）
 
-温度链已全部修复并验证通过 ✅ （**21/21 检查点**，pi-coding-agent **v0.84.1**，pi-subagents **v0.48.0**）。
+温度链已全部修复并验证通过 ✅ （**21/21 检查点**，pi-coding-agent **v0.84.2**，pi-subagents **v0.49.0**）。
+
+**2026-08-14 v0.49.0/v0.84.2 适配（v2.15.0，第 13 次删除）**：pi-subagents 升至 v0.49.0，再次删除全部 13 个 src 检查点（npm pack 原始 tarball 验证：pi-args.ts/agents.ts 中 temperature 0 引用）。CHANGELOG 显示 v0.49.0 新增单 child 运行（#1059）/debug.run（#1037）/tools: inherit（#1047）/终端示例等（均为功能新增，未触碰 temperature 结构）——src 层已由 postinstall 自动重打 13/13 ✅。**dist 层特殊状况**：本次 `pi update`（0.84.1→0.84.2）使用 `--ignore-scripts`（npm 参数），**postinstall 钩子不触发** → pi-coding-agent 的 8 个 dist 检查点被新版本覆盖为原生无温度且无人自动重打，reapply.sh 检测报 8 缺失。手动 `--apply` 一次重打 21/21 成功（无漂移警告），运行时断链模拟三场景全部验证通过：① 无 env → YAML 兜底读 explore.md = **0.1** ✅ ② `PI_SUBAGENT_TEMPERATURE=0.7` → **0.7** 优先于 YAML ✅。优先级链：CLI > env > YAML 兜底。reapply.sh 版本声明已更新（v2.15.0 / `pi-subagents <= v0.49.x`）。
 
 **2026-08-13 v0.48.0/v0.84.1 适配（v2.14.0，第 12 次删除）**：pi-subagents 经 `pi update --extensions` 升至 v0.48.0，再次删除 temperature 支持（13 个 pi-subagents 检查点全缺，dist 层 8 个完好）。CHANGELOG 显示 v0.48.0 新增 per-run 子代理 fan-out budget 上限（#1031）、活跃异步会话并发 cap（#1029）、Fleet Prompt Audit 抽屉（#1021）、全局 timeoutMs 配置（#1018）、`PI_SUBAGENT_TASK_DELIVERY` env（#1028）、LLM intent arbiter（#1020）等（均为功能新增/修复，未触碰 temperature 结构）——**v2.13.0 锚点全部命中**，postinstall `--apply` 自动重打 21/21 成功，幂等复跑 ✅，无 ⚠️ 漂移警告。同时修复 reapply.sh 标题计数错误（`source files (12)` → `(13)`，实为 13 个检查点）。reapply.sh 版本声明已更新（v2.14.0 / `pi-subagents <= v0.48.x`）。
 
@@ -518,11 +520,12 @@ npm update / pi update
 
 **幂等性**：所有补丁操作均为幂等——已修复项自动跳过，多次运行安全。
 
-**版本兼容**：脚本对 0.82.x 自动修复，对 0.83+ 尝试修复并报告，对未知版本输出诊断。**v0.48.0/v0.84.1 已实测（v2.14.0）**；v0.47.0/v0.84.1 已实测（v2.13.0）；v0.46.0/v0.84.1 已实测（v2.12.0）；v0.45.2/v0.84.1 已实测（v2.11.0）；v0.45.0/v0.84.1 已实测（v2.10.0）；v0.43.0/v0.84.1 已实测（v2.9.0）；v0.42.1/v0.84.1 已实测（v2.8.0）。
+**版本兼容**：脚本对 0.82.x 自动修复，对 0.83+ 尝试修复并报告，对未知版本输出诊断。**v0.49.0/v0.84.2 已实测（v2.15.0）**；v0.48.0/v0.84.1 已实测（v2.14.0）；v0.47.0/v0.84.1 已实测（v2.13.0）；v0.46.0/v0.84.1 已实测（v2.12.0）；v0.45.2/v0.84.1 已实测（v2.11.0）；v0.45.0/v0.84.1 已实测（v2.10.0）；v0.43.0/v0.84.1 已实测（v2.9.0）；v0.42.1/v0.84.1 已实测（v2.8.0）。
 
 ## ⚠️ 注意事项
 
 1. **npm update 会自动修复**：postinstall 钩子触发 `~/.pi/patches/reapply.sh` → `temperature/reapply.sh --apply` 自动重打全部补丁。仅在自动重打失败时才需手动执行本 skill。
+   - ⚠️ **例外（2026-08-14 实测）**：`pi update` 自身用 `npm install -g --ignore-scripts`（跳过 postinstall）——升级 pi-coding-agent 后 dist 层 8 个检查点被覆盖但**不会自动重打**。此时需手动 `~/.pi/patches/temperature/reapply.sh --apply`。而 `pi update --extensions`（git+npm install，postinstall 正常触发）会自动重打 src 层。升级后建议直接跑一次 `reapply.sh` 确认 21/21。
 2. **Anthropic 特例**：启用 thinking 时跳 temperature（API 限制），`compat.supportsTemperature=false` 的模型也不接受自定义温度。这是 provider 层行为，非本修复引入。
 3. **默认值行为**：`temperature` 未设置（`undefined`）时，provider 使用 API 默认温度，与修复前一致。
 4. **版本要求**：`pi-subagents >= 0.36.0`，`pi-coding-agent >= 0.82.1`。

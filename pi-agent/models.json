@@ -2,6 +2,15 @@
   "providers": {
     "opencode-go": {
       "modelOverrides": {
+        "glm-5.3": {
+          "thinkingLevelMap": {
+            "minimal": "low",
+            "low": "low",
+            "medium": "high",
+            "high": "max",
+            "xhigh": "max"
+          }
+        },
         "glm-5.2": {
           "thinkingLevelMap": {
             "minimal": null,
