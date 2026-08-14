@@ -1,6 +1,6 @@
 ---
 name: coding-skills-index
-version: 1.4.0
+version: 1.5.1
 description: Coding 技能集入口——进入项目时自动加载项目文档协议、检测项目特征并引导加载对应领域技能
 triggers:
   - "进入项目"
@@ -32,6 +32,35 @@ tools:
 ## 立即执行
 
 **当本 skill 被加载时，不要只是浏览——立即按以下步骤执行：**
+
+> ### ⚡ 强制触发规则（1% 法则，入口检查语义）
+>
+> **任务开始时**，如果觉得有 1% 的可能性某个 skill 适用于当前任务，绝对必须调用它。
+>
+> **IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.**
+>
+> 这不是可谈判的——**除非**该 skill 的「适用边界与豁免」章节所列情形适用，否则必须使用。（来源：obra/superpowers using-superpowers，MIT）
+>
+> **pi 平台适用说明**：pi 中 skill 加载是一次工具调用（read 文件），有真实成本——因此本检查在**任务开始时执行一次**（对照下方目录与决策树），由 description 匹配引导具体 skill，**不在每个动作前重复强制检查**。
+>
+> **反合理化（Red Flags）**——以下想法出现时就是你在为自己跳过 skill 找借口：
+>
+> | 想法 | 现实 |
+> |------|------|
+> | "这只是个简单问题" | 问题也是任务，任务开始时先查 skill |
+> | "我需要更多上下文" | skill 检查在澄清问题**之前** |
+> | "让我先探索代码库" | skill 告诉你**怎么**探索，任务开始时先查 |
+> | "我快速看下文件" | 文件缺会话上下文，任务开始时先查 skill |
+> | "让我先收集信息" | skill 告诉你**怎么**收集 |
+> | "这个不需要正式流程" | 有 skill 就用 |
+> | "我记得这个 skill" | skill 会进化，读当前版本 |
+> | "这不算任务" | 动作 = 任务，任务开始时先查 |
+> | "这个 skill 小题大做" | 简单的事会变复杂，用它 |
+> | "我就先做这一件事" | 任务开始时先查，不逐动作重复 |
+> | "这感觉很有产出" | 无纪律的行动浪费时间 |
+> | "我知道那是什么意思" | 知道概念 ≠ 使用 skill，调用它 |
+>
+> **Skill 优先级**：流程类 skill（planning/debugging/verification）先于实现类——它们决定方法，实现类负责执行。
 
 ### 步骤 1：加载项目文档协议（必须）
 
@@ -70,7 +99,7 @@ tools:
 
 ## 工作流速查
 
-```
+```text
 进入项目
   │
   ├─ 1. project-documentation-protocol（阶段A）
@@ -108,7 +137,10 @@ tools:
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|:---|---|
 | 4 | [improvement-loop.md](improvement-loop.md) | 1.4.0 | 修改→审查（momus）→修复（hephaestus）→再审查 的迭代循环 | 代码重构后验证质量、bug 修复后全面检查 |
-| 5 | [interactive-cli-design.md](interactive-cli-design.md) | 1.3.0 | 交互式 CLI/TUI 设计规范——强制键位集、信息密集界面导航与搜索、PTY 自动化测试验收、已有代码资产复用 | 构建/审查任何交互式终端工具时逐条对照 |
+| 5 | [writing-plans.md](writing-plans.md) | 1.1.0 | 实施计划编写——零上下文执行者假设、bite-sized 任务粒度、接口契约块、无占位符、Self-Review 三查 | 多步任务（≥3 独立可测任务）实施前必须产出计划 |
+| 6 | [root-cause-debugging.md](root-cause-debugging.md) | 1.1.0 | 根因调试——先查根因再动手，四阶段流程 + Iron Law，禁止症状修复 | 任何 bug/报错/异常/测试失败/行为不符预期 |
+| 7 | [verification-before-completion.md](verification-before-completion.md) | 1.1.0 | 完成前验证——声称完成/修复/通过必须附新鲜命令输出证据（Gate Function） | 声称完成、提交前、报告结果、信任 agent 报告时 |
+| 8 | [interactive-cli-design.md](interactive-cli-design.md) | 1.3.0 | 交互式 CLI/TUI 设计规范——强制键位集、信息密集界面导航与搜索、PTY 自动化测试验收、已有代码资产复用 | 构建/审查任何交互式终端工具时逐条对照 |
 
 > **与其他 skill 的关系**：
 > - `improvement-loop.md`：循环内「审查」阶段可结合 `development-quality-gates.md` 的关卡清单作为审查标准；循环结束后应触发 `project-documentation-protocol.md` 的阶段 B 更新文档
@@ -120,15 +152,15 @@ tools:
 
 | # | Skill | 版本 | 适用领域 | 何时加载 |
 |:--|:---|:---:|:---|---|
-| 6 | [ml-training.md](ml-training.md) | 1.5.0 | ML 深度学习/RL 训练 | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
-| 7 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.1.0 | 量化投资 ML | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据 |
-| 8 | [vps-operations.md](vps-operations.md) | 2.0.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
-| 9 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
-| 10 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
+| 9 | [ml-training.md](ml-training.md) | 1.5.0 | ML 深度学习/RL 训练 | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
+| 10 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.1.0 | 量化投资 ML | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据 |
+| 11 | [vps-operations.md](vps-operations.md) | 2.0.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
+| 12 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
+| 13 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
 
 ### 领域 skill 加载决策树
 
-```
+```text
 项目中有 .py + train 相关文件？
   ├─ 是 → 加载 ml-training.md
   │        └─ 项目中有 Sharpe/IC/alpha 词汇？ → 同时加载 quant-ml-falsification.md
@@ -166,6 +198,13 @@ tools:
 | `interactive-cli-design.md` §5 | `improvement-loop.md` | 验收清单可作为审查循环的审查标准 |
 | `interactive-cli-design.md` | `project-documentation-protocol.md` §阶段B | TUI 工具完成后按协议更新文档 |
 | `interactive-cli-design.md` §3 | 本机项目 `bl`/`news-report`/`在深渊` 等 | 已有代码资产可复用，避免轮子再造 |
+| `writing-plans.md` | `improvement-loop.md` | improvement-loop 的修改阶段前先用 writing-plans 产出计划，momus 审计划后再实施 |
+| `writing-plans.md` | `verification-before-completion.md` | 计划中每个任务 step 的验证按 Gate Function 执行，声称任务完成附命令输出 |
+| `writing-plans.md` | `resource-aware-delegation.md` | Subagent 驱动执行时，每个 subagent 调用前检查资源 |
+| `root-cause-debugging.md` | `verification-before-completion.md` | Phase 4 修复后验证用 Gate Function，禁止裸声称 |
+| `root-cause-debugging.md` | `quant-ml-falsification.md` | 量化假 alpha 排查 = 根因调查的领域特化（先插桩取证再下结论） |
+| `verification-before-completion.md` | `improvement-loop.md` | §5.9 Chain 输出门控是平台层验证，本 skill 是方法论层验证——两层都要 |
+| `verification-before-completion.md` | `ml-training.md` | 训练验收前先用 Gate Function 验证产物（results JSON）真实存在 |
 
 ## 五、维护约定
 
@@ -176,6 +215,18 @@ tools:
 ---
 
 ## 变更日志
+
+### 1.5.1 (2026-08-14)
+- 修复（momus 审查轮，2 P0 + 6 P1 全部修复）：版本表 1.0.0→1.1.0 同步；Red Flags 表与入口检查语义统一（5 处）；「不能绕过」加豁免例外；最后更新日期修正；ASCII 图块标 text
+- 修改：「1% 法则」增加 pi 平台适用说明——入口检查语义（任务开始时检查一次，由 description 匹配引导），非每动作强制（pi 中 skill 加载有工具调用成本）
+- 修改：新增 3 个流程 skill 升 1.1.0——各补「适用边界与豁免」章节（防教条化）、正文叙述浅文言压缩约 30%、front matter 规范化（description 去句号、triggers ≤8 个、代码块标语言）
+- 修改：root-cause-debugging 明确「3 次失败」阈值是升级信号而非硬停止，可按项目在 inputs 中覆盖
+
+### 1.5.0 (2026-08-14)
+- 新增：通用工作流 #5 `writing-plans.md`（实施计划编写）、#6 `root-cause-debugging.md`（根因调试四阶段）、#7 `verification-before-completion.md`（完成前验证）——三者移植自 obra/superpowers（MIT License），已本地化衔接表与案例
+- 新增：立即执行章节「强制触发规则（1% 法则）」+ 反合理化 Red Flags 表——任何任务开始前先查 skill 是否适用，禁止用借口跳过
+- 修改：通用工作流编号 4-5 → 4-8，领域专用编号 6-10 → 9-13
+- 修改：交叉引用表新增 7 条（writing-plans / root-cause-debugging / verification-before-completion 相关）
 
 ### 1.4.0 (2026-08-03)
 - improvement-loop → 1.4.0：新增 §5.7–5.9 Chain 输出捕获 / Edit 预验证 / 输出门控
@@ -204,4 +255,4 @@ tools:
 - 新增：步骤 1-4 的明确执行指令
 - 保留原有目录内容供浏览参考
 
-*最后更新: 2026-08-03*
+*最后更新: 2026-08-14*
