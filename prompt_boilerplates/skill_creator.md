@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-version: 2.1.0
+version: 2.2.0
 description: 协助AI打包特定工作流程，创建符合pi-agent规范的skill文件
 triggers:
   - "创建skill"
@@ -9,6 +9,8 @@ triggers:
   - "make skill"
   - "写一个skill"
   - "生成skill"
+  - "更新skill"
+  - "skill索引"
 inputs:
   - name: skill_name
     description: 新skill的名称（英文小写，使用连字符分隔）
@@ -78,6 +80,18 @@ glob 模式: "{output_dir}/**/*.md"
 
 使用 `write` 创建新文件（目标文件不存在时）或 `edit` 更新已有文件。
 
+### 6. 更新索引与内联引用（必须）
+
+写入/更新 skill 文件后，**必须**同步更新索引与内联引用，否则新 skill 不可被发现、版本与内容脱节（历史教训：创建了 `pi-subagents-ENAMETOOLONG-fix.md` 却漏更新 `System_Fix/index.md`，入口技能无法加载该文档）。
+
+1. 若 `{output_dir}` 下有 `index.md` 入口索引，先 `read` 其目录表结构
+2. 更新目录表：新增该 skill 行（名称、版本、用途、触发场景），或更新已有行
+3. 同步 front matter triggers：若该 skill 的触发词可让用户从入口直达，追加到 index.md 的 triggers（保持 3-8 个总数约束）
+4. 若 index.md 有「症状→文档决策树」，添加对应分支（含加载顺序/前置依赖注释）
+5. 升级 index.md 自身 version 并在其变更日志追加条目；末尾「最后更新」行同步
+6. 检查相关 skill 文档（交叉引用表、互链段落）是否需要同步更新——保证内联一致性
+7. 版本一致性：skill 的 front matter `version` 必须与 index 目录表中的版本号完全一致
+
 ---
 
 ## 输出格式
@@ -94,6 +108,7 @@ glob 模式: "{output_dir}/**/*.md"
 
 - 若目标文件已存在，使用 `edit` 而非 `write` 覆写
 - 生成后必须按「七、生成检查清单」逐项验证
+- 创建/更新后必须执行步骤 6「更新索引与内联引用」——漏更新 index.md 会导致 skill 不可被发现（历史教训：ENAMETOOLONG 修复文档创建后 index 未同步）
 - 若用户未提供足够的 workflow 细节，先追问再生成，不猜测
 
 ---
@@ -716,6 +731,14 @@ name: my-skill
 - [ ] 已包含书写规范（花括号下标、分式、省略号）
 - [ ] 已包含生成后自查清单
 
+### F. 索引与内联检查（必须）
+- [ ] `{output_dir}/index.md` 目录表已新增/更新该 skill 行（名称、版本、用途、触发场景）
+- [ ] index.md front matter triggers 已补充该 skill 触发词（如适用，保持 3-8 个）
+- [ ] index.md 症状→文档决策树已添加对应分支（如适用）
+- [ ] index.md 自身 version 已升级、变更日志已追加、末尾「最后更新」已同步
+- [ ] skill 的 front matter `version` 与 index 目录表版本号一致
+- [ ] 相关 skill 文档的交叉引用/互链已同步（内联一致性）
+
 ---
 
 ## 八、变更日志格式约定
@@ -798,6 +821,12 @@ superseded_by: new-skill    # 替代者 name（status: superseded 时必填）
 4. **覆写前确认**：如果必须覆写已有文件，先告知用户并获得明确许可
 
 ## 变更日志
+
+### 2.2.0 (2026-08-15)
+- 新增：执行流程步骤 6「更新索引与内联引用（必须）」——创建/更新 skill 后强制同步 index.md 目录表、triggers、决策树、版本号与交叉引用（历史教训：pi-subagents-ENAMETOOLONG-fix.md 创建后 System_Fix/index.md 未同步）
+- 新增：检查清单 F 组「索引与内联检查」6 项（目录表/triggers/决策树/版本一致性/交叉引用）
+- 新增：注意事项第 4 条（漏更新 index 的后果）
+- 新增：triggers「更新skill」「skill索引」
 
 ### 2.1.0 (2026-07-31)
 - 新增：1.7 浅文言风格（token 压缩）——skill 正文默认浅文言，叙述压缩 35-45%，技术部分不动，禁纯文言
