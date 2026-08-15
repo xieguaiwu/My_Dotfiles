@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 1.9.0
+version: 2.0.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -20,6 +20,9 @@ triggers:
   - "PDF 报错"
   - "CMap"
   - "subagent 异常"
+  - "ENAMETOOLONG"
+  - "subagent_wait 挂起"
+  - "async 结果丢失"
   - "记忆索引"
   - "关机慢"
   - "同步配置"
@@ -159,6 +162,7 @@ journalctl -p err -b --no-pager | tail -20
 | 8 | [piagent-search-pipeline-fix.md](piagent-search-pipeline-fix.md) | 1.0.0 | web_search 配置/编码崩溃/provider 不可用/内容检索失败 | 搜索报错、provider 502 |
 | 9 | [piagent-cmap-fix.md](piagent-cmap-fix.md) | 1.0.0 | 处理 PDF 时 CMap 字体警告（unpdf file:// 路径问题） | PDF 解析报 CMap 警告 |
 | 10 | [memory-index-condense.md](memory-index-condense.md) | 1.3.0 | 记忆索引调查与浓缩（并行 reader 合成 MEMORY_INDEX.md） | 记忆膨胀、索引过时 |
+| 10.5 | [pi-subagents-ENAMETOOLONG-fix.md](pi-subagents-ENAMETOOLONG-fix.md) | 2.0.0 | pi-subagents 结果索引/result-pending ENAMETOOLONG 修复（encodeSegment 截断+稳定哈希、超长 stat 静默容错、遗留目录启动期迁移） | subagent 报 ENAMETOOLONG、subagent_wait 挂起、async 结果丢失、中文路径 session、pi-subagents 升级后补丁重打 |
 
 ## 四、维护类
 
@@ -211,6 +215,9 @@ journalctl -p err -b --no-pager | tail -20
 
 「记忆混乱 / MEMORY_INDEX 过时 / 找不到历史上下文」
   └─ memory-index-condense.md
+
+「subagent 报 ENAMETOOLONG / subagent_wait 挂起 / async 结果丢失 / 中文路径 session」
+  └─ pi-subagents-ENAMETOOLONG-fix.md ← 补丁在 ~/.pi/agent/npm，升级覆盖后需重打；修复后须重启 pi 主进程
 
 「关机慢 / 关机报错 / ABRT」
   └─ cleanup_shutdown_issue.sh
@@ -267,6 +274,11 @@ journalctl -p err -b --no-pager | tail -20
 
 ## 变更日志
 
+### 2.0.0 (2026-08-15)
+- 新增：pi-agent 层文档 `pi-subagents-ENAMETOOLONG-fix.md` **2.0.0**（encodeSegment 截断+稳定哈希、existingResultFile ENAMETOOLONG 静默容错、migrateLegacyResultSegments 启动期自愈迁移 + 直接目录扫描兜底；中文路径 session 触发）
+- 新增：triggers「ENAMETOOLONG」「subagent_wait 挂起」「async 结果丢失」
+- 新增：决策树分支「subagent 报 ENAMETOOLONG / subagent_wait 挂起」
+
 ### 1.8.0 (2026-08-10)
 - 新增：系统层 — `chrome-leak-reaper.md`（Chrome 内存泄漏排查 + chrome-reaper v3 维护：chromedp/桥实例/zygote 误杀 PPID 链修复/restart 残留/profile 锁冲突，基于 2026-08-10 第三次泄漏实战）
 - 更新：`freeze-oom-protection.md` 1.0.0 → **1.1.0**（新增死机元凶排查：chrome 泄漏排查命令 + 交叉引用；front matter triggers「内存被吃光」）
@@ -317,4 +329,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-10（1.8.0 新增 chrome-leak-reaper.md；freeze-oom-protection 1.1.0 加泄漏源排查）*
+*最后更新: 2026-08-15（2.0.0 新增 pi-subagents-ENAMETOOLONG-fix.md 2.0.0：encodeSegment 三层修复 + 遗留目录迁移）*

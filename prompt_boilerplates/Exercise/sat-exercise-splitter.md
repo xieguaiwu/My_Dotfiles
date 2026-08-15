@@ -1,6 +1,6 @@
 ---
 name: sat-exercise-splitter
-version: 1.0.3
+version: 1.0.4
 description: 识别多个SAT专题练习文件，按难度分section生成题目与答案+解析两个LaTeX文件，各section题号自 1 重排，tectonic编译。位于 SAT 工具链上游——下游可接入 sat-error-note-generator（Obsidian 错题笔记）或 mistake-practice-generation（AI 练习卷）
 triggers:
   - "拆分SAT专题练习"
@@ -191,6 +191,12 @@ tectonic "{output_name}_answers.tex"
   - 两文件 section 结构一致
   - `grep -c '\\item'` 与源题块数相符
   - **答案字母抽样校验**：从 Easy/Medium/Hard 各随机抽 3 题，对照源 PDF 的 Correct Answer 字段手工确认——此步检测文本提取中的 OCR 错误或清洗失误（尤其当源 PDF 包含扫描页时）
+  - **题干完整性校验（必做，防 vision 模型静默丢内容）**：
+    1. 每页 probe FIRST_WORDS token 覆盖检查（见注意 #13）——命中 < 50% 的页补扫
+    2. 问题含 "underlined" 的页必须有 `*[UL_START]*` 标记
+    3. notes 题型页必须有 bullet 列表（生成后 grep `\\begin{itemize}` 数 = notes 题数）
+    4. 引用 table/graph 的题必须有对应 tabular/图片（grep `tabular` 数 = 表格题数）
+    5. 抽 3-5 页渲染图用多模态 agent（visual-engineering / multimodal-looker）视觉复核：填空下划线、划线句、表格对齐、中文渲染、无溢出/重叠
 - 题量逾 40 时，调 subagent 复核题目-答案对应（momus 或 oracle，`timeoutMs: 600000`，`clarify: false`）
 
 ### 8. 汇报
@@ -310,8 +316,20 @@ Easy: 12 题 | Medium: 12 题 | Hard: 6 题
 10. **QID 注释**：每题保留 `% QID: xxxxxxxx`，便于 Bluebook 回查与去重核对
 11. **题号以页面序/FOOTER 为准**：vision 转录时模型自报的 `Q<num>` 不可信（实测报 Q1 实为 Q16）；解析阶段按 PDF 页面顺序编号，用转录的 FOOTER/页码交叉验证
 12. **转录增量保存**：整卷转录时每页完成即写入 raw.json，中途失败可断点续跑；rationale 缺失（"Not answerable"/"not provided in the image"）的页面标记待补扫（换模型或裁剪重读），不得静默留空
+13. **题干完整性交叉验证（probe FIRST_WORDS 法）**：vision 转录后，模型可能静默丢弃 passage/笔记列表而只输出问题句+选项（实测 M2 Q13 文献整段丢失、4 页 notes 题型笔记列表全丢，长度检测抓不到——丢失后问题句仍有 70-200 字符）。检测：
+    - 用 probe 阶段记录的每页 `FIRST_WORDS` 提取关键 token（专有名词/数字/长词），检查转录文本是否包含；命中 < 50% 即 suspect → 补扫
+    - 短题干（<130 字符）直接 suspect → 补扫（注：仅长度检测不够，p40 丢失后仍有 144 字符）
+    - **notes 题型专项**：页面含 "researching a topic" / "notes" 字样的题，转录必须含 bullet 列表（`- ` 行）；无 bullet → 补扫
+    - **划线句题专项**：问题含 "underlined" 的页，转录必须含 `*[UL_START]*...*[UL_END]*` 标记；缺失时用中文解析/答案解析反推划线句文本（实测 glm-4v 只标出 4/6 页）
+    - 补扫 prompt 必须强制 `PASSAGE:/QUESTION:/OPTIONS:` 三节结构 + 逐条 bullet 输出，否则模型仍会丢
+14. **表格/图表内容检测**：题目引用 table/graph/text 但转录无对应数据块（pipe 行 / FIGURE_BBOX）→ 报警并补扫。生成 LaTeX 时 pipe 表格必须转 `tabular`（自动列宽：表头 >18 字符用 `p{}` 比例列宽 + `\footnotesize`，防 Overfull）
+15. **笔记列表 LaTeX 化**：转录的 `- ` bullet 行须转 `\begin{itemize}` 列表（需 `\usepackage{enumitem}` 支持 `[nosep]`）；ASCII 直引号 `"` 须成对转 `` `` '' ``（仅转 Unicode 弯引号不够）
 
 ## 变更日志
+
+### 1.0.4 (2026-08-13)
+- 新增注意 #13-15 + §7 题干完整性校验：vision 模型静默丢 passage/笔记列表的检测法（probe FIRST_WORDS token 覆盖 / notes 题型 bullet 专项 / 划线句 UL 标记专项 / 表格数据块检测），补扫 prompt 强制 PASSAGE/QUESTION/OPTIONS 三节结构；pipe 表格→tabular 自动列宽；bullet→itemize + ASCII 引号成对转义
+- 来源：2026-06 SAT 第二套转录事故（M2 Q13 文献整段丢失、4 页 notes 列表丢失，长度检测抓不到；多模态 agent 视觉复核发现）
 
 ### 1.0.3 (2026-08-12)
 - 注意 #2：补充整卷扫描版处理路径（指向 exam-paper-cloner §0.3a.11 服务器端扫描）

@@ -1,7 +1,7 @@
 ---
 name: error-checklist-creator
-version: 1.5.0
-description: 按学科生成超紧凑LaTeX易错点清单——三轨排版：文科轨（liberal_arts，AP_Lang 表格型 + Tip/Rule + Quick Checklist）、理科轨（science，common_necessaties / physics_common 双栏公式速查）、计算机轨（cs，最终CSA易错点整理 代码驱动型）；新特性：章节分组（grouping=chapters）+ Core Principles 前置、陷阱分类系统（Trap Taxonomy）、双 agent 并行审查（momus+ultrabrain）、SAT 中文分析模式（language=sat_cn）；只积累普遍性易错规律、禁止照搬具体错题
+version: 1.6.0
+description: 按学科生成超紧凑LaTeX易错点清单——三轨排版：文科轨（liberal_arts，AP_Lang 表格型 + Tip/Rule + Quick Checklist）、理科轨（science，common_necessaties / physics_common 双栏公式速查）、计算机轨（cs，最终CSA易错点整理 代码驱动型）；新特性：章节分组（grouping=chapters）+ Core Principles 前置、陷阱分类系统（Trap Taxonomy）、双 agent 并行审查（momus+ultrabrain）、SAT 中文分析模式（language=sat_cn）；v1.6.0 新增 TikZ 示意图规范（图+公式成对、V 上 SA 下）、glm-4.5v 视觉验证闭环、红黑变色节制原则；只积累普遍性易错规律、禁止照搬具体错题
 triggers:
   - "易错点清单"
   - "生成错题清单"
@@ -737,6 +737,29 @@ System.out.println(s1.equals(s2));   // true (contents equal)
 
 ---
 
+## 实战经验（2026-08-15 实测，SAT3_Math_Error_Checklist 立体几何图块）
+
+### 示意图（TikZ 内联）与公式成对原则
+- **示意图一律 TikZ 内联**（`\usepackage{tikz}`），不用外部图片：自包含、矢量、随文档缩放，tectonic 可直接编译；禁止依赖外部 PNG/文件夹（共享单文件时图会丢）
+- **图+公式必须成对**：公式直接放进图内（体积在上 `V=...`、表面积在下 `SA=...`），禁止图形块与公式文本分离——分离迫使读者做"图→公式"心智映射，是最大视觉缺陷（双多模态 agent 审查一致确认）
+- 每个 tikzpicture 用 `\useasboundingbox (0,-0.42) rectangle (2.6,1.7)` 统一框尺寸保证多图对齐；公式 node 放框内顶部（y≈1.5）/底部（y≈-0.12），图形主体居中；图间 `\hspace{0.45em}` 防"互相渗入"
+- 表面积公式引入新变量（如斜高 $\ell$）时**必须同步在图上标注**（棱锥斜高虚线从顶点到底棱中点、圆锥直接标在母线），否则变量悬空
+
+### 视觉验证闭环（模型不支持看图时的替代）
+- 当前模型直接看不了图时：`pdftoppm -png -r 200` 渲染页面 → zhipu glm-4.5v（key 在 `~/.pi/agent/auth.json` 的 zhipu）逐项检查（公式缺失/标签重叠/可读性/颜色方案）→ 按反馈微调 → 复验；glm-4.5v 对标签碰撞敏感（能发现 0.03cm 级压线），反馈可靠
+- **标签坐标防压线**：标签放面内时先算该高度处斜边/母线的 x 坐标，确保标签落在面内中央且距两侧边线 ≥0.05cm（实测棱锥 $h$ 标签两次踩坑：x 偏左直接压斜边）
+- 布局审查可并行调多模态 subagent（visual-engineering / multimodal-looker），固定问题集：杂乱度 1-10、主次层级、图公式对应、具体缺陷清单
+
+### 变色节制（红黑原则）
+- **红色只留给错误警示（mist）**，正确/解释（corr）一律黑色——红绿双色大面积并置 = "圣诞树效应"，主次全失（用户明确诉求）
+- 去绿实现：`\newcommand{\corr}[1]{#1}`（保留命令名便于将来恢复）；同时删无用 `\definecolor{corrcolor}`
+- 其它装饰（`\boxed`/`\colorbox`）禁用，与既有规范一致
+
+### 压缩精简原则
+- 重复度高条目合并：如三角形不等式"只查上界"与"≤ 误当合法"合并为一条双面陷阱（严格性两个侧面）
+- 价值低/超纲小节可删：用户删除 Hollow / Compound Solids 子节（钻削复合体题 SAT 低频、单条价值低）
+- 条目数控制：每子节 1-3 组 mist/corr 为上限，超出即检查可合并性
+
 ## 执行要点
 
 ### 必须做
@@ -773,3 +796,9 @@ System.out.println(s1.equals(s2));   // true (contents equal)
 - 对公式、语法规则等没有十足把握时，通过查阅确认而非猜测硬写
 - 知识浓度高（每页应承载该学科核心易错点的 80%+）
 - 存疑条目标注 "Verify" 而非编造
+
+## 变更日志
+
+### 1.6.0 (2026-08-15)
+- 新增"实战经验"章节（执行要点前）：TikZ 内联示意图规范（图+公式成对、V 上 SA 下、useasboundingbox 对齐）、glm-4.5v 视觉验证闭环（渲染→检查→迭代）、标签坐标防压线（含 0.05cm 间隙铁律）、红黑变色节制（corr 去绿、mist 保红）、多模态 subagent 布局审查固定问题集、条目压缩合并原则
+- 背景：SAT3_Math_Error_Checklist §5 立体几何图块，双 agent 审查发现"图公式分离"缺陷 → 公式入图（V 上 SA 下）→ glm-4.5v 复验通过；用户诉求去红绿圣诞树 → corr 黑色化
