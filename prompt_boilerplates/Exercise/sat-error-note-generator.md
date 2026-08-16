@@ -1,6 +1,6 @@
 ---
 name: sat-error-note-generator
-version: 1.2.0
+version: 1.4.0
 description: 从SAT答题记录和试卷PDF中提取错题/标记题，生成或追加 Obsidian 错题分析笔记（整卷分析与单题积累两种模式）
 triggers:
   - "整理SAT错题"
@@ -16,7 +16,7 @@ inputs:
     description: 试卷/答案解析 PDF 路径（官方题库 PDF 含文本层与 Question ID，优先）
     required: true
   - name: question_specs
-    description: 单题积累模式的题目指定列表，如 [{"question": 3, "answer": "A", "correct": "D"}, {"id": "5b8f9cf2", "answer": "C", "correct": "B"}]；无 answer_file 时使用
+    description: '单题积累模式的题目指定列表，如 [{"question": 3, "answer": "A", "correct": "D"}, {"id": "5b8f9cf2", "answer": "C", "correct": "B"}]；无 answer_file 时使用'
     required: false
   - name: output_dir
     description: Obsidian Vault 输出目录
@@ -282,6 +282,59 @@ File: {output_dir}/SAT RW {set_name} 错题积累.md
 当前积累: N 题
 ```
 
+## 实战经验
+
+> 每次实战后回填：新增题型模式与流程教训，版本号 +1，变更日志追加。
+
+### 1. 本地 LaTeX 源优先，零 OCR（2026-08-16, 26.6-2）
+
+真题套卷常配套本地 LaTeX：`练习批注版.tex`（题目）与 `标准答案与解析.tex`（解析）。此时**完全跳过 PDF/OCR 流程**：
+
+```bash
+grep -n "qtitle{13}" 练习批注版.tex        # 定位题干
+sed -n '1428,1480p' 标准答案与解析.tex     # 定位官方解析
+```
+
+- `\qans{13.}{B}` 结构直接给出官方答案，逐项中文解析是现成 ground truth（比 OCR 可靠得多）
+- 有本地解析 tex 时以其为权威；官方题库 PDF 的 Question ID 流程仅在无本地源时启用
+
+### 2. M1+M2 合并文件同题号——必须与用户确认 Module（教训）
+
+M1+M2 合并文件会有两个 `qtitle{13}`，**凭 answer_file 猜测会出错**：本次用户说"第十三题"，我按"学生已作答的 M1 Q13"推断，实际用户要的是 M2 Q13（未作答）。
+
+定位规则：
+
+1. `grep -n "qtitle{13}"` 看全部命中，复述确认——**不确定时直接问用户要哪个 Module**，不要猜
+2. 若用户说"第二部分的第 13 题"这类表述，直接映射 Module 2
+3. 两套答案不要混：M1 Q13 与 M2 Q13 是不同题
+
+### 3. 范围匹配题模式（scope matching）
+
+Command of Evidence / Scientific Reasoning 高频子类：题干给出**目标范围**（worldwide / global / 所有群体）与**已验证范围**（单一物种 / 单一地区 / 单一群体）的差距，问哪个发现能证明工具/结论支持目标范围。
+
+**正解**：把效果从已验证范围**推广到目标范围**的发现（跨物种、跨地区，关键词直接对位题干范围词，如 "outside the Indian Ocean" ↔ "worldwide"）。
+
+**典型干扰项**：
+- **性质混淆**：稳定性/耐久性等"工具品质" ≠ 跨范围有效性
+- **本地相关**：已验证范围内的高浓度-效果相关性（范围不扩展）
+- **同范围内比较**：同一物种受损 vs 健康场景的比较
+
+### 4. 答对/未作答题也可积累
+
+单题积累模式不只限错题。答对但考点典型（标注「答对 · 代表性题」）或未作答需讲解（标注「未作答 · 代表性题」）的题均可入笔记，用于题型模式提炼与下游练习卷生成。
+
+## 写作规范（ASD-STE100 中文适配）
+
+分析笔记是功能性文档，套用 ASD-STE100（简化技术英语，国际标准）的写作原则：
+
+- **短句**：一句一个主题，中文单句控制在 40 字内
+- **主动语态优先**：A 做 B，少用"被"
+- **术语一致**：同一概念全文同一说法，不换同义词
+- **条件前置**：如果...则...，关键条件放句首
+- **编号步骤**：分析/行动项用编号列表，结构平行
+
+题干/选项保留英文原文不受约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+
 ## 注意事项
 
 1. **词汇表禁止** — 任何时候都不要添加词汇积累、词汇表、同/反义词、学术词汇等列表。本 skill 的产出是**逻辑分析笔记**，不是词汇本
@@ -293,3 +346,9 @@ File: {output_dir}/SAT RW {set_name} 错题积累.md
 7. **Mermaid 图适度使用** — 仅在有清晰的因果链或流程关系时使用，每道题最多一个
 8. **语言** — 题干/选项保留英文原文，分析/总结/callout 一律中文（跟随 vault 既有笔记惯例）
 9. **官方解析优先** — PDF 自带 rationale 时作为 ground truth 交叉验证（防幻觉）；与官方不一致时以官方为准并标注差异
+
+## 变更日志
+
+- **1.4.0** (2026-08-16): 新增写作规范小节（ASD-STE100 中文适配）——分析笔记遵守简化技术英语原则（短句/术语一致/主动语态/条件前置），完整规范见 technical-writing-standard.md
+
+- **1.3.0** (2026-08-16): 新增「实战经验」章节——① 本地 LaTeX 源（`练习批注版.tex` / `标准答案与解析.tex`）优先于 PDF/OCR，`\qtitle{}`/`\qans{}{}` 直接 grep 定位；② M1+M2 合并文件同题号**必须与用户确认 Module**（凭 answer_file 猜测曾出错，教训）；③ 范围匹配题模式（scope matching）正解 = 效果推广到目标范围 + 三类干扰；④ 答对/未作答题均可积累

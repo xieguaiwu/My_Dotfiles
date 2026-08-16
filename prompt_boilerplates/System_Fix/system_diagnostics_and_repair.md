@@ -1,6 +1,6 @@
 ---
 name: system-diagnostics-and-repair
-version: 1.0.0
+version: 1.1.0
 description: 排查 Linux 桌面系统问题（Fedora/Arch/Debian），收集硬件、内核、服务、日志信息，诊断常见缺陷并给出无需重启的修复方案
 triggers:
   - "系统问题排查"
@@ -245,6 +245,18 @@ sudo modprobe -r btusb; and sudo modprobe btusb
 | 蓝牙 | 重载后 `rfkill list` 无阻塞，`systemctl status bluetooth` active |
 | 硬件加速 | `glxinfo -B \| grep Accelerated` → yes |
 | 网络连通 | `ping -c1 8.8.8.8` → 成功 |
+
+## 脚本输出文本规范（ASD-STE100）
+
+诊断/修复脚本与用户的自动化文字交互（echo、提示、错误消息）遵守 ASD-STE100（简化技术英语，国际标准）规范：
+
+- **短句**：一条消息 ≤ 20 词（中文 ≤ 40 字），一句一个信息
+- **指令祈使**：提示操作直接说"要做什么"
+- **术语一致**：同一脚本内同一概念同一措辞
+- **状态消息**：固定前缀模板（[OK] / [FAIL] / [WARN]），机器可读且人可读
+- **错误消息**：先说原因再说动作，附可执行建议
+
+完整规范见 [technical-writing-standard.md](../technical-writing-standard.md) 第 7 节。
 
 ## 输出格式
 

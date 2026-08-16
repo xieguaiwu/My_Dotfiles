@@ -1,6 +1,6 @@
 ---
 name: tor-browser-check-and-fix
-version: 1.0.0
+version: 1.2.1
 description: 检查 Tor Browser 配置与连通性，定位 bootstrap 失败根因（IPv6 bridge、代理类型、直连封锁），修复 torrc 并经真实 tor 内核实测验证至 100%
 triggers:
   - "tor浏览器用不了"
@@ -20,7 +20,7 @@ inputs:
     required: false
     default: 127.0.0.1:7897
   - name: fix_mode
-    description: 修复模式: ask（先问后改）, auto（直接修复）, report（仅诊断不改）
+    description: '修复模式: ask（先问后改）, auto（直接修复）, report（仅诊断不改）'
     required: false
     default: "ask"
 tools:
@@ -185,6 +185,10 @@ curl -s --unix-socket /tmp/verge/verge-mihomo.sock http://localhost/connections 
 11. **写操作前备份** — 改 torrc 前必 `cp` 备份，遵循偏好 ⑧ 与 ask_user 流程
 
 ## 变更日志
+
+### 1.2.1 (2026-08-16)
+- 修复：front matter version 补齐 1.0.0→1.2.1（与变更日志顶条 1.2.0 脱节，历史遗留）
+- 修复：inputs description 含裸半角冒号致严格 YAML 解析失败，已加引号（规则见 skill_creator.md 检查清单 G 组）
 
 ### 1.2.0 (2026-08-11)
 - **核心教训**：torrc 由 prefs.js 的 `torbrowser.settings.bridges.*` 在每次启动时重新生成——只改 torrc 会被覆盖（实证：21:27 改 IPv4，21:34 浏览器启动即还原 IPv6）

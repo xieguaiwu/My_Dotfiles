@@ -1,6 +1,6 @@
 ---
 name: project-documentation-protocol
-version: 1.0.1
+version: 1.1.0
 description: 跨项目标准化文档协议——进入项目时按规范阅读项目文档（含 graphify 知识图谱）和工作完成后按规范更新项目文档（含 graphify 知识图谱）
 triggers:
   - "标准化文档流程"
@@ -541,6 +541,21 @@ graphify query "社区划分" --graph graphify-out/graph.json
 
 ---
 
+## 文档写作规范（ASD-STE100）
+
+本 skill 产出的项目文档（README、CONTEXT、CHANGELOG、计划等）是功能性文档，遵守 ASD-STE100 简化技术英语（国际标准，现行 Issue 9）核心规则：
+
+- **短句**：每句 ≤ 20 词，一句一个主题
+- **指令祈使**：操作说明直接以动词开头（"Run the command."），不用叙述式（"The command should be run."）
+- **主动语态**：描述用 "A does B"，仅在必要时用被动
+- **现在时为主**：不用 will 将来时与 -ing 进行时
+- **一词一义**：同一概念全文同一词汇，不换同义词；不用行话/含糊词
+- **数字用数字**：写 5、25，不写 five、twenty-five
+- **条件前置**：关键条件放句首（If ..., then ...）
+- **列表平行**：编号步骤动词开头、结构平行
+
+完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+
 ## 注意事项
 
 ### 边界情况
@@ -600,6 +615,9 @@ graphify query "社区划分" --graph graphify-out/graph.json
 ---
 
 ## 变更日志
+
+### 1.1.0 (2026-08-16)
+- 新增：文档写作规范（ASD-STE100）——项目文档遵守简化技术英语核心规则，完整规范见 technical-writing-standard.md
 
 ### 1.0.1 (2026-08-03)
 - 移除：§A5 中 OpenCode 配置特征检测与决策矩阵条目（opencode_health_check.md 已删除）

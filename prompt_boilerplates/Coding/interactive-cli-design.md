@@ -1,6 +1,6 @@
 ---
 name: interactive-cli-design
-version: 1.3.0
+version: 1.4.0
 description: 交互式 CLI/TUI 工具设计规范——文本输入键位、信息密集界面导航与搜索、PTY 自动化测试验收、已有项目代码资产复用。构建或审查终端交互工具时逐条对照
 triggers:
   - "交互式 CLI"
@@ -866,7 +866,23 @@ if len([]rune(line)) > contentW {
 
 ---
 
+## 用户可见文本写作规范（ASD-STE100）
+
+帮助文本、错误信息、提示语是功能性文档，遵守 ASD-STE100 核心规则：
+
+- **短句**：每句 ≤ 20 词，一句一个指令
+- **指令祈使**：直接说要做什么（"Press Enter to confirm."），不用"用户应当..."式绕弯
+- **术语一致**：同一操作全文同一措辞，不换同义词（help/error/prompt 三处必须一致）
+- **主动语态、现在时**：避免 will 将来时与 -ing 进行时
+- **数字用数字**：写 5、25
+- **条件前置**：错误信息先说条件再说动作（If the file exists, ...）
+
+完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+
 ## 变更日志
+
+### 1.4.0 (2026-08-16)
+- 新增：文档写作规范（ASD-STE100）——用户可见文本（帮助/错误/提示）遵守简化技术英语核心规则，完整规范见 technical-writing-standard.md
 
 ### 1.3.0 (2026-08-03)
 - 新增：§7「弹窗/叠加层渲染规范」——从 news-report LLM 弹窗排版错乱中提取 5 条规则

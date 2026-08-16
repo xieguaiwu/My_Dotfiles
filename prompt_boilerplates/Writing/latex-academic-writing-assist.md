@@ -1,6 +1,6 @@
 ---
 name: latex-academic-writing-assist
-version: 1.0.0
+version: 1.1.0
 description: 学术论文LaTeX排版、格式检查、编译调试与样式优化
 triggers:
   - "LaTeX辅助"
@@ -522,6 +522,18 @@ latexmk -pdf -interaction=nonstopmode "{tex_file}"
 ```
 
 ---
+
+## 学术写作清晰性（ASD-STE100 轻度适配）
+
+学术写作不套用 STE 的词典控制与祈使句，仅采纳其「清晰性」子集（ASD-STE100，简化技术英语，国际标准）：
+
+- **句子长度**：以 ≤ 25 词为宜，避免超长句与多重嵌套从句
+- **术语一致**：同一概念全文同一措辞，不换同义词
+- **主动语态优先**：保留学术惯用的被动表达，但能主动则主动
+- **数字用数字**：写 5、25，不用 five、twenty-five
+- **一词一义**：避免一词多义造成的歧义
+
+完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
 
 ## 输出格式
 

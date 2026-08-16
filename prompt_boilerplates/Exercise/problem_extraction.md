@@ -1,6 +1,6 @@
 ---
 name: problem-extraction
-version: 1.0.0
+version: 1.1.0
 description: 从图片或文档中提取题目并整理成Obsidian格式的Markdown笔记
 triggers:
   - "整理题目"
@@ -80,6 +80,18 @@ $$\int_1^{\infty} f(x) \, dx = ...$$
 
 **Answer: A**
 ```
+
+## 写作规范（ASD-STE100 中文适配）
+
+分析笔记是功能性文档，套用 ASD-STE100（简化技术英语，国际标准）的写作原则：
+
+- **短句**：一句一个主题，中文单句控制在 40 字内
+- **主动语态优先**：A 做 B，少用"被"
+- **术语一致**：同一概念全文同一说法，不换同义词
+- **条件前置**：如果...则...，关键条件放句首
+- **编号步骤**：分析/行动项用编号列表，结构平行
+
+题目内容与数学符号不受约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
 
 ## 注意事项
 

@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 2.2.0
+version: 2.3.1
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -78,6 +78,12 @@ triggers:
   - "中文路径 session"
   - "播放卡顿"
   - "显卡加速"
+  - "SSH 连不上 Windows"
+  - "KEXINIT"
+  - "Connection reset"
+  - "Windows OpenSSH"
+  - "火绒拦截 SSH"
+  - "Windows 脚本"
   - "没响应"
   - "bridge 反复重启"
   - "输出千篇一律"
@@ -189,7 +195,7 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 何时生效 |
 |:--|:---|:---:|---|---|
-| 1 | [system_diagnostics_and_repair.md](system_diagnostics_and_repair.md) | 1.0.0 | 全面系统诊断（硬件/内核/服务/日志），输出修复方案 | 无明确症状的故障、定期体检 |
+| 1 | [system_diagnostics_and_repair.md](system_diagnostics_and_repair.md) | 1.1.0 | 全面系统诊断（硬件/内核/服务/日志），输出修复方案 | 无明确症状的故障、定期体检 |
 | 2 | [system_fix.fish](system_fix.fish) | 1.0.0 | 可执行健康检查脚本（core dump/缓存/DNF/崩溃告警），`--dry`/`--auto` 模式 | 想自动跑一遍检查时 |
 
 ## 二、系统层（桌面/OS/资源）
@@ -198,7 +204,7 @@ journalctl -p err -b --no-pager | tail -20
 |:--|:---|:---:|---|---|
 | 3 | [enospc-tmpfs-check.md](enospc-tmpfs-check.md) | 1.1.0 | ENOSPC/tmpfs 满排查：磁盘 vs 内存盘区分、换出页占配额、孤儿进程清理；先判别 ENOSPC ≠ ENAMETOOLONG | 任何 "no space left"、写入失败、tmpfs 满、ENAMETOOLONG 判别 |
 | 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.1.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足 |
-| 3.6 | [chrome-leak-reaper.md](chrome-leak-reaper.md) | 1.0.0 | Chrome 内存泄漏排查与 chrome-reaper 维护：chromedp/桥实例/zygote 误杀（PPID 链）/restart 残留/profile 锁冲突 | chrome 吃内存、chrome 进程多、DidStartWorkerFail、bridge 反复重启 |
+| 3.6 | [chrome-leak-reaper.md](chrome-leak-reaper.md) | 1.1.0 | Chrome 内存泄漏排查与 chrome-reaper 维护：chromedp/桥实例/zygote 误杀（PPID 链）/restart 残留/profile 锁冲突 | chrome 吃内存、chrome 进程多、DidStartWorkerFail、bridge 反复重启 |
 | 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.2.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅） | 代理失效、无法上网、订阅失败 |
 | 5 | [fcitx5_punctuation_fix.md](fcitx5_punctuation_fix.md) | 1.0.0 | fcitx5 中文标点问题（半角标点、顿号书名号打不出） | 输入法标点异常 |
 | 6 | [cleanup_shutdown_issue.sh](cleanup_shutdown_issue.sh) | — (脚本) | 关机/重启清理脚本（systemd 守卫、ABRT 处理） | 关机慢、关机报错 |
@@ -207,31 +213,37 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 7 | [subagent-temperature-fix.md](subagent-temperature-fix.md) | 2.6.1 | subagent temperature 配置链验证与重打补丁（21 检查点，双保险：传递链 + YAML 兜底） | subagent 输出温度异常 |
+| 7 | [subagent-temperature-fix.md](subagent-temperature-fix.md) | 2.15.0 | subagent temperature 配置链验证与重打补丁（21 检查点，双保险：传递链 + YAML 兜底） | subagent 输出温度异常 |
 | 8 | [piagent-search-pipeline-fix.md](piagent-search-pipeline-fix.md) | 1.0.0 | web_search 配置/编码崩溃/provider 不可用/内容检索失败 | 搜索报错、provider 502 |
 | 9 | [piagent-cmap-fix.md](piagent-cmap-fix.md) | 1.0.0 | 处理 PDF 时 CMap 字体警告（unpdf file:// 路径问题） | PDF 解析报 CMap 警告 |
-| 10 | [memory-index-condense.md](memory-index-condense.md) | 1.3.0 | 记忆索引调查与浓缩（并行 reader 合成 MEMORY_INDEX.md） | 记忆膨胀、索引过时 |
+| 10 | [memory-index-condense.md](memory-index-condense.md) | 1.3.1 | 记忆索引调查与浓缩（并行 reader 合成 MEMORY_INDEX.md） | 记忆膨胀、索引过时 |
 | 10.5 | [pi-subagents-ENAMETOOLONG-fix.md](pi-subagents-ENAMETOOLONG-fix.md) | 3.1.0 | pi-subagents 结果索引 ENAMETOOLONG 独立修复 skill：判别路由、四层补丁 verify/apply（含完整重打代码）、死索引与空目录清扫、验证闭环 | subagent 报 ENAMETOOLONG、subagent_wait 挂起、async 结果丢失、中文路径 session、pi-subagents 升级后补丁重打 |
 
 ## 四、维护类
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 11 | [dotfiles-sync-and-audit.md](dotfiles-sync-and-audit.md) | 1.1.0 | 配置同步到 My_Dotfiles + Git 仓库审计（有上游不推送） | 定期备份、配置审计 |
+| 11 | [dotfiles-sync-and-audit.md](dotfiles-sync-and-audit.md) | 1.2.1 | 配置同步到 My_Dotfiles + Git 仓库审计（有上游不推送） | 定期备份、配置审计 |
 
 ## 五、应用层（桌面应用故障）
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
 | 12 | [ghostwriter-math-check-and-fix.md](ghostwriter-math-check-and-fix.md) | 1.1.0 | ghostwriter 预览数学公式不渲染三层自愈（pandoc wrapper / flatpak override / 导出器配置）+ 全链验证 | ghostwriter 公式不渲染、数学显示源码 |
-| 13 | [tor-browser-check-and-fix.md](tor-browser-check-and-fix.md) | 1.0.0 | Tor 浏览器 bootstrap 失败检查+修复（IPv6 bridge / Socks5Proxy 禁，HTTPSProxy + IPv4 bridge 实测可用）+ tor 内核验证 | tor 无法连接、bootstrap 卡 0% |
-| 14 | [video-playback-decode-fix.md](video-playback-decode-fix.md) | 2.1.0 | 视频播放/解码故障修复总集：A 无法解码（ffmpeg-free 禁解码器 → `dnf swap` 换完整 ffmpeg，脚本 [video-decode-ffmpeg-swap.sh](video-decode-ffmpeg-swap.sh)）；B 能播放但雪花/花屏（iHD 弃 Gen9 HEVC → i965 驱动 + VAAPI 硬解 + 环境注入，脚本 [video-playback-vaapi-fix.sh](video-playback-vaapi-fix.sh)）；覆盖 VLC/mpv/ffplay/GStreamer + iHD/i965 驱动层 | VLC/mpv 报 could not decode、播不了、雪花、花屏、画面错乱、播放卡顿、显卡加速异常 |
+| 13 | [tor-browser-check-and-fix.md](tor-browser-check-and-fix.md) | 1.2.1 | Tor 浏览器 bootstrap 失败检查+修复（IPv6 bridge / Socks5Proxy 禁，HTTPSProxy + IPv4 bridge 实测可用）+ tor 内核验证 | tor 无法连接、bootstrap 卡 0% |
+| 14 | [video-playback-decode-fix.md](video-playback-decode-fix.md) | 2.1.1 | 视频播放/解码故障修复总集：A 无法解码（ffmpeg-free 禁解码器 → `dnf swap` 换完整 ffmpeg，脚本 [video-decode-ffmpeg-swap.sh](video-decode-ffmpeg-swap.sh)）；B 能播放但雪花/花屏（iHD 弃 Gen9 HEVC → i965 驱动 + VAAPI 硬解 + 环境注入，脚本 [video-playback-vaapi-fix.sh](video-playback-vaapi-fix.sh)）；覆盖 VLC/mpv/ffplay/GStreamer + iHD/i965 驱动层 | VLC/mpv 报 could not decode、播不了、雪花、花屏、画面错乱、播放卡顿、显卡加速异常 |
 
 ## 六、资产/数据备份类
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 15 | [sparrow-wallet-backup-test.md](sparrow-wallet-backup-test.md) | 1.0.0 | Sparrow 钱包备份完整性体检：自动定位钱包文件、明文种子检查、rbw 条目存在性 + bw 附件哈希比对、GUI 恢复演练指引（脚本 [sparrow-wallet-backup-test.sh](sparrow-wallet-backup-test.sh)） | 钱包备份验证、恢复演练、备份完整性检查 |
+| 15 | [sparrow-wallet-backup-test.md](sparrow-wallet-backup-test.md) | 1.1.0 | Sparrow 钱包备份完整性体检：自动定位钱包文件、明文种子检查、rbw 条目存在性 + bw 附件哈希比对、GUI 恢复演练指引（脚本 [sparrow-wallet-backup-test.sh](sparrow-wallet-backup-test.sh)） | 钱包备份验证、恢复演练、备份完整性检查 |
+
+## 七、Windows 远程排障
+
+| # | Skill | 版本 | 用途 | 触发场景 |
+|:--|:---|:---:|---|---|
+| 16 | [windows-scripting-and-ssh-debug.md](windows-scripting-and-ssh-debug.md) | 1.2.0 | Windows 端 .bat/.ps1 脚本编写规范自查（ASCII/提权/PS5.1 语法陷阱/BOM/bsdtar+xz/盘符）+ OpenSSH 远程排障（黑盒三测试、KEXINIT reset 排除链 10 步、前台 vs 服务差异、测试函数原始输出、杀软接力、MOTW 陷阱、脚本化协作闭环）；v1.2.0 新增输出消息规范（ASD-STE100） | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、Windows 脚本编写 |
 
 ---
 
@@ -289,6 +301,9 @@ journalctl -p err -b --no-pager | tail -20
 「钱包备份 / 备份验证 / sparrow / 恢复演练 / 助记词备份」
   └─ sparrow-wallet-backup-test.md ← 先解锁 rbw；bw 附件比对需解锁 bw 后重跑；哈希不一致=备份过期需重新上传
 
+「SSH 连不上 Windows / KEXINIT / Connection reset / Windows OpenSSH / 火绒拦截 SSH」
+  └─ windows-scripting-and-ssh-debug.md ← 黑盒三测试定位 → 排除链 10 步（杀软→防火墙→密钥权限→密钥内容→重建→算法→前台 vs 服务→重启→重注册→内置）；前台 -ddd 正常+服务 reset = 服务上下文问题（重启优先，勿反复重试触发火绒拉黑）
+
 「想自动跑系统健康检查」
   └─ system_fix.fish ← 只读检查，先 --dry
 
@@ -315,6 +330,7 @@ journalctl -p err -b --no-pager | tail -20
 | `video-playback-decode-fix.md` | `system_diagnostics_and_repair.md` | 播放类故障先查系统 ffmpeg 解码能力，再深入播放器自身；GPU 无硬件加速时驱动安装/VAAPI 能力对照收拢于 video skill |
 | `dotfiles-sync-and-audit.md` | `memory-index-condense.md` | 两者都涉及 pi-agent 配置文件的备份/维护 |
 | 任何 pi-agent 层文档修复后 | `memory-index-condense.md` | 修复后如记忆/索引涉及，需重新浓缩 |
+| `windows-scripting-and-ssh-debug.md` 排障产出 | `win-ssh-setup` 工具包（~/Downloads/win-ssh-setup） | Windows 端脚本均按该 skill 规范编写：fix-sshd-service.bat（阶梯修复）/ diag-sshd3.bat（前台调试）/ install-rsync.bat（MSYS2+rsync） |
 
 ## 维护约定
 
@@ -333,10 +349,23 @@ journalctl -p err -b --no-pager | tail -20
       必须能触发本入口）
 - [ ] 目录表版本与文档 front matter version 一致
 - [ ] 变更日志已追加、末尾「最后更新」已同步
+- [ ] 全部文档 front matter 严格 YAML 解析通过（命令见 skill_creator.md 步骤 4：python3 yaml.safe_load）
 
 ---
 
 ## 变更日志
+
+### 2.3.1 (2026-08-16)
+- 修复：YAML 解析失败 3 文件（dotfiles-sync-and-audit 1.2.1 / tor-browser-check-and-fix 1.2.1 / video-playback-decode-fix 2.1.1，inputs description 裸半角冒号加引号）；tor-browser front matter 版本补齐（1.0.0→1.2.1，与变更日志顶条脱节）
+- 新增：维护检查清单「front matter 严格 YAML 解析」条目（防复发，规范见 skill_creator.md 检查清单 G 组）
+
+### 2.3.0 (2026-08-16)
+- 新增：第七类「Windows 远程排障」— `windows-scripting-and-ssh-debug.md` 1.0.0（win-ssh-setup 实战沉淀：.bat/.ps1 编写规范 11 项、黑盒三测试、KEXINIT reset 排除链 10 步、前台 vs 服务差异定位、脚本化协作闭环）
+- 新增：决策树分支「SSH 连不上 Windows / KEXINIT / Connection reset」+ 交叉引用 1 条 + triggers 5 个
+- 新增：决策树注释——前台 -ddd 正常 + 服务 reset = 服务上下文问题，重启优先，勿反复重试触发火绒拉黑
+- 更新：windows-scripting-and-ssh-debug.md 1.1.0 → 1.2.0（新增输出消息规范，ASD-STE100 脚本输出文本，见根目录 technical-writing-standard.md 第 7 节）
+- 更新：system_diagnostics_and_repair.md 1.0.0 → 1.1.0（新增脚本输出文本规范，ASD-STE100）
+- 修复：目录表 5 行版本漂移同步（chrome-leak-reaper 1.1.0、dotfiles-sync-and-audit 1.2.0、memory-index-condense 1.3.1、sparrow-wallet-backup-test 1.1.0、subagent-temperature-fix 2.15.0）
 
 ### 2.2.0 (2026-08-16)
 - 修复：裸词 "OOM" trigger 子串误命中风险（zoom/room 等常见英文词均含 oom）→ 保留 "OOM"（内核 OOM 报错原文）并新增 "out of memory" 短语，匹配算法新增短串语境确认规则
@@ -408,4 +437,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-16（index 2.2.0：短串语境确认 + 缺口词补齐；pi-subagents-ENAMETOOLONG-fix.md 3.1.0：补丁完整代码）*
+*最后更新: 2026-08-16（index 2.3.1：YAML 修复 3 文件 + tor 版本补齐；2.3.0：新增第七类 Windows 远程排障 + windows-scripting-and-ssh-debug.md 1.0.0；2.2.0：短串语境确认 + 缺口词补齐）*

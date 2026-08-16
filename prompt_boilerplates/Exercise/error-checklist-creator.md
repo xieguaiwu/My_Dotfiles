@@ -1,7 +1,7 @@
 ---
 name: error-checklist-creator
-version: 1.6.0
-description: 按学科生成超紧凑LaTeX易错点清单——三轨排版：文科轨（liberal_arts，AP_Lang 表格型 + Tip/Rule + Quick Checklist）、理科轨（science，common_necessaties / physics_common 双栏公式速查）、计算机轨（cs，最终CSA易错点整理 代码驱动型）；新特性：章节分组（grouping=chapters）+ Core Principles 前置、陷阱分类系统（Trap Taxonomy）、双 agent 并行审查（momus+ultrabrain）、SAT 中文分析模式（language=sat_cn）；v1.6.0 新增 TikZ 示意图规范（图+公式成对、V 上 SA 下）、glm-4.5v 视觉验证闭环、红黑变色节制原则；只积累普遍性易错规律、禁止照搬具体错题
+version: 1.7.0
+description: 按学科生成超紧凑LaTeX易错点清单——三轨排版：文科轨（liberal_arts，AP_Lang 表格型 + Tip/Rule + Quick Checklist）、理科轨（science，common_necessaties / physics_common 双栏公式速查）、计算机轨（cs，最终CSA易错点整理 代码驱动型）；新特性：章节分组（grouping=chapters）+ Core Principles 前置、陷阱分类系统（Trap Taxonomy）、双 agent 并行审查（momus+ultrabrain）、SAT 中文分析模式（language=sat_cn）；v1.6.0 新增 TikZ 示意图规范（图+公式成对、V 上 SA 下）、glm-4.5v 视觉验证闭环、红黑变色节制原则；只积累普遍性易错规律、禁止照搬具体错题。v1.7.0 新增文档写作规范（ASD-STE100）
 triggers:
   - "易错点清单"
   - "生成错题清单"
@@ -726,6 +726,23 @@ System.out.println(s1.equals(s2));   // true (contents equal)
 
 ---
 
+## 文档写作规范（ASD-STE100）
+
+本 skill 产出的易错点清单是功能性学习文档。条目语言与说明文字遵守 ASD-STE100 简化技术英语（国际标准，现行 Issue 9）核心规则：
+
+- **短句**：每句 ≤ 20 词，一句一个主题
+- **指令祈使**：一句一个指令，直接以动词开头（"Solve the equation."），不用"Students should..."式叙述
+- **主动语态**：描述用 "A does B"，仅在必要时用被动
+- **现在时为主**：不用 will 将来时与 -ing 进行时
+- **一词一义**：同一概念全文同一词汇，不换同义词；不用行话/习语/含糊词（etc.）
+- **数字用数字**：写 5、25，不写 five、twenty-five
+- **条件前置**：关键条件放句首（If ..., then ...）
+- **列表平行**：编号步骤动词开头、结构平行
+
+数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+
+---
+
 ## 文件命名
 
 ```
@@ -798,6 +815,9 @@ System.out.println(s1.equals(s2));   // true (contents equal)
 - 存疑条目标注 "Verify" 而非编造
 
 ## 变更日志
+
+### 1.7.0 (2026-08-16)
+- 新增：文档写作规范（ASD-STE100）小节——条目语言与说明文字遵守 STE 核心规则（短句、指令祈使、主动语态、一词一义、列表平行）
 
 ### 1.6.0 (2026-08-15)
 - 新增"实战经验"章节（执行要点前）：TikZ 内联示意图规范（图+公式成对、V 上 SA 下、useasboundingbox 对齐）、glm-4.5v 视觉验证闭环（渲染→检查→迭代）、标签坐标防压线（含 0.05cm 间隙铁律）、红黑变色节制（corr 去绿、mist 保红）、多模态 subagent 布局审查固定问题集、条目压缩合并原则
