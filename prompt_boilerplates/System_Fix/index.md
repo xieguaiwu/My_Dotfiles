@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 2.0.0
+version: 2.2.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -19,6 +19,7 @@ triggers:
   - "输入法标点"
   - "PDF 报错"
   - "CMap"
+  - "unpdf"
   - "subagent 异常"
   - "ENAMETOOLONG"
   - "subagent_wait 挂起"
@@ -52,6 +53,40 @@ triggers:
   - "备份验证"
   - "恢复演练"
   - "助记词备份"
+  - "死机"
+  - "冻结"
+  - "卡死"
+  - "内存不足"
+  - "OOM"
+  - "out of memory"
+  - "Purging GPU memory"
+  - "subagent 温度异常"
+  - "web_search 报错"
+  - "provider 不可用"
+  - "搜索无结果"
+  - "记忆混乱"
+  - "MEMORY_INDEX 过时"
+  - "找不到历史上下文"
+  - "ABRT"
+  - "备份 dotfiles"
+  - "git 仓库审计"
+  - "ghostwriter 公式"
+  - "数学显示源码"
+  - "订阅失败"
+  - "半角标点"
+  - "bootstrap 卡 0%"
+  - "中文路径 session"
+  - "播放卡顿"
+  - "显卡加速"
+  - "没响应"
+  - "bridge 反复重启"
+  - "输出千篇一律"
+  - "PDF 解析警告"
+  - "关机报错"
+  - "markdown 公式不显示"
+  - "tor 浏览器用不了"
+  - "tor 连不上"
+  - "系统健康检查"
 inputs:
   - name: symptom
     description: 用户描述的症状/报错信息
@@ -83,7 +118,7 @@ tools:
 |:---|:---|:---|
 | **A. 未知/综合性问题** | "电脑卡"、"出问题了"、无明显报错 | → 步骤 2 全面诊断 |
 | **B. 明确报错** | 有具体错误信息（ENOSPC、Segfault、报错弹窗等） | → 步骤 3 按症状匹配 |
-| **C. pi-agent 自身故障** | subagent/web_search/PDF/记忆 相关报错 | → 直接加载 pi-agent 层文档 |
+| **C. pi-agent 自身故障** | subagent/web_search/PDF/记忆 相关报错 | → 按步骤 3 决策树匹配 pi-agent 层文档 |
 | **D. 应用级故障** | 代理/输入法/特定应用不工作 | → 直接加载应用层文档 |
 | **E. 维护任务** | 同步配置、清理、健康检查 | → 直接加载维护类文档 |
 
@@ -102,7 +137,21 @@ journalctl -p err -b --no-pager | tail -20
 
 ### 步骤 3：明确报错 → 按症状匹配文档
 
-对照下方 **「症状 → 文档决策树」** 加载对应修复文档。若一个症状匹配多个文档，按表格顺序执行。
+**匹配算法（自动路由的核心）**：
+
+1. 将用户描述与 front matter triggers + 决策树关键词做**子串匹配**（大小写不敏感，
+   中英文均可，如 "enametoolong" 命中 "ENAMETOOLONG"）
+2. 同义词扩展：报错码原文（`name too long`、`no space left`、`out of memory`）、
+   常见缩写（ABRT）、应用名（VLC、tor、sparrow）、空格变体（「tor连不上」vs
+   「tor 连不上」）
+3. **短串须语境确认**：长度 ≤4 的 trigger（如 tor、VLC、OOM）子串匹配会误命中
+   （zoom/room 含 oom、history 含 tor）——须结合整句语境（内存报错/浏览器报错）
+   才路由，纯子串命中但语境不符时不触发
+4. 多命中时按决策树**从上到下顺序**执行；同一症状多文档命中（如死机↔chrome
+   泄漏↔ENOSPC）按决策树注释的前置依赖顺序加载
+5. 无命中 → 走 catch-all：`system_diagnostics_and_repair.md` 全面诊断
+6. 命中后**必须 read 该 skill 全文并按其实质「执行流程」执行**——目录表只是索引，
+   不是执行内容
 
 ### 步骤 4：修复完成后验证 + 沉淀
 
@@ -147,7 +196,7 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 3 | [enospc-tmpfs-check.md](enospc-tmpfs-check.md) | 1.0.0 | ENOSPC/tmpfs 满排查：磁盘 vs 内存盘区分、换出页占配额、孤儿进程清理 | 任何 "no space left"、写入失败、tmpfs 满 |
+| 3 | [enospc-tmpfs-check.md](enospc-tmpfs-check.md) | 1.1.0 | ENOSPC/tmpfs 满排查：磁盘 vs 内存盘区分、换出页占配额、孤儿进程清理；先判别 ENOSPC ≠ ENAMETOOLONG | 任何 "no space left"、写入失败、tmpfs 满、ENAMETOOLONG 判别 |
 | 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.1.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足 |
 | 3.6 | [chrome-leak-reaper.md](chrome-leak-reaper.md) | 1.0.0 | Chrome 内存泄漏排查与 chrome-reaper 维护：chromedp/桥实例/zygote 误杀（PPID 链）/restart 残留/profile 锁冲突 | chrome 吃内存、chrome 进程多、DidStartWorkerFail、bridge 反复重启 |
 | 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.2.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅） | 代理失效、无法上网、订阅失败 |
@@ -162,7 +211,7 @@ journalctl -p err -b --no-pager | tail -20
 | 8 | [piagent-search-pipeline-fix.md](piagent-search-pipeline-fix.md) | 1.0.0 | web_search 配置/编码崩溃/provider 不可用/内容检索失败 | 搜索报错、provider 502 |
 | 9 | [piagent-cmap-fix.md](piagent-cmap-fix.md) | 1.0.0 | 处理 PDF 时 CMap 字体警告（unpdf file:// 路径问题） | PDF 解析报 CMap 警告 |
 | 10 | [memory-index-condense.md](memory-index-condense.md) | 1.3.0 | 记忆索引调查与浓缩（并行 reader 合成 MEMORY_INDEX.md） | 记忆膨胀、索引过时 |
-| 10.5 | [pi-subagents-ENAMETOOLONG-fix.md](pi-subagents-ENAMETOOLONG-fix.md) | 2.0.0 | pi-subagents 结果索引/result-pending ENAMETOOLONG 修复（encodeSegment 截断+稳定哈希、超长 stat 静默容错、遗留目录启动期迁移） | subagent 报 ENAMETOOLONG、subagent_wait 挂起、async 结果丢失、中文路径 session、pi-subagents 升级后补丁重打 |
+| 10.5 | [pi-subagents-ENAMETOOLONG-fix.md](pi-subagents-ENAMETOOLONG-fix.md) | 3.1.0 | pi-subagents 结果索引 ENAMETOOLONG 独立修复 skill：判别路由、四层补丁 verify/apply（含完整重打代码）、死索引与空目录清扫、验证闭环 | subagent 报 ENAMETOOLONG、subagent_wait 挂起、async 结果丢失、中文路径 session、pi-subagents 升级后补丁重打 |
 
 ## 四、维护类
 
@@ -217,7 +266,7 @@ journalctl -p err -b --no-pager | tail -20
   └─ memory-index-condense.md
 
 「subagent 报 ENAMETOOLONG / subagent_wait 挂起 / async 结果丢失 / 中文路径 session」
-  └─ pi-subagents-ENAMETOOLONG-fix.md ← 补丁在 ~/.pi/agent/npm，升级覆盖后需重打；修复后须重启 pi 主进程
+  └─ pi-subagents-ENAMETOOLONG-fix.md ← 独立 skill：判别→核查补丁→清扫→验证；补丁在 ~/.pi/agent/npm，升级覆盖后需重打；修复后须重启 pi 主进程
 
 「关机慢 / 关机报错 / ABRT」
   └─ cleanup_shutdown_issue.sh
@@ -240,6 +289,9 @@ journalctl -p err -b --no-pager | tail -20
 「钱包备份 / 备份验证 / sparrow / 恢复演练 / 助记词备份」
   └─ sparrow-wallet-backup-test.md ← 先解锁 rbw；bw 附件比对需解锁 bw 后重跑；哈希不一致=备份过期需重新上传
 
+「想自动跑系统健康检查」
+  └─ system_fix.fish ← 只读检查，先 --dry
+
 「以上都不是 / 综合症状 / 说不清楚」
   └─ system_diagnostics_and_repair.md（全面诊断）
        └─ 发现具体问题 → 回到上方对应文档
@@ -256,6 +308,7 @@ journalctl -p err -b --no-pager | tail -20
 | `chrome-leak-reaper.md` | `freeze-oom-protection.md` / `enospc-tmpfs-check.md` | chrome 泄漏引爆死机或 tmpfs/swap 压力时互相配合 |
 | `enospc-tmpfs-check.md` Phase 4.2 | `cleanup_shutdown_issue.sh` | 清理任务可复用其 systemd 守卫模式 |
 | `enospc-tmpfs-check.md` 预防 | `piagent-search-pipeline-fix.md` | opencli/chromedp 泄漏是搜索管道与 tmpfs 满的共同隐患 |
+| `enospc-tmpfs-check.md` 先判别 | `pi-subagents-ENAMETOOLONG-fix.md` | /tmp 下 `name too long`（路径组件 >255B）不是 ENOSPC，路由到该文档 |
 | `ghostwriter-math-check-and-fix.md` 第三层 | `dotfiles-sync-and-audit.md` | 配置修正后需同步 My_Dotfiles 备份副本 |
 | `clash-verge-diagnose-and-fix.md` | `system_diagnostics_and_repair.md` Phase 1.5 网络 | 网络层诊断先跑通用检查再深入 Clash |
 | `tor-browser-check-and-fix.md` 前置 | `clash-verge-diagnose-and-fix.md` | Tor 经本地代理引导，代理失效时先修 Clash 再修 Tor |
@@ -270,9 +323,35 @@ journalctl -p err -b --no-pager | tail -20
 - 文档退役时：保留条目但标注 `~~deprecated~~` 与替代者，不直接删除
 - 沉淀新故障经验的模板：参照 `enospc-tmpfs-check.md`（front matter + 核心认知 + Phase 1-5 + 预防 + 注意事项）
 
+### 路由完整性自检（每次新增/更新文档后必须执行）
+
+自动路由依赖「triggers → 决策树 → 目录表」三者一致，逐项核对：
+
+- [ ] 每个文档在目录表有行（编号/版本/用途/触发场景）
+- [ ] 每个可修复文档在决策树有分支（含加载顺序/前置依赖注释）
+- [ ] 每个决策树分支的关键症状词都在 front matter triggers 中（用户说得出的话
+      必须能触发本入口）
+- [ ] 目录表版本与文档 front matter version 一致
+- [ ] 变更日志已追加、末尾「最后更新」已同步
+
 ---
 
 ## 变更日志
+
+### 2.2.0 (2026-08-16)
+- 修复：裸词 "OOM" trigger 子串误命中风险（zoom/room 等常见英文词均含 oom）→ 保留 "OOM"（内核 OOM 报错原文）并新增 "out of memory" 短语，匹配算法新增短串语境确认规则
+- 新增：决策树 9 个缺失分支词 triggers（没响应/bridge 反复重启/输出千篇一律/PDF 解析警告/关机报错/markdown 公式不显示/tor 浏览器用不了/tor 连不上空格变体/系统健康检查）
+- 精进：步骤 1 C 类「直接加载」→「按步骤 3 决策树匹配」
+- 修正：2.0.0 变更日志条目时代错乱（2026-08-15 条目误述 08-16 的 2.1.0 三波+第 4 层内容）
+- 更新：`pi-subagents-ENAMETOOLONG-fix.md` 3.0.0 → **3.1.0**（第 3/4 层补丁完整代码、清扫命令去 npx 依赖与硬编码 uid）
+
+### 2.1.0 (2026-08-16)
+- 重构：`pi-subagents-ENAMETOOLONG-fix.md` 2.1.0 → **3.0.0**（独立可执行 skill：任务目标/执行流程 6 步/输出格式/注意事项，聚合散落修复知识）
+- 更新：`enospc-tmpfs-check.md` 1.0.0 → **1.1.0**（先判别 ENOSPC ≠ ENAMETOOLONG 交叉路由）
+- 修复：triggers 与决策树不一致——补全缺失症状词（死机/冻结/OOM、web_search 报错、记忆混乱、ghostwriter、ABRT、半角标点、订阅失败、bootstrap 卡 0%、中文路径 session、播放卡顿/显卡加速等 25 个）
+- 新增：步骤 3 匹配算法（子串/同义词/多命中顺序/未命中 catch-all/命中后须读全文执行）
+- 新增：路由完整性自检清单（triggers ↔ 决策树 ↔ 目录表三者一致）
+- 新增：决策树分支「想自动跑系统健康检查」→ system_fix.fish
 
 ### 2.0.0 (2026-08-15)
 - 新增：pi-agent 层文档 `pi-subagents-ENAMETOOLONG-fix.md` **2.0.0**（encodeSegment 截断+稳定哈希、existingResultFile ENAMETOOLONG 静默容错、migrateLegacyResultSegments 启动期自愈迁移 + 直接目录扫描兜底；中文路径 session 触发）
@@ -329,4 +408,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-15（2.0.0 新增 pi-subagents-ENAMETOOLONG-fix.md 2.0.0：encodeSegment 三层修复 + 遗留目录迁移）*
+*最后更新: 2026-08-16（index 2.2.0：短串语境确认 + 缺口词补齐；pi-subagents-ENAMETOOLONG-fix.md 3.1.0：补丁完整代码）*

@@ -1,6 +1,6 @@
 ---
 name: enospc-tmpfs-check
-version: 1.0.0
+version: 1.1.0
 description: 诊断 ENOSPC (no space left on device) 报错是否来自 tmpfs/内存盘而非磁盘。覆盖根盘空闲但写入失败、/run/user/1000 等 tmpfs 满、swap 压力导致 tmpfs 配额耗尽、孤儿进程泄漏等场景，提供清理与预防方案
 triggers:
   - "ENOSPC"
@@ -13,6 +13,8 @@ triggers:
   - "cannot create file"
   - "write failed"
   - "nvim报错"
+  - "ENAMETOOLONG"
+  - "name too long"
 inputs:
   - name: error_source
     description: 报错的程序（nvim / vim / 编译器 / 下载工具 / 任意写入者）
@@ -29,6 +31,21 @@ tools:
 ---
 
 # ENOSPC / tmpfs 空间检查 Skill
+
+## 先判别：ENOSPC ≠ ENAMETOOLONG（2026-08-16 补充）
+
+`/tmp` 是 tmpfs，**但 /tmp 下的报错不全是空间问题**。先看错误码再动手，
+别按文档标题直接进排查流程：
+
+| 错误码 | 含义 | 处理 |
+|--------|------|------|
+| `ENOSPC` / `no space left on device` | 空间/配额不足（含换出页占配额） | 本文档全流程 |
+| `ENAMETOOLONG` / `name too long` | **单个路径组件名超 255B**（URL 编码的中文 session 路径等），与空间无关 | 路由到 [pi-subagents-ENAMETOOLONG-fix.md](pi-subagents-ENAMETOOLONG-fix.md)，按其步骤 1-4 判别与修复 |
+| `EACCES` / `EPERM` | 权限 | 属主/挂载选项（如 tmpfs `mode=`），不是本文档范围 |
+
+快速自检：`df -h /tmp && df -i /tmp` 先排除真空间问题；字节数测量（
+`python3 -c "print(len('<超长名字>'.encode()))"`，>255B 即 ENAMETOOLONG）与
+完整修复流程见 pi-subagents-ENAMETOOLONG-fix.md 步骤 1-4。
 
 ## 任务目标
 
@@ -178,3 +195,15 @@ rm -f /run/user/1000/.wtest
 8. **容器内 `/dev/shm` 默认只有 64M**：Docker/Podman 容器里 ENOSPC 常因 /dev/shm 太小，`docker run --shm-size=2g` 解决；先 `df -h /dev/shm` 确认。
 9. **本文档属于 System_Fix 技能集**：入口与症状决策树见 [index.md](index.md)；opencli/chromedp 泄漏与搜索管道的关联见 [piagent-search-pipeline-fix.md](piagent-search-pipeline-fix.md)；chrome 泄漏（含 headless 实例堆积）的排查与修复见 [chrome-leak-reaper.md](chrome-leak-reaper.md)。
 10. **判断 chrome 实例归属不能只看 scope 内有无主进程**：flatpak 会把 zygote/renderer 树拆到独立 scope（与主树分离），scope 内无主进程 ≠ 孤儿——须追 PPID 链确认是否挂在受管实例（如 systemd bridge）下：链通则保护，链断才杀。误杀合法子树会引发重启-误杀恶性循环（详见 chrome-leak-reaper.md）。
+
+## 变更日志
+
+### 1.1.0 (2026-08-16)
+- 新增「先判别：ENOSPC ≠ ENAMETOOLONG」章节 + ENAMETOOLONG/name too long 触发器：
+  /tmp 下报 `name too long` 时先测路径组件字节数，>255B 路由到
+  pi-subagents-ENAMETOOLONG-fix.md，避免拿 ENOSPC 流程查 ENAMETOOLONG
+  （2026-08-16 实战：用户把 ENAMETOOLONG 刷屏误报为本文档场景，实为
+  pi-subagents 339B sessionId 死索引条目）
+
+### 1.0.0 (2026-07-31)
+- 初始发布：ENOSPC/tmpfs 满排查流程（磁盘 vs 内存盘、换出页占配额、孤儿进程清理）
