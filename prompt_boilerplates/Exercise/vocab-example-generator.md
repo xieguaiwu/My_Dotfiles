@@ -1,6 +1,6 @@
 ---
 name: vocab-example-generator
-version: 1.0.0
+version: 1.1.0
 description: 根据输入的外语单词，生成画面感强、便于记忆的例句（支持英语/德语），以帮助背诵词汇
 triggers:
   - "英语例句"
@@ -186,6 +186,19 @@ tools:
 🇩🇪 Hervorragend! Das ist genau die Lösung, nach der ich seit Wochen suche.
 🇬🇧 Excellent! That's exactly the solution I've been looking for for weeks.
 ```
+
+---
+
+## 例句写作规范（ASD-STE100）
+
+学习例句是功能性语言材料，遵守 ASD-STE100（简化技术英语，国际标准）的简洁性原则：
+
+- **短句**：每条例句 ≤ 20 词，一句一个意思
+- **一词一义**：同一单词的例句中不混用多义，避免歧义语境
+- **现在时为主**：避免 -ing 进行时堆叠
+- **主动语态优先**：描述用 "A does B"
+
+完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
 
 ---
 

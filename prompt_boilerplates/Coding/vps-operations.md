@@ -1,6 +1,6 @@
 ---
 name: vps-operations
-version: 2.0.0
+version: 2.2.0
 description: 从零部署和管理 VPS 服务器，含 OS 加固、Hysteria2 代理搭建、服务部署、监控备份、排错恢复的全流程运维手册
 triggers:
   - "搭建私人代理"
@@ -448,7 +448,22 @@ VPS 端:
 - 数据库写入用 `os.CreateTemp` + `os.Rename` 实现原子替换
 - 密码比较用 `subtle.ConstantTimeCompare` 防时序攻击
 
+## 脚本输出文本规范（ASD-STE100）
+
+部署/运维脚本与用户的自动化文字交互（echo、systemd 服务提示、错误消息）遵守 ASD-STE100（简化技术英语，国际标准）规范：
+
+- **短句**：一条消息 ≤ 20 词（中文 ≤ 40 字），一句一个信息
+- **指令祈使**：提示操作直接说"要做什么"
+- **术语一致**：同一脚本内同一概念同一措辞，不换同义词
+- **状态消息**：固定前缀模板（[OK] / [FAIL] / [WARN]）
+- **错误消息**：先说原因再说动作，附可执行建议
+
+完整规范见 [technical-writing-standard.md](../technical-writing-standard.md) 第 7 节。
+
 ## 变更日志
+
+### 2.2.0 (2026-08-16)
+- 新增：脚本输出文本规范（ASD-STE100）——新增「脚本输出文本规范」章节，部署/运维脚本 echo、systemd 服务提示、错误消息遵守简化技术英语的短句/祈使/术语一致/状态前缀规范，详见 technical-writing-standard.md 第 7 节
 
 ### 2.1.0 (2026-07-28)
 - 新增：4.3 用户管理首选 `vpscap users` CLI（保留 curl 作为 fallback）

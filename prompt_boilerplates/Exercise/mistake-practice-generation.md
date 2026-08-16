@@ -1,7 +1,7 @@
 ---
 name: mistake-practice-generation
-version: 1.2.0
-description: 不限科目，支持诊断驱动生成与目录扫描双模式。从错题诊断（trap type + difficulty）或错题文件直接生成全英文 LaTeX 选择题练习卷。SAT 模式支持 CB 官方拟真格式（Question ID + Assessment 头 + Rationale 逐项解析）。内置语义甄别专项模式、难度递进设计、答案分布均衡算法、系列化增量生成。v1.2.0 新增升级维度规则（反堆料铁律）：同陷阱家族升级 = 换更深的维度而非加计算/加长句（规范见 difficulty-escalation-framework.md）
+version: 1.3.0
+description: 不限科目，支持诊断驱动生成与目录扫描双模式。从错题诊断（trap type + difficulty）或错题文件直接生成全英文 LaTeX 选择题练习卷。SAT 模式支持 CB 官方拟真格式（Question ID + Assessment 头 + Rationale 逐项解析）。内置语义甄别专项模式、难度递进设计、答案分布均衡算法、系列化增量生成。v1.2.0 新增升级维度规则（反堆料铁律）：同陷阱家族升级 = 换更深的维度而非加计算/加长句（规范见 difficulty-escalation-framework.md）。v1.3.0 新增文档写作规范（ASD-STE100）
 triggers:
   - "错题重排"
   - "生成错题卷"
@@ -25,14 +25,14 @@ inputs:
     required: false
     default: 0
   - name: diagnostic_specs
-    description: 诊断规格对象。{ trap_families: [{family, difficulty?, count?}], format: "sat"|"generic" }。提供时跳过目录扫描，直接进入陷阱→题目设计。trap_family 可选值含 "semantic-discrimination" "subject-verb-agreement" "modifier-placement" "transitions" "boundaries" "form-structure-sense" 等。
+    description: '诊断规格对象。{ trap_families: [{family, difficulty?, count?}], format: "sat"|"generic" }。提供时跳过目录扫描，直接进入陷阱→题目设计。trap_family 可选值含 "semantic-discrimination" "subject-verb-agreement" "modifier-placement" "transitions" "boundaries" "form-structure-sense" 等。'
     required: false
   - name: format
     description: 输出格式（"generic" 或 "sat"）。sat 模式使用 CB 官方拟真格式。
     required: false
     default: "generic"
   - name: series
-    description: 系列生成参数。{ set_number: 1, continue_from: null }。continue_from 为前一册的 Practice_N 编号，新册自动递增。
+    description: '系列生成参数。{ set_number: 1, continue_from: null }。continue_from 为前一册的 Practice_N 编号，新册自动递增。'
     required: false
 tools:
   - write
@@ -972,6 +972,23 @@ AP1_Mistake_Practice_Answers.tex        → 答案
 ├── [output]_Practice.tex                ← 题目输出
 └── [output]_Practice_Answers.tex        ← 答案输出
 ```
+
+---
+
+## 文档写作规范（ASD-STE100）
+
+本 skill 产出的英文试卷是功能性文档。题面指令、解析（rationale）、说明文字遵守 ASD-STE100 简化技术英语（国际标准，现行 Issue 9）核心规则：
+
+- **短句**：每句 ≤ 20 词，一句一个主题
+- **指令祈使**：一句一个指令，直接以动词开头（"Solve the equation."），不用"Students should..."式叙述
+- **主动语态**：描述用 "A does B"，仅在必要时用被动
+- **现在时为主**：不用 will 将来时与 -ing 进行时
+- **一词一义**：同一概念全文同一词汇，不换同义词；不用行话/习语/含糊词（etc.）
+- **数字用数字**：写 5、25，不写 five、twenty-five
+- **条件前置**：关键条件放句首（If ..., then ...）
+- **列表平行**：编号步骤动词开头、结构平行
+
+数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
 
 ---
 

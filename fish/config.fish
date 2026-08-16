@@ -4,6 +4,7 @@ end
 
 # API keys (for OpenCode + pi-agent) — replace with your own keys
 set -gx OPENCODE_API_KEY "<your-key>"
+#xieguaiwu: "<your-key>"
 #songjieshi: set -gx OPENCODE_API_KEY "<your-key>"
 set -gx DEEPSEEK_API_KEY "<your-key>"
 set -gx NVIDIA_API_KEY "<your-key>"

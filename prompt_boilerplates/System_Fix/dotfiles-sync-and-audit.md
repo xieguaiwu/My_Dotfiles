@@ -1,6 +1,6 @@
 ---
 name: dotfiles-sync-and-audit
-version: 1.2.0
+version: 1.2.1
 description: 三合一维护：本地配置增量同步至 ~/My_Dotfiles/（惟更新已有项）、审计本地 Git 仓库提交推送状态、自动生成 commit 信息。自有仓库可 push，有上游者惟本地 commit。执行前必先征得用户同意
 triggers:
   - "同步配置"
@@ -13,7 +13,7 @@ triggers:
   - "git仓库审计"
 inputs:
   - name: scope
-    description: 执行范围: all（全部）, sync-only（仅同步配置）, audit-only（仅审计仓库）
+    description: '执行范围: all（全部）, sync-only（仅同步配置）, audit-only（仅审计仓库）'
     required: false
     default: "all"
   - name: dotfiles_dir

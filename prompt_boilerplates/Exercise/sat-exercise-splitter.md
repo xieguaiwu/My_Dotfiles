@@ -1,7 +1,7 @@
 ---
 name: sat-exercise-splitter
-version: 1.0.4
-description: 识别多个SAT专题练习文件，按难度分section生成题目与答案+解析两个LaTeX文件，各section题号自 1 重排，tectonic编译。位于 SAT 工具链上游——下游可接入 sat-error-note-generator（Obsidian 错题笔记）或 mistake-practice-generation（AI 练习卷）
+version: 1.2.0
+description: 识别多个SAT专题练习文件，按难度分section生成题目与答案+解析两个LaTeX文件，各section题号自 1 重排，tectonic编译。文本层 PDF 直接几何提取：PyMuPDF thin-line 下划线检测、y-gap 段落切分、诗歌逐行排版、答案全量比对。位于 SAT 工具链上游——下游可接入 sat-error-note-generator（Obsidian 错题笔记）或 mistake-practice-generation（AI 练习卷）
 triggers:
   - "拆分SAT专题练习"
   - "题目答案解析分离"
@@ -190,13 +190,13 @@ tectonic "{output_name}_answers.tex"
   - 各 section 题号连续，自 1 起无跳号
   - 两文件 section 结构一致
   - `grep -c '\\item'` 与源题块数相符
-  - **答案字母抽样校验**：从 Easy/Medium/Hard 各随机抽 3 题，对照源 PDF 的 Correct Answer 字段手工确认——此步检测文本提取中的 OCR 错误或清洗失误（尤其当源 PDF 包含扫描页时）
+  - **答案全量比对（首选，替代抽样）**：从源 PDF 用 PyMuPDF 正则 `ID: {qid} Answer\nCorrect Answer: {X}` 提取期望答案表，与答案 tex 的 `\item \textbf{X}` + `\qid{...}` 按顺序 zip 比对，全量 0 差异才算过（实测 52/52）。抽样手工确认仅在源为扫描版（无文本层）时作补充
   - **题干完整性校验（必做，防 vision 模型静默丢内容）**：
     1. 每页 probe FIRST_WORDS token 覆盖检查（见注意 #13）——命中 < 50% 的页补扫
     2. 问题含 "underlined" 的页必须有 `*[UL_START]*` 标记
     3. notes 题型页必须有 bullet 列表（生成后 grep `\\begin{itemize}` 数 = notes 题数）
     4. 引用 table/graph 的题必须有对应 tabular/图片（grep `tabular` 数 = 表格题数）
-    5. 抽 3-5 页渲染图用多模态 agent（visual-engineering / multimodal-looker）视觉复核：填空下划线、划线句、表格对齐、中文渲染、无溢出/重叠
+    5. 抽 3-5 页渲染图用多模态 agent（visual-engineering / multimodal-looker）视觉复核：填空下划线、划线句、表格对齐、中文渲染、无溢出/重叠；**两 agent 均不可用（410/429）时降级 zhipu glm-4.5v 脚本化逐页 QA（见注意 #21）**
 - 题量逾 40 时，调 subagent 复核题目-答案对应（momus 或 oracle，`timeoutMs: 600000`，`clarify: false`）
 
 ### 8. 汇报
@@ -324,8 +324,54 @@ Easy: 12 题 | Medium: 12 题 | Hard: 6 题
     - 补扫 prompt 必须强制 `PASSAGE:/QUESTION:/OPTIONS:` 三节结构 + 逐条 bullet 输出，否则模型仍会丢
 14. **表格/图表内容检测**：题目引用 table/graph/text 但转录无对应数据块（pipe 行 / FIGURE_BBOX）→ 报警并补扫。生成 LaTeX 时 pipe 表格必须转 `tabular`（自动列宽：表头 >18 字符用 `p{}` 比例列宽 + `\footnotesize`，防 Overfull）
 15. **笔记列表 LaTeX 化**：转录的 `- ` bullet 行须转 `\begin{itemize}` 列表（需 `\usepackage{enumitem}` 支持 `[nosep]`）；ASCII 直引号 `"` 须成对转 `` `` '' ``（仅转 Unicode 弯引号不够）
+16. **下划线几何检测（文本层 PDF 必做，PyMuPDF）**：CB 官方题 PDF 的下划线不是文本属性（span flags 检测不到），而是 **thin-line 绘制图形**——`page.get_drawings()` 中 height<2.5pt、width>5pt、y 在正文区（45<y<800）的水平矩形。单词判定：word bbox 垂直相交（`wy1 >= L.y0-1.5` 且 `wy0 <= L.y1+1.5`）。两个铁律：
+    - **同词多 rule 必须 union 合并后判定**：一行下划线常被渲染为多段矩形（实测 "Jinshanzhuang—Hong" 一词被两条相邻 rule 各盖一半，只取第一条 rule 会丢 "—Hong"；"(Plebejus" 被相邻 rule 各盖一半，取错 rule 直接丢词）。对每个词收集所有垂直相交 rule，合并 x 区间，取覆盖最大的区间再判
+    - **部分覆盖词按标点切 sub-token**：下划线可能只盖一个词的一部分（实测 "rock—a soft kind of rock—marched" 只划 "a soft kind of rock"）。整词判定会把 "rock" 和 "marched" 一起划进去。按 `[A-Za-z0-9]+|[^A-Za-z0-9]+` 切 sub-token，宽度按比例分配（`词宽 × len(sub)/len(tok)`），判定 `frac≥0.5 或 (frac≥0.2 且 rule 贴 sub-token 边缘)`
+    - **片段分组**：同线相邻（x-gap<40pt 且 y 差<6）或下一行续接（y-gap 0~10pt）合并为一片段；跨行片段用 `\x00` 哨兵连接做 stripped 匹配后按行切分，再以 alnum rank 映射回转义坐标（`rank = alnum 计数`）
+    - **匹配**：两侧都转 stripped（仅保留 alnum、小写）全文搜索，命中后按标点 pad 扩展边界；注意转义文本里 `—` 已变 `---`、弯引号已变 `` `` '' ``，pad 集合需含反引号与双引号：
+      ```python
+      ESC_PAD = set(".,;:!?-'") | {"`", '"', "(", ")", "[", "]"}  # 转义后文本用
+      RAW_PAD = set(".,;:!?\u2014\u2013'\"\u2018\u2019\u201c\u201d()[]")  # 原始文本用
+      ```
+    - 渲染用 `\usepackage[normalem]{ulem}` 的 `\uline{}`（支持跨行折行；`\underline` 不可跨行）
+17. **pdftotext 丢段落 → 几何切段**：本系列 PDF 所有 passage 行距恒 1.8pt（源文件里段落之间也无空行），pdftotext 的段落信息全丢。用 PyMuPDF `get_text("dict")` 版式按 **y-gap > 8pt** 切段（实测真段落间隙 10.8pt）；**跨页不切段**（passage 可中途换页继续）；排除页头元数据列（y<140）与前一题答案块（ID 行上方，见 #20）
+18. **诗歌 intro/verse 切分**：intro 止于首个以 `[.!?]` 结尾的行——**行尾可能是引号**（实测 "At Newport." 以 `”` 结尾，`[.!?]$` 会漏判）→ 用 `[.!?]['"”’]*$`。诗句逐行渲染：`\begin{quote}\itshape ...\\...\end{quote}` 每行独立；**`\uline` 不可跨 `\\`**——跨行下划线按行拆成多个 `\uline`（哨兵匹配 + rank 映射后逐行应用）
+19. **passage 几何定位**：`page.search_for("ID: {qid}")` 定位 ID 行；passage = ID 行下方至问题行（`^(Which|What) choice`）之间的版式行（可跨页扫描）。**过滤条件用 `y0 >= id_y1 - 0.5`**——用 `y1 < id_y1` 会把 ID 行自己漏进 passage（连带破坏 poem 检测，因为首行不再是 "poem" intro）
+20. **答案全量比对脚本**（注意 #7 的落地实现）：
+    ```python
+    expected = {}  # {qid: letter}
+    for m in re.finditer(r"ID:\s*([0-9a-f]+)\s*Answer\s*\nCorrect Answer:\s*([A-D])", src_pdf_text):
+        expected[m.group(1)] = m.group(2)
+    letters = re.findall(r"\\item \\textbf\{([A-D])\}", ans_tex)
+    qids = re.findall(r"\\qid\{([0-9a-f]+)\}", ans_tex)
+    mismatch = [q for l, q in zip(letters, qids) if expected.get(q) != l]
+    ```
+21. **视觉验证降级链**：visual-engineering / multimodal-looker 可能 410/429（2026-08-16 双双 410）→ 降级 **zhipu glm-4.5v**（key 在 `~/.pi/agent/auth.json` 的 `zhipu`，POST `https://open.bigmodel.cn/api/paas/v4/chat/completions`，模型名 `glm-4.5v`，base64 data URL 传图），逐页跑固定 QA 问题集（下划线连续性/诗歌逐行/段落空行/溢出重叠/命令残渣）。**答案页误报规避**：QA prompt 必须说明答案页按设计只含字母+rationale（无下划线、无诗歌排版），否则 glm-4.5v 会把 rationale 里提到的 "the underlined phrase" 误报为缺失下划线
+
+## 文档写作规范（ASD-STE100）
+
+本 skill 产出的英文试卷是功能性文档。题面指令、解析（rationale）、说明文字遵守 ASD-STE100 简化技术英语（国际标准，现行 Issue 9）核心规则：
+
+- **短句**：每句 ≤ 20 词，一句一个主题
+- **指令祈使**：一句一个指令，直接以动词开头（"Solve the equation."），不用"Students should..."式叙述
+- **主动语态**：描述用 "A does B"，仅在必要时用被动
+- **现在时为主**：不用 will 将来时与 -ing 进行时
+- **一词一义**：同一概念全文同一词汇，不换同义词；不用行话/习语/含糊词（etc.）
+- **数字用数字**：写 5、25，不写 five、twenty-five
+- **条件前置**：关键条件放句首（If ..., then ...）
+- **列表平行**：编号步骤动词开头、结构平行
+
+数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
 
 ## 变更日志
+
+### 1.2.0 (2026-08-16)
+- 新增：文档写作规范（ASD-STE100）小节——题面指令、解析、说明文字遵守 STE 核心规则（短句、指令祈使、主动语态、一词一义、数字用数字）
+
+### 1.1.0 (2026-08-16)
+- 新增注意 #16-21：文本层 PDF 几何提取全套经验——PyMuPDF thin-line 下划线检测（同词多 rule 必须 union 合并、部分覆盖词按标点切 sub-token、\x00 哨兵跨行匹配、stripped+pad 扩展）、y-gap 几何段落切分（pdftotext 丢段落）、诗歌 intro/verse 切分（[.!?] 允许尾部引号）与 \uline 不跨行、passage 几何定位（y0 ≥ id_y1 过滤）、答案全量比对脚本、视觉验证降级链（glm-4.5v + 答案页误报规避）
+- §7 验证：答案字母抽样校验改为全量比对首选（实测 52/52）；视觉复核补充 glm-4.5v 降级路径
+- 来源：2026-08-16 Text Structure and Purpose 拆分（Medium 31 + Hard 21 = 52 题）——下划线/段落/诗歌三类 fidelity 问题全部在几何层解决
 
 ### 1.0.4 (2026-08-13)
 - 新增注意 #13-15 + §7 题干完整性校验：vision 模型静默丢 passage/笔记列表的检测法（probe FIRST_WORDS token 覆盖 / notes 题型 bullet 专项 / 划线句 UL 标记专项 / 表格数据块检测），补扫 prompt 强制 PASSAGE/QUESTION/OPTIONS 三节结构；pipe 表格→tabular 自动列宽；bullet→itemize + ASCII 引号成对转义

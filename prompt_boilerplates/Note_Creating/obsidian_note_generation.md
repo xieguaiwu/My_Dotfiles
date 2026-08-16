@@ -1,6 +1,6 @@
 ---
 name: obsidian-note-generation
-version: 1.0.0
+version: 1.1.0
 description: 从知识点生成Obsidian格式的Markdown笔记
 triggers:
   - "生成笔记"
@@ -140,6 +140,20 @@ flowchart LR
 
 ### 8. 写入文件
 使用 `write` 将笔记写入 `{output_dir}/{笔记名}.md`。
+
+## 笔记写作规范（ASD-STE100 中文适配）
+
+笔记正文是功能性文档，套用 ASD-STE100（简化技术英语，国际标准）的写作原则：
+
+- **短句**：一句一个主题，中文单句控制在 40 字内
+- **主动语态优先**：A 做 B，少用"被"
+- **术语一致**：同一概念全文同一说法，不换同义词
+- **指令祈使**：操作说明直接以动词开头（"打开文件"），不用"文件需要被打开"
+- **条件前置**：如果...则...，关键条件放句首
+- **编号步骤**：程序性内容用编号列表，结构平行
+- **数字用数字**：写 5、25，不写五、二十五
+
+完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
 
 ## 输出格式
 

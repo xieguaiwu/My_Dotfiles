@@ -1,6 +1,6 @@
 ---
 name: content-safe-handler
-version: 1.1.0
+version: 1.1.1
 description: 通用内容安全规避策略 - 在AI执行任务时，自行判断哪些内容可能触发审查误报，并选择合适策略绕过
 triggers:
   - "规避审查"
@@ -20,7 +20,7 @@ inputs:
     description: 需要处理的内容或任务描述
     required: true
   - name: mode
-    description: 处理模式: auto（自动风险判断并选择策略）/ placeholder（仅占位符替换）/ direct（直接处理，不加规避）
+    description: '处理模式: auto（自动风险判断并选择策略）/ placeholder（仅占位符替换）/ direct（直接处理，不加规避）'
     required: false
     default: auto
   - name: fallback_threshold

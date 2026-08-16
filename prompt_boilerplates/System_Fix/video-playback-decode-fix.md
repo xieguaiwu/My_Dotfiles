@@ -1,6 +1,6 @@
 ---
 name: video-playback-decode-fix
-version: 2.1.0
+version: 2.1.1
 description: Fedora 视频播放/解码故障修复总集——A 无法解码（ffmpeg-free 禁专利解码器 → RPM Fusion dnf swap 换完整 ffmpeg）；B 能播放但雪花/花屏（iHD 驱动缺 Gen9 HEVC 硬解 → i965 驱动 + VAAPI 硬解 + 环境注入）；覆盖 VLC/mpv/ffplay/GStreamer 全链路与 Intel VAAPI 驱动层（iHD/i965），附两脚本与 MPRIS 位置恢复
 triggers:
   - "VLC"
@@ -32,7 +32,7 @@ inputs:
     required: false
     default: "auto-detect"
   - name: fix_mode
-    description: 修复模式: ask（先问后改）, auto（直接修复）, report（仅诊断不改）
+    description: '修复模式: ask（先问后改）, auto（直接修复）, report（仅诊断不改）'
     required: false
     default: "ask"
   - name: file_path
@@ -297,6 +297,9 @@ dbus-send --session --print-reply --dest=org.mpris.MediaPlayer2.vlc /org/mpris/M
 14. **本文档属于 System_Fix 技能集**：入口与症状决策树见 [index.md](index.md)；系统级诊断流程见 [system_diagnostics_and_repair.md](system_diagnostics_and_repair.md)。
 
 ## 变更日志
+
+### 2.1.1 (2026-08-16)
+- 修复：inputs description 含裸半角冒号致严格 YAML 解析失败，已加引号（规则见 skill_creator.md 检查清单 G 组）
 
 ### 2.1.0 (2026-08-10)
 - 改名：`vlc-hevc-decode-fix.md` → **`video-playback-decode-fix.md`**（universal 化，覆盖播放器/解码库/驱动层全链路）；脚本随之改名 `video-decode-ffmpeg-swap.sh`、`video-playback-vaapi-fix.sh`

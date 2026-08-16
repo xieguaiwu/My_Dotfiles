@@ -1,7 +1,7 @@
 ---
 name: exam-paper-cloner
-version: 1.3.0
-description: 阅读现有试卷作为模板和/或根据知识点描述，生成全英文LaTeX试卷，使用tectonic编译，极致节省纸张。支持扫描版PDF作为模板（§0.3a Vision OCR 流水线）。v1.2.0 新增难度升级专项（§1.7）：按学科分轨（数理禁堆计算量/文科允许句法复杂度），12+10 维度矩阵与反堆料检查清单，难度档案标注（规范见 difficulty-escalation-framework.md）。v1.3.0 更新 §0.3a：vision 模型可用性实测表+fallback 链+增量保存+rationale 缺失检测+新增 §0.3a.11 服务器端扫描（资源确认/SSH 不稳应对/RapidOCR 版本坑）
+version: 1.4.0
+description: 阅读现有试卷作为模板和/或根据知识点描述，生成全英文LaTeX试卷，使用tectonic编译，极致节省纸张。支持扫描版PDF作为模板（§0.3a Vision OCR 流水线）。v1.2.0 新增难度升级专项（§1.7）：按学科分轨（数理禁堆计算量/文科允许句法复杂度），12+10 维度矩阵与反堆料检查清单，难度档案标注（规范见 difficulty-escalation-framework.md）。v1.3.0 更新 §0.3a：vision 模型可用性实测表+fallback 链+增量保存+rationale 缺失检测+新增 §0.3a.11 服务器端扫描（资源确认/SSH 不稳应对/RapidOCR 版本坑）。v1.4.0 新增文档写作规范（ASD-STE100）
 triggers:
   - "clone exam"
   - "生成试卷"
@@ -1062,7 +1062,25 @@ Q3: A → 验证: ... ❌ 计算错误，应为 B（已修复）
 3. 文件已存在时优先用 `edit` 修改，不用 `write` 覆写
 4. 确需覆写时先告知用户
 
+## 文档写作规范（ASD-STE100）
+
+本 skill 产出的英文试卷是功能性文档。题面指令、解析（rationale）、说明文字遵守 ASD-STE100 简化技术英语（国际标准，现行 Issue 9）核心规则：
+
+- **短句**：每句 ≤ 20 词，一句一个主题
+- **指令祈使**：一句一个指令，直接以动词开头（"Solve the equation."），不用"Students should..."式叙述
+- **主动语态**：描述用 "A does B"，仅在必要时用被动
+- **现在时为主**：不用 will 将来时与 -ing 进行时
+- **一词一义**：同一概念全文同一词汇，不换同义词；不用行话/习语/含糊词（etc.）
+- **数字用数字**：写 5、25，不写 five、twenty-five
+- **条件前置**：关键条件放句首（If ..., then ...）
+- **列表平行**：编号步骤动词开头、结构平行
+
+数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+
 ## 变更日志
+
+### 1.4.0 (2026-08-16)
+- 新增：文档写作规范（ASD-STE100）小节——题面指令、解析（rationale）、说明文字遵守 STE 核心规则（短句、指令祈使、主动语态、一词一义、数字用数字）
 
 ### 1.3.0 (2026-08-12)
 - §0.3a.2：模型可用性表实测更新——doubao-pro 账号级 429（Safe Experience Mode）移入不可用表；doubao-1.6-vision 404、nemotron-omni 503 标记不可用；新增 nemotron-nano-12b-v2-vl 实测可用（漏读 rationale 需补扫）

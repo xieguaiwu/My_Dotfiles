@@ -1,7 +1,7 @@
 ---
 name: ap-csa-exam-generation
-version: 1.1.0
-description: 生成AP Computer Science A完整模拟试卷(LaTeX格式)。v1.1.0 新增难度升级专项：CS轨禁用代码堆料（超长代码/更多层嵌套循环），改用边界情况、追踪变体、调试找错、算法选择、设计约束、概念辨别等维度升级（规范见 difficulty-escalation-framework.md）
+version: 1.2.0
+description: 生成AP Computer Science A完整模拟试卷(LaTeX格式)。v1.1.0 新增难度升级专项：CS轨禁用代码堆料（超长代码/更多层嵌套循环），改用边界情况、追踪变体、调试找错、算法选择、设计约束、概念辨别等维度升级（规范见 difficulty-escalation-framework.md）。v1.2.0 新增文档写作规范（ASD-STE100）
 triggers:
   - "AP CSA 试卷"
   - "生成AP试卷"
@@ -469,6 +469,23 @@ public class NumberUtil {
     \item Write the method \texttt{contains} that returns true if the target value is found in the array.
 \end{enumerate}
 ```
+
+---
+
+## 文档写作规范（ASD-STE100）
+
+本 skill 产出的英文试卷是功能性文档。题面指令、解析（rationale）、说明文字遵守 ASD-STE100 简化技术英语（国际标准，现行 Issue 9）核心规则：
+
+- **短句**：每句 ≤ 20 词，一句一个主题
+- **指令祈使**：一句一个指令，直接以动词开头（"Solve the equation."），不用"Students should..."式叙述
+- **主动语态**：描述用 "A does B"，仅在必要时用被动
+- **现在时为主**：不用 will 将来时与 -ing 进行时
+- **一词一义**：同一概念全文同一词汇，不换同义词；不用行话/习语/含糊词（etc.）
+- **数字用数字**：写 5、25，不写 five、twenty-five
+- **条件前置**：关键条件放句首（If ..., then ...）
+- **列表平行**：编号步骤动词开头、结构平行
+
+数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
 
 ---
 

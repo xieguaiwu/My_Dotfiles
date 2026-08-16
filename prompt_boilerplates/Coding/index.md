@@ -1,6 +1,6 @@
 ---
 name: coding-skills-index
-version: 1.5.1
+version: 1.6.1
 description: Coding 技能集入口——进入项目时自动加载项目文档协议、检测项目特征并引导加载对应领域技能
 triggers:
   - "进入项目"
@@ -126,8 +126,8 @@ tools:
 
 | # | Skill | 版本 | 用途 | 何时生效 |
 |:--|:---|:---:|:---|---|
-| 1 | [development-quality-gates.md](development-quality-gates.md) | 1.4.0 | 编码质量 11 关卡——写每行代码时自我对照 | 编码阶段 |
-| 2 | [project-documentation-protocol.md](project-documentation-protocol.md) | 1.0.1 | 文档阅读与更新协议——进入项目时读文档、完成工作时更新文档（含 graphify 知识图谱） | 项目入口 + 项目退出 |
+| 1 | [development-quality-gates.md](development-quality-gates.md) | 1.5.0 | 编码质量 13 关卡——写每行代码时自我对照（含关卡 13 用户可见文本，ASD-STE100） | 编码阶段 |
+| 2 | [project-documentation-protocol.md](project-documentation-protocol.md) | 1.1.0 | 文档阅读与更新协议——进入项目时读文档、完成工作时更新文档（含 graphify 知识图谱） | 项目入口 + 项目退出 |
 | 3 | [resource-aware-delegation.md](resource-aware-delegation.md) | 1.1.0 | subagent 资源感知调度——启动子代理前检查 CPU/内存/GPU 状态 | subagent 调用前 |
 
 ## 二、通用工作流
@@ -137,10 +137,10 @@ tools:
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|:---|---|
 | 4 | [improvement-loop.md](improvement-loop.md) | 1.4.0 | 修改→审查（momus）→修复（hephaestus）→再审查 的迭代循环 | 代码重构后验证质量、bug 修复后全面检查 |
-| 5 | [writing-plans.md](writing-plans.md) | 1.1.0 | 实施计划编写——零上下文执行者假设、bite-sized 任务粒度、接口契约块、无占位符、Self-Review 三查 | 多步任务（≥3 独立可测任务）实施前必须产出计划 |
+| 5 | [writing-plans.md](writing-plans.md) | 1.2.0 | 实施计划编写——零上下文执行者假设、bite-sized 任务粒度、接口契约块、无占位符、Self-Review 三查 | 多步任务（≥3 独立可测任务）实施前必须产出计划 |
 | 6 | [root-cause-debugging.md](root-cause-debugging.md) | 1.1.0 | 根因调试——先查根因再动手，四阶段流程 + Iron Law，禁止症状修复 | 任何 bug/报错/异常/测试失败/行为不符预期 |
 | 7 | [verification-before-completion.md](verification-before-completion.md) | 1.1.0 | 完成前验证——声称完成/修复/通过必须附新鲜命令输出证据（Gate Function） | 声称完成、提交前、报告结果、信任 agent 报告时 |
-| 8 | [interactive-cli-design.md](interactive-cli-design.md) | 1.3.0 | 交互式 CLI/TUI 设计规范——强制键位集、信息密集界面导航与搜索、PTY 自动化测试验收、已有代码资产复用 | 构建/审查任何交互式终端工具时逐条对照 |
+| 8 | [interactive-cli-design.md](interactive-cli-design.md) | 1.4.0 | 交互式 CLI/TUI 设计规范——强制键位集、信息密集界面导航与搜索、PTY 自动化测试验收、已有代码资产复用 | 构建/审查任何交互式终端工具时逐条对照 |
 
 > **与其他 skill 的关系**：
 > - `improvement-loop.md`：循环内「审查」阶段可结合 `development-quality-gates.md` 的关卡清单作为审查标准；循环结束后应触发 `project-documentation-protocol.md` 的阶段 B 更新文档
@@ -154,7 +154,7 @@ tools:
 |:--|:---|:---:|:---|---|
 | 9 | [ml-training.md](ml-training.md) | 1.5.0 | ML 深度学习/RL 训练 | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
 | 10 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.1.0 | 量化投资 ML | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据 |
-| 11 | [vps-operations.md](vps-operations.md) | 2.0.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
+| 11 | [vps-operations.md](vps-operations.md) | 2.2.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
 | 12 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
 | 13 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
 
@@ -205,16 +205,25 @@ tools:
 | `root-cause-debugging.md` | `quant-ml-falsification.md` | 量化假 alpha 排查 = 根因调查的领域特化（先插桩取证再下结论） |
 | `verification-before-completion.md` | `improvement-loop.md` | §5.9 Chain 输出门控是平台层验证，本 skill 是方法论层验证——两层都要 |
 | `verification-before-completion.md` | `ml-training.md` | 训练验收前先用 Gate Function 验证产物（results JSON）真实存在 |
+| `project-documentation-protocol.md` + `writing-plans.md` | [technical-writing-standard.md](../technical-writing-standard.md) | 文档写作规范（ASD-STE100 国际标准）——文档与实施计划写作参照 |
 
 ## 五、维护约定
 
 - 新增 skill 后**必须更新本文件**：在对应分类下添加条目 + 更新交叉引用表
 - skill 版本升级时：如果新增了与已有 skill 重叠的内容，更新交叉引用表
 - skill 退役（deprecated/superseded）时：在此文件中标记状态，保留条目但注明替代者
+- skill 的 front matter 严格 YAML 解析与版本一致性检查规范见 `skill_creator.md` 检查清单 G 组（防复发：YAML 引号铁律、版本撞号、裸词 trigger、索引同步）
 
 ---
 
 ## 变更日志
+
+### 1.6.1 (2026-08-16)
+- 新增：维护约定补充——front matter 严格 YAML 解析与版本一致性检查规范见 skill_creator.md 检查清单 G 组（防复发：YAML 引号铁律、版本撞号、裸词 trigger、索引同步）
+
+### 1.6.0 (2026-08-16)
+- 新增：交叉引用表增加 `technical-writing-standard.md`（文档写作规范，ASD-STE100 国际标准）——`project-documentation-protocol.md` 与 `writing-plans.md` 的写作参照
+- 修改：project-documentation-protocol 1.0.1→1.1.0、writing-plans 1.1.0→1.2.0、interactive-cli-design 1.3.0→1.4.0、development-quality-gates 1.4.0→1.5.0、vps-operations 2.0.0→2.2.0（版本同步，ASD-STE100 写作规范嵌入）
 
 ### 1.5.1 (2026-08-14)
 - 修复（momus 审查轮，2 P0 + 6 P1 全部修复）：版本表 1.0.0→1.1.0 同步；Red Flags 表与入口检查语义统一（5 处）；「不能绕过」加豁免例外；最后更新日期修正；ASCII 图块标 text
@@ -255,4 +264,4 @@ tools:
 - 新增：步骤 1-4 的明确执行指令
 - 保留原有目录内容供浏览参考
 
-*最后更新: 2026-08-14*
+*最后更新: 2026-08-16*

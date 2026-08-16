@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-version: 2.2.0
+version: 2.4.0
 description: 协助AI打包特定工作流程，创建符合pi-agent规范的skill文件
 triggers:
   - "创建skill"
@@ -74,7 +74,29 @@ glob 模式: "{output_dir}/**/*.md"
 
 ### 4. 验证格式
 
-按照「生成检查清单」逐项验证。
+先按「七、生成检查清单」逐项检查，再运行**严格 YAML 解析验证**（必须通过，历史教训：多个 skill 的 inputs description 含裸半角冒号导致严格解析失败）：
+
+```bash
+# 单文件验证（FILE 替换为目标 skill 路径）
+python3 -c "import yaml; d=yaml.safe_load(open('FILE').read().split('---',2)[1]); assert d.get('name') and d.get('version'); print('YAML OK')"
+
+# 全仓库验证（新 skill 入库前跑一次）
+cd ~/prompt_boilerplates && python3 - <<'EOF'
+import yaml, glob
+bad = []
+for f in glob.glob('**/*.md', recursive=True):
+    if '.pi-subagents' in f: continue
+    txt = open(f).read()
+    if not txt.startswith('---'): continue
+    try:
+        yaml.safe_load(txt.split('---',2)[1])
+    except Exception as e:
+        bad.append((f, str(e).split('\n')[0]))
+print('全部通过' if not bad else bad)
+EOF
+```
+
+验证项：四字段齐全（name/version/description/triggers）、严格 YAML 可解析、版本号与变更日志顶条一致（见检查清单 G 组）。
 
 ### 5. 写入文件
 
@@ -205,6 +227,19 @@ name: my-skill
 
 ---
 
+### 1.8 指令文本写作规范（ASD-STE100）
+
+生成的 skill 文件是功能性文档，指令文本遵守 ASD-STE100（简化技术英语，国际标准）核心规则：
+
+- **短句**：每句 ≤ 20 词（中文 ≤ 40 字），一句一个主题
+- **指令祈使**：步骤描述直接以动词开头（"Run the check."），不用"需要被执行"式叙述
+- **主动语态**：描述用 A does B
+- **一词一义**：同一概念全文同一词汇，不换同义词
+- **编号步骤**：流程用编号列表，结构平行
+- **条件前置**：关键条件放句首（如果...则...）
+
+完整规范见 [technical-writing-standard.md](technical-writing-standard.md)（与 skill_creator 同目录）。
+
 ## 二、YAML Front Matter
 
 ### 2.1 必须包含的字段（按此顺序）
@@ -257,6 +292,11 @@ tools:                    # 所需 pi-agent 工具列表
 #### `inputs`
 - 每个参数必须有 `name`、`description`、`required`
 - `required: false` 时**必须**提供 `default`
+- **description 值安全（铁律，历史教训）**：参数说明含半角冒号+空格（`: `）、花括号（`{...}`）、方括号（`[...]`）等 YAML 特殊结构时，**必须用引号包裹**（优先单引号；值内含单引号时改用双引号）。示例：
+  - ❌ `description: 修复模式: ask（先问后改）, auto（直接修复）`（裸半角冒号 → 严格 YAML 解析失败）
+  - ✅ `description: '修复模式: ask（先问后改）, auto（直接修复）'`
+  - ✅ `description: '诊断规格对象。{ trap_families: [...] }。'`
+- 全角冒号（`：`）与中文标点不受此限
 - `default` 值规则：
   - 路径类：不带引号，用相对路径或 `~`/`$HOME` 路径（如 `./output`、`~/My_Dotfiles`、`$HOME/BOOKS/`），避免硬编码绝对路径
   - 字符串类：带引号（如 `"auto"`、`"normal"`）
@@ -739,6 +779,15 @@ name: my-skill
 - [ ] skill 的 front matter `version` 与 index 目录表版本号一致
 - [ ] 相关 skill 文档的交叉引用/互链已同步（内联一致性）
 
+### G. YAML 与版本卫生检查（必须，历史教训防复发）
+- [ ] front matter 四字段齐全：`name` + `version` + `description` + `triggers`（缺一不可；历史文件缺字段时必须补齐而非只补 version）
+- [ ] 严格 YAML 解析通过（python3 yaml.safe_load，命令见步骤 4）
+- [ ] 所有 `inputs[*].description` 含半角冒号/花括号/方括号时已加引号（规则见 §2.2 `inputs`）
+- [ ] 升级版本前已检查变更日志顶条未占号（顶条版本 == 本次版本 → 撞号；历史脱节时 front matter 补到更高版本，如 1.2.0 顶条 + 1.0.0 脱节 → 补 1.2.1）
+- [ ] 变更日志顶条版本 == front matter `version`
+- [ ] triggers 无裸词（2-4 字母子串会误命中日常对话：如 "STE" 命中 step/system/install；用完整词 "ASD-STE100"）
+- [ ] index 目录表版本 == front matter `version`（步骤 6 铁律，见 F 组）
+
 ---
 
 ## 八、变更日志格式约定
@@ -821,6 +870,13 @@ superseded_by: new-skill    # 替代者 name（status: superseded 时必填）
 4. **覆写前确认**：如果必须覆写已有文件，先告知用户并获得明确许可
 
 ## 变更日志
+
+### 2.4.0 (2026-08-16)
+- 新增：步骤 4 命令化验证——严格 YAML 解析（单文件 + 全仓库 python3 yaml.safe_load 命令模板）
+- 新增：检查清单 G 组「YAML 与版本卫生检查」7 项（四字段齐全/严格解析/引号铁律/版本撞号/顶条一致/裸词 trigger/索引一致）
+- 新增：§2.2 `inputs` description 值安全铁律（半角冒号/花括号/方括号须加引号，含正反例）
+- 背景：2026-08-16 修复 6 个既有 skill 的 YAML 解析失败（dotfiles-sync/tor-browser/video-playback/novel-publish/web-novel/content-safe-handler）+ tor-browser 版本脱节（front matter 1.0.0 vs 变更日志顶条 1.2.0），全部为历史遗留，防复发沉淀为本组检查
+- 新增：文档写作规范（ASD-STE100）——生成 skill 的指令文本遵守简化技术英语核心规则，完整规范见 technical-writing-standard.md
 
 ### 2.2.0 (2026-08-15)
 - 新增：执行流程步骤 6「更新索引与内联引用（必须）」——创建/更新 skill 后强制同步 index.md 目录表、triggers、决策树、版本号与交叉引用（历史教训：pi-subagents-ENAMETOOLONG-fix.md 创建后 System_Fix/index.md 未同步）

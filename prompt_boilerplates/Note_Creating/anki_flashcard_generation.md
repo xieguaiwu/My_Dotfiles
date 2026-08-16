@@ -1,6 +1,6 @@
 ---
 name: anki-flashcard-generation
-version: 1.0.0
+version: 1.1.0
 description: 从Markdown公式文件生成Anki闪卡(.apkg)
 triggers:
   - "生成anki闪卡"
@@ -217,6 +217,18 @@ if __name__ == '__main__':
 ```
 
 ---
+
+## 闪卡文本写作规范（ASD-STE100）
+
+闪卡正面/背面文字是功能性学习材料，遵守 ASD-STE100 核心规则：
+
+- **短句**：每句 ≤ 20 词，一张卡一面只表达一个知识点
+- **一词一义**：同一概念全文同一词汇，不换同义词
+- **主动语态、现在时**：不用 will 将来时与 -ing 进行时
+- **数字用数字**：写 5、25
+- **术语一致**：与来源笔记的术语保持一致
+
+完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
 
 ## 五、检查清单
 
