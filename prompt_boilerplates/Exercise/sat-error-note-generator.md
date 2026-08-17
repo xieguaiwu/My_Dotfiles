@@ -1,7 +1,7 @@
 ---
 name: sat-error-note-generator
-version: 1.4.0
-description: 从SAT答题记录和试卷PDF中提取错题/标记题，生成或追加 Obsidian 错题分析笔记（整卷分析与单题积累两种模式）
+version: 2.0.0
+description: 从SAT答题记录和试卷PDF中提取错题/标记题，按 v3.3 标准模板（7 步结构）生成或追加 Obsidian 错题分析笔记（整卷分析与单题积累两种模式）
 triggers:
   - "整理SAT错题"
   - "生成SAT错题笔记"
@@ -42,8 +42,8 @@ tools:
 1. **两种模式** — 「整卷分析」：一次生成一份完整错题笔记；「单题积累」：把指定题目追加进已有积累笔记（检测已有 → 更新计数/目录/汇总 → 追加新节）
 2. **中文分析 + 英文题干** — 题干、选项保留英文原文；考点说明、推理、总结一律中文（跟随 vault 既有笔记惯例）
 3. **无词汇积累** — 不包含词汇表、学术词汇表、同义词/反义词表
-4. **重逻辑分析** — 每道题的重点在：题干还原、选项分析、正确思路、考点说明、解题策略
-5. **可视化** — 优先使用 Mermaid 流程图/思维导图辅助说明推理链条
+4. **7 步标准结构** — 每道题严格按 v3.3 标准模板（`SAT RW 错题解析标准模板.md`，位于 `~/Documents/Obsidian Vault/SAT/`）的 7 步书写：Task → Step 1 Map → Step 2 Mark(T/F/NG) → Step 3 Source-check → Step 4 Chain-check → Trap → Principle；不再使用旧的「题干 / 选项分析 / 推理过程 / 解题策略」松散结构
+5. **文本链优先** — 推理链用文本 `A → B → C` 表达（简洁可复制）；Mermaid 仅在有复杂分支时使用，每题最多一个
 6. **Question ID 一等公民** — 记录官方题库题目 ID（便于 Bluebook 回查），并提取官方 rationale 交叉验证
 7. **符合 vault 标签规范** — 复用已有标签体系（SAT / Reading / 错题）
 
@@ -122,18 +122,23 @@ SAT Reading & Writing 常见考点分类：
 - **Transition/Logical Connection** — 逻辑过渡词选择
 - **Standard English Conventions** — 语法/标点/句子结构（细分到具体考点，如 Subject-Modifier Placement、Subject-Verb Agreement、Boundaries）
 
-#### c. 选项分析
-列出4个选项的逐项分析表（评价用中文），格式：
+#### c. 选项判定（Step 2 — Mark）
+列出 4 个选项的 T/F/NG 判定表（依据用中文），格式：
 
 ```markdown
-| 选项 | 内容 | 评价 |
+| 选项 | 判定 | 依据 |
 |:---|:---|:---|
-| **A** ✅ | ... | ✅ 正确理由 |
-| **B** ✏️ | ... | ❌ 错误原因 |
+| **A** | NG | 引入了原文未出现的元素（命名缺失元素） |
+| **B** | T | 每个元素都能在原文找到（指出支撑句） |
+| **C** | F | 与原文某句直接矛盾（写出矛盾点） |
+| **D** | NG | ... |
 ```
 
-#### d. 推理链
-- 对 Words in Context 题：画出因果链 Mermaid 流程图
+判定标准：T = 选项每个元素都能在原文找到；F = 与原文某句直接矛盾；NG = 引入原文从未出现的元素。语法题用 T/F + 语法规则依据（可引用 Checklist A1.x/A2.x 规则编号，引用前必须 grep 核实编号存在）。
+
+#### d. 推理链（Step 1 Map + Step 4 Chain-check）
+- **Step 1 — Map**：阅读题给每句标注职责（set-up / claim / evidence / contrast / conclusion / answer）；语法题标注句法结构，先找主句/从句的真正谓语
+- **Step 4 — Chain-check**：把原文逻辑写成链 `A → B → C`（因果/转折/回答），确认幸存选项是链上的一环而非跳链；语法题做边界测试（一个分句只有一个有限动词）
 - 对 Command of Evidence 题：拆解假说→证据→结论的关系
 - 对 Scientific Reasoning 题：列出关键数据比较，解释推理过程
 
@@ -141,17 +146,14 @@ SAT Reading & Writing 常见考点分类：
 - 若有学生自注错因，**逐条校验归因是否正确**；发现错误归因（如把悬垂修饰语误判为标点题）时，在笔记中显式指出并写明真正考点
 - 与官方 rationale 交叉验证：自写分析与官方解析结论一致才算完成；不一致时以官方为准并标注差异
 
-#### f. 陷阱识别
-标注常见陷阱类型：
-- Cause-Effect Reversal (common in vocab questions)
-- Net Effect Cancellation (common in evidence questions)
-- Correlation ≠ Causation
-- Overgeneralization (beyond the data)
-- Purpose Confusion (summary vs. narrative)
-- 语法专项：虚位主语陷阱、邻近干扰（Proximity Trap）、所有格伪装、人/作品主语混淆等
+#### f. 陷阱命名（Trap）
+陷阱必须压缩为**可复用命名模式**（一句话规则 + 一句话防法），不是"这题做错了"。常见命名模式：
+- 范围缺口（Scope Gap）、程度夸大（Intensity Inflation）、set-up 当中心、话题偷换
+- 双谓语、comma splice、虚位主语陷阱、邻近干扰（Proximity Trap）、所有格伪装、人/作品主语混淆
+- 指标混淆、张冠李戴、净效应抵消、时间窗口错位、以偏概全（Cherry-pick）等
 
-#### g. 解题策略
-每条 3-5 步可执行的操作步骤（下次遇到同类题怎么做），中文。
+#### g. 对应原则（Principle）
+标注本题违反/应用的核心原则：原则一 文本依据 / 原则二 逻辑优先 / 原则三 功能定位 / 原则四 中心问题；语法题标注「结构优先」（逻辑优先的语法版）。
 
 ### 4. 生成 / 追加笔记
 
@@ -189,6 +191,7 @@ created: {YYYY-MM-DD}
 > - **来源**: `{source pdf}`
 > - **当前积累**: N 题（{question list}）
 > - **薄弱技能**: {weak areas}
+> - **备注**: {按 v3.3 标准模板重塑（{date}）——仅在重塑时追加}
 
 ---
 
@@ -205,32 +208,32 @@ created: {YYYY-MM-DD}
 
 # 1. {Q} — 考点（中文）
 
-> [!info] 我的答案: `{letter}` — 正确答案: **{letter}**
+> [!info] 我的答案: {letter} — 错误 | 正确答案: **{letter}**
 > Question ID: `{xxxxxxxx}` | 难度: {Hard/Medium/Easy}
 
-## 题干
-{英文题干 + 选项}
+## Task（题干与选项）
+{英文题干 + 选项，逐字保留}
 
-## 考点
-{中文考点说明}
+## Step 1 — Map（结构标注）
+{阅读题：逐句标注职责（claim / evidence / contrast / conclusion / answer / set-up）
+语法题：标注句法结构，先找主句/从句真正谓语}
 
-## 选项分析
-{中文评价表格}
+## Step 2 — Mark（T / F / NG 判定）
+{表格：选项 | 判定 | 依据；语法题用 T/F + 语法规则依据（Checklist A1.x/A2.x）}
 
-## 推理过程
-{Mermaid 图（每题最多一个）}
+## Step 3 — Source-check（溯源）
+{幸存 T 选项逐元素溯源到原文句子；NG 命名缺失元素；F 命名矛盾句}
 
-### 为什么 {正确选项} 正确
-{中文}
+## Step 4 — Chain-check（链条验证）
+{文本逻辑链 A → B → C；确认幸存选项是链上一环；语法题做边界测试（一分句一有限动词）}
 
-### 为什么 {错选选项} 错误
-{中文}
+## Trap（陷阱命名）
+> [!warning] {可复用命名模式}
+> 规则：一句话规则。
+> 防法：一句话防法。
 
-## 陷阱识别
-{中文 callout}
-
-## 解题策略
-{3-5 步中文操作步骤}
+## Principle（对应原则）
+{原则一 文本依据 / 原则二 逻辑优先 / 原则三 功能定位 / 原则四 中心问题；语法题=结构优先}
 
 ---
 
@@ -247,13 +250,19 @@ created: {YYYY-MM-DD}
 **行动项**: {重复陷阱合并后的共同对策}
 ```
 
+> [!important] 权威规范
+> 完整模板规范（含阅读题/语法题双样板、旧结构→新结构映射表、5 条铁律）以 `~/Documents/Obsidian Vault/SAT/SAT RW 错题解析标准模板.md` 为准。生成笔记前先 read 该文件。
+
 #### 关键约束
 1. **不包含**任何形式的词汇积累/学术词汇/同反义词表
-2. **不使用** `---` 水平分割线分隔章节（Front Matter 后唯一可用），章节间靠 `#` 标题层级分隔
-3. 每道题以 `# 序号. {Q} — 考点` 为二级标题开始
+2. **7 步铁律** — 每题必须完整出现 7 步：Task / Step 1 Map / Step 2 Mark / Step 3 Source-check / Step 4 Chain-check / Trap / Principle，缺一不可
+3. 每道题以 `# 序号. {Q} — 考点` 为一级标题开始，每题内部用 `##` 级 7 步标题
 4. 每道题之间用 `---` 分隔
 5. **中文分析 + 英文题干**：题干/选项保留原文；分析、总结、callout 一律中文
 6. **Question ID**：每题记录官方题库 ID 与难度，便于 Bluebook 回查
+7. **逐字保留** — 题干、选项、我的答案、正确答案逐字保留，不得改写、缩写到失真
+8. **不加新分析** — 不得添加原笔记没有的新分析/新事实（Trap 命名、T/F/NG 判定等模板元素除外）
+9. **Trap 可复用** — 陷阱必须是可复用命名模式（范围缺口、程度夸大、双谓语…），不能只是"这题做错了"
 
 ### 5. 验证与清理
 
@@ -343,11 +352,13 @@ Command of Evidence / Scientific Reasoning 高频子类：题干给出**目标�
 4. **OCR 质量** — OCR 可能不完美，如果某题 OCR 结果模糊，应结合上下文合理推测。如果完全无法识别，在笔记中标注 "[OCR 识别不清]"
 5. **标签复用** — 使用 vault 已有标签（SAT / Reading / 错题）。如发现新领域标签，则在首次使用时创建，并在后续复用
 6. **客观呈现学生答案** — 标注学生的作答结果，但不预设对错；重点在解释正确的推理过程
-7. **Mermaid 图适度使用** — 仅在有清晰的因果链或流程关系时使用，每道题最多一个
+7. **文本链优先** — 推理链优先用文本 `A → B → C`；Mermaid 仅保留复杂分支场景，每题最多一个
 8. **语言** — 题干/选项保留英文原文，分析/总结/callout 一律中文（跟随 vault 既有笔记惯例）
 9. **官方解析优先** — PDF 自带 rationale 时作为 ground truth 交叉验证（防幻觉）；与官方不一致时以官方为准并标注差异
 
 ## 变更日志
+
+- **2.0.0** (2026-08-17): 全面升级为 v3.3 标准模板（对齐 `SAT_RW_Error_Checklist.tex` Chapter E 样板与 Obsidian 标准模板文件）——每题改为 7 步结构（Task → Step 1 Map → Step 2 Mark(T/F/NG) → Step 3 Source-check → Step 4 Chain-check → Trap 命名 → Principle 四原则）；选项分析表改为 T/F/NG 判定表；mermaid 改为文本链优先；语法题可引用 Checklist A1.x/A2.x 规则编号（须核实存在）；权威规范指向 `SAT RW 错题解析标准模板.md`（含双样板与映射表）
 
 - **1.4.0** (2026-08-16): 新增写作规范小节（ASD-STE100 中文适配）——分析笔记遵守简化技术英语原则（短句/术语一致/主动语态/条件前置），完整规范见 technical-writing-standard.md
 
