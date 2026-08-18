@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 2.3.1
+version: 2.4.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -243,7 +243,7 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 16 | [windows-scripting-and-ssh-debug.md](windows-scripting-and-ssh-debug.md) | 1.2.0 | Windows 端 .bat/.ps1 脚本编写规范自查（ASCII/提权/PS5.1 语法陷阱/BOM/bsdtar+xz/盘符）+ OpenSSH 远程排障（黑盒三测试、KEXINIT reset 排除链 10 步、前台 vs 服务差异、测试函数原始输出、杀软接力、MOTW 陷阱、脚本化协作闭环）；v1.2.0 新增输出消息规范（ASD-STE100） | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、Windows 脚本编写 |
+| 16 | [windows-scripting-and-ssh-debug.md](windows-scripting-and-ssh-debug.md) | 1.4.0 | Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/BOM/bsdtar+xz/盘符/exe 取退出码/Transcript/依赖内容门禁/输出规范）+ OpenSSH 远程排障（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 22 条 | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、Windows 脚本编写 |
 
 ---
 
@@ -302,7 +302,7 @@ journalctl -p err -b --no-pager | tail -20
   └─ sparrow-wallet-backup-test.md ← 先解锁 rbw；bw 附件比对需解锁 bw 后重跑；哈希不一致=备份过期需重新上传
 
 「SSH 连不上 Windows / KEXINIT / Connection reset / Windows OpenSSH / 火绒拦截 SSH」
-  └─ windows-scripting-and-ssh-debug.md ← 黑盒三测试定位 → 排除链 10 步（杀软→防火墙→密钥权限→密钥内容→重建→算法→前台 vs 服务→重启→重注册→内置）；前台 -ddd 正常+服务 reset = 服务上下文问题（重启优先，勿反复重试触发火绒拉黑）
+  └─ windows-scripting-and-ssh-debug.md ← 黑盒三测试定位 → 排除链 0-10 步（存在性 1060→杀软→防火墙→密钥权限→密钥内容→重建→算法→前台 vs 服务→重启→重注册→内置）；拒绝访问用 TEMP 隔离判别器分路径拦截/内容拦截；/inheritance:r 只用于密钥类；身份鉴定用大小+SHA256+试运行三件套
 
 「想自动跑系统健康检查」
   └─ system_fix.fish ← 只读检查，先 --dry
@@ -354,6 +354,10 @@ journalctl -p err -b --no-pager | tail -20
 ---
 
 ## 变更日志
+
+### 2.4.0 (2026-08-17)
+- 更新：windows-scripting-and-ssh-debug.md 1.2.0 → 1.3.0（win-ssh-setup 第 11-13 轮：diag v2 定位服务未注册真相、v5 误诊复盘、v6 ACL 判别）
+- 新增：编写规范 M/N/O（exe 试运行取退出码、修复脚本 Start-Transcript、依赖搜索路径∪用户指令路径+SHA256 内容门禁）；排除链 step 0 存在性 + TEMP 隔离试跑判别器；实战补充 2（9-16 条：吞错组合、空 FileVersion 误诊、A/B 试跑救援源、/inheritance:r 适用边界、Defender 归责证据化、版本门禁 fail-closed、自带 scp 通道、审计自己脚本 bug）
 
 ### 2.3.1 (2026-08-16)
 - 修复：YAML 解析失败 3 文件（dotfiles-sync-and-audit 1.2.1 / tor-browser-check-and-fix 1.2.1 / video-playback-decode-fix 2.1.1，inputs description 裸半角冒号加引号）；tor-browser front matter 版本补齐（1.0.0→1.2.1，与变更日志顶条脱节）
@@ -437,4 +441,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-16（index 2.3.1：YAML 修复 3 文件 + tor 版本补齐；2.3.0：新增第七类 Windows 远程排障 + windows-scripting-and-ssh-debug.md 1.0.0；2.2.0：短串语境确认 + 缺口词补齐）*
+*最后更新: 2026-08-17（index 2.4.0：windows-scripting-and-ssh-debug.md 1.3.0——ACL 拒绝访问判别与第 11-13 轮实战教训；2.3.1：YAML 修复 3 文件；2.3.0：第七类 Windows 远程排障）*

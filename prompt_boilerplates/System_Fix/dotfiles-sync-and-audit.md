@@ -1,7 +1,7 @@
 ---
 name: dotfiles-sync-and-audit
-version: 1.2.1
-description: 三合一维护：本地配置增量同步至 ~/My_Dotfiles/（惟更新已有项）、审计本地 Git 仓库提交推送状态、自动生成 commit 信息。自有仓库可 push，有上游者惟本地 commit。执行前必先征得用户同意
+version: 1.3.0
+description: 四合一维护：本地配置增量同步至 ~/My_Dotfiles/（惟更新已有项）、审计本地 Git 仓库提交推送状态、自动生成 commit 信息、新建项目默认 scaffold（git init + MIT LICENSE + .gitignore + README + 首 commit）。自有仓库可 push，有上游者惟本地 commit。执行前必先征得用户同意
 triggers:
   - "同步配置"
   - "备份dotfiles"
@@ -11,6 +11,15 @@ triggers:
   - "配置审计"
   - "更新My_Dotfiles"
   - "git仓库审计"
+  - "新建项目"
+  - "项目初始化"
+  - "scaffold"
+  - "git init"
+  - "LICENSE"
+  - "初始化仓库"
+  - "新项目"
+  - "创建 repo"
+  - "gh repo create"
 inputs:
   - name: scope
     description: '执行范围: all（全部）, sync-only（仅同步配置）, audit-only（仅审计仓库）'
@@ -265,3 +274,58 @@ fi
 11. **逐项确认不批量** — 每 ask_user 只问一条，禁全选/全跳
 12. **路径含空格/中文** — 仓库路径如 `Documents/Obsidian Vault`、`Desktop/c++/在深渊`；扫描必须 `-print0` + `while read -d ''`，禁 `for dir in $(find ...)` 词分割（2026-08-06 实测漏 18 仓库）
 13. **完整性自检** — 报告须含仓库总数；若已知存在的仓库未出现，先查 maxdepth/prune 是否过严，勿直接下"干净"结论
+
+---
+
+## 附录：新项目 Scaffold（git init + MIT LICENSE）
+
+**核心原则：任何新项目的第一件事就是进入版本控制。** 没有 git 的项目等于没有历史（教训：go-projects 14 项目中 6 个曾无 git、8 个曾无 LICENSE，2026-08-18 才补齐）。hephaestus 等 builder agent 创建新项目时必须执行本流程。
+
+### 标准流程（按顺序）
+
+1. **检测现有状态**（已有则跳过，不覆写）：
+   ```bash
+   [ -d .git ] && echo "已有 git" || echo "无 git"
+   [ -f LICENSE ] && echo "已有 LICENSE" || echo "无 LICENSE"
+   [ -f .gitignore ] && echo "已有 .gitignore" || echo "无 .gitignore"
+   ```
+2. **git init**：`git init -q -b main`（统一 main 分支；已有仓库分支为 master 不强制改名）
+3. **.gitignore**（secrets 条目优先）：
+   ```gitignore
+   # Binary
+   /{binary_name}
+   # Secrets — never commit
+   config.json
+   servers.json
+   *.env
+   .env*
+   # IDE / OS
+   .idea/  .vscode/  *.swp  *.swo  .DS_Store
+   # Agent 运行时产物（按需）
+   .pi-subagents/  .omo/  node_modules/
+   ```
+4. **MIT LICENSE**：复制 `~/Desktop/go-projects/bl/LICENSE`（2026 xieguaiwu 版，全库统一模板）
+5. **README.md 骨架**：`# 项目名` + 一句话描述 + 安装/使用/开发/许可证（中文为主，ASD-STE100 规范）
+6. **首次 commit**：
+   ```bash
+   git add -A
+   # 提交前敏感扫描：git diff --cached | grep -iE "sk-|nvapi-|token|password" 零命中才提交
+   git -c user.name="xieguaiwu" -c user.email="xieguaiwu@163.com" commit -m "chore: initial scaffold (git init + MIT LICENSE)"
+   ```
+7. **可选发布**（用户要求时）：`gh repo create xieguaiwu/{repo} --public --source . --push --description "..."`；GitHub API 503 时退避重试（sleep 30-60，最多 5 次），git push/tag 不受 API 故障影响
+
+### Scaffold 检查清单
+
+- [ ] .git 存在（branch: main）
+- [ ] LICENSE 存在（MIT, 2026 xieguaiwu）
+- [ ] .gitignore 含 secrets 条目
+- [ ] README.md 存在
+- [ ] 首 commit 完成，工作区干净，`git diff --cached` 无敏感信息
+- [ ] （如发布）GitHub repo 公开可见
+
+### 常见陷阱
+
+1. **并行竞态**：cp LICENSE 与 git add 并行执行 → pathspec 不匹配（cp 未完成）。顺序执行
+2. **损坏代码也要 git init**：现状入库胜过无历史（mess_math 教训），修复后 diff 可见
+3. **目录名大小写**：repo 名与目录名可不同（Essen → essen），以 GitHub repo 名为准
+4. **私有项目**（含真实凭据/密码/服务器 IP）：git init + LICENSE 照做，但发布用 `--private` 或干脆不发布（vpn-check 教训）

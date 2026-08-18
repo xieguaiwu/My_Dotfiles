@@ -1,7 +1,7 @@
 ---
 name: windows-scripting-and-ssh-debug
-version: 1.2.0
-description: Windows 端 .bat/.ps1 脚本编写规范自查与 OpenSSH 远程排障——KEXINIT reset 排除链、黑盒三测试、前台 vs 服务模式差异定位、脚本化协作闭环
+version: 1.4.0
+description: Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/输出规范）与 OpenSSH 远程排障——KEXINIT reset 排除链、黑盒三测试、前台 vs 服务模式差异定位、ACL 拒绝访问判别、自愈看门狗、脚本化协作闭环
 triggers:
   - "Windows 脚本"
   - "bat 脚本"
@@ -11,6 +11,9 @@ triggers:
   - "Connection reset"
   - "Windows OpenSSH"
   - "火绒拦截 SSH"
+  - "OpenSSH 拒绝访问"
+  - "sshd 无法运行"
+  - "服务未安装"
 inputs:
   - name: target_host
     description: 目标 Windows 主机 IP
@@ -98,6 +101,20 @@ if %errorlevel% neq 0 (
 
 完整规范见 [technical-writing-standard.md](../technical-writing-standard.md) 第 7 节。
 
+**M. 外部 exe 试运行必须取退出码，勿信「无输出」**：`& $exe -t 2>&1` 在 exe 根本无法启动时（拒绝访问）抛 `NativeCommandFailed`，且 `$out` 保持 null → 后续 `.Trim()` 连环崩（v5 实况：57/60 行双报错）。无输出 ≠ 成功。**修**：`Start-Process -Wait -PassThru -RedirectStandardError <tmpfile>` 取 `$p.ExitCode`（负数格式化 `0x{0:X8}` 便于认 NTSTATUS，-1=0xFFFFFFFF）。
+
+**N. 修复脚本必须 Start-Transcript**：v4 五轮修复不落盘日志，全部证据丢失、只能重跑诊断。`Start-Transcript -Path <桌面>\xxx-log.txt` + 退出前 `Stop-Transcript`，原生命令输出也捕获；用户关窗/闪退仍有全量日志可回传。
+
+**O. 依赖文件搜索路径 = 给用户的指令路径 ∪ 脚本目录 ∪ Downloads**：v5 让用户把 zip 放 `D:\Downloads\`，脚本却只搜 `$PSScriptRoot` → 白跑一轮。发布前把用户指令里每个路径对着脚本搜索清单核一遍；且依赖要内容寻址：zip 解压后先试运行 + SHA256 对官方指纹，装完再比一次哈希（当场抓 AV 篡改）。
+
+**P. bat 必须纯 ASCII + CRLF**（restart-sshd.bat 首版翻车根因）：中文 Windows cmd 默认 GBK 代码页，UTF-8 中文直接解析失败；LF-only 在多行括号块下解析不稳。判据：`file x.bat` 输出 `ASCII text, with CRLF line terminators`。能跑的历史文件（diag-svc / fix-sshd-v7 / push-backup）全是纯 ASCII——用户提示信息用英文（配合 ASD-STE100）。UAC 提权失败分支必须停留（goto :eof 前 echo + pause），不能闪退，否则表现为「双击没反应」。
+
+**Q. 单文件自包含交付（bat 内嵌 ps1）**：需要用户在 Windows 侧双击一个文件搞定一切时，把 ps1 逐行 echo 进 `%TEMP%\x.ps1` 再执行（`>>"%PS%" echo <line>`，空行用 `echo.`）：
+- **重定向前置**：`>>"%PS%" echo xxx`——内容以数字结尾（如 `exit 1`）时后置写法会把尾数当句柄（`1>>`）；
+- **内嵌内容禁用 cmd 元字符** `| & % < > ^ !`（含注释）——`grep -nE '[|&%<>^!`]'` 验证；
+- **生成后必须回验**：awk/sed 从 bat 提取内嵌段 diff 源 ps1，`ROUND-TRIP OK` 才算数；
+- 单文件 = 用户只传一次，杜绝多文件散落/编码被改的二次故障源。
+
 ### 2. 环境预检（远程黑盒画像）
 
 ```bash
@@ -126,6 +143,9 @@ Python socket 直连 22 端口，三种 payload：
 ### 4. KEXINIT reset 排除链（由外至内，成本递增）
 
 ```
+0. 存在性     → sc qc / Get-Service（1060「服务未安装」= 服务从未注册成功，
+                 别急着排杀软/密钥）+ netstat :22 分开看：
+                 服务在/监听不在、进程在/服务不在，各是不同路
 1. 杀软进程   → tasklist 匹配 Hips/wsctrl/sysdiag(火绒)、360、kxescore、QQPCTray、
                  Rav、kav、avp、bdagent、cis、mbam、MsMpEng、Norton、Symantec
                  注：进程名子串匹配会误命中（IntelCpHeciSvc 含 "cis"），人工确认
@@ -144,6 +164,8 @@ Python socket 直连 22 端口，三种 payload：
 ```
 
 **日志源三处勿混**：System 日志（服务控制）、Application 日志（sshd.exe 崩溃/WER）、`OpenSSH/Operational` 事件源（sshd 自身错误，未启用时查询报「找不到匹配事件」）。诊断脚本必须覆盖全部三处。
+
+**TEMP 隔离试跑判别器**：把嫌疑 exe 复制到 `%TEMP%` 再试运行——TEMP 能跑而原位置拒绝访问 = 路径性拦截（目录 ACL/路径策略）；TEMP 也拒绝 = 内容级拦截（按哈希/签名的策略）。一次复制区分两大方向。
 
 **火绒暴力破解防护**：多次连接失败 + nmap 扫描会触发源 IP 临时拉黑（症状：localhost PASS 但外部持续 reset，等待数分钟无效）——排障时减少无谓重试，先查火绒安全日志。
 
@@ -232,7 +254,140 @@ schtasks /sc onlogon 需密码会在提权窗口卡住——勿用。
 - 脚本输出全部诊断（where ssh/ACL/Run 键/AV 进程/残留注册表）——一次回传解决一轮
 - 用户贴回的文件（agony.md）每次 md5 变化，先 diff 再分析，勿重复读旧结论
 
+## 实战补充 2（2026-08-17 第 11-13 轮：diag v2 定位、v5 误诊、v6）
+
+背景：v4 修复脚本跑了五轮全部失败。diag v2 终于看清：服务从未注册成功（sc qc 1060），
+磁盘上 sshd.exe 全部「拒绝访问」，唯一能跑的是第一个 .bak 里的 v10。
+
+### 9. `-ErrorAction SilentlyContinue` + `2>&1` = 吞错组合拳
+
+diag v1 的 Start-Service 用了这对组合，把最需要的真实报错吞得干干净净（只看到
+StartType 不动）。要真实报错：`try { Start-Service x -ErrorAction Stop } catch {
+$_.Exception.Message }`。与上文 F 条（'Stop' + stderr 陷阱）合参：诊断路径
+'Continue' + 显式 catch，修复路径按需。
+
+### 10. 空 FileVersion 是症状不是证据（v5 误诊教训）
+
+当前 sshd.exe FileVersion 为空 → 我推断「非官方构建、二进制损坏」，据此写了整套
+「验证式安装」。实际：文件 1343920B 与官方 v9.5 完全一致，版本资源读不出来
+本身可能就是访问被拒的连带症状。**身份鉴定三件套：字节数、SHA256、试运行**
+（官方 v9.5 sshd.exe = 1343920B，SHA256 6F31CF7A11189C683D8455180B4EE6A6078
+1D2E3F3AADF3ECC86F578D480CFA9，Linux 侧 strings 可验证版本资源存在）。
+单一属性异常 → 先找第二证据再下结论。
+
+### 11. 全盘 A/B 试运行：昨天的可用工件就是救援源
+
+把 `C:\Program Files\OpenSSH*` 全部目录（含 5 个 .bak）逐一 `-t` 试运行：唯一
+exit 0 的是第一个 .bak（v10）= 08-16 16:44 前台验证过的同一份。已知可用工件
+往往还躺在磁盘上——**下载/重装前先枚举试跑全部现存工件**，rescue-before-download。
+（代价为零，还能白得 A/B 对照组。）
+
+### 12. 「拒绝访问」与 `/inheritance:r` 强相关：剥继承只用于密钥类
+
+六个目录里唯一能跑的，恰是唯一没经过 v4 [4/9] `icacls /inheritance:r` 处理的
+（它在加固前就被挪成了 .bak）。规则：**`/inheritance:r` 只用于主机密钥/
+administrators_authorized_keys（sshd 强制严格权限）；二进制安装目录保持继承**
+（`/reset` 恢复父继承 + 增量 grant）。最终定性待 v6 icacls 对比 + TEMP 隔离验证。
+
+### 13. Defender 归责先查证据日志
+
+怀疑 Defender 前先查 Defender/Operational：1116/1117（检测/处置）、1121/1122
+（ASR 拦截）。两处全空 = Defender 从未盯上这个文件 → 停止怀疑、换方向
+（v5 的「Defender 篡改二进制」假设因此被否，节约了安全模式弯路）。
+
+### 14. 版本门禁 fail-closed
+
+v4 的防 v10 检查 `$ver -match '^10\.'` 在 FileVersion 为空时静默放行。门禁逻辑
+必须拒绝空/未知（fail-closed）；更稳的做法是直接拿哈希当门禁（见 O 条）。
+
+### 15. Windows 10 自带 ssh.exe/scp = 现成双向传输通道
+
+System32\OpenSSH 里的客户端无需安装任何东西：用户 `scp` 从 Linux 拉 zip、
+推回日志，全程只要 Linux 密码。当 Linux 防火墙开新端口需要 sudo 密码、
+SMB 共享不可用时，这是唯一通路——排障第一天就该建立它。
+
+### 15b. 无效用户名 = KEX 后 reset（不是 Permission denied）
+
+Win10 家庭版内置 Administrator 账户默认禁用/不存在；Win32-OpenSSH 对无效用户
+的行为是 KEX 完成后直接 reset 连接——极易误判为「握手层/密钥层故障」（本项目
+曾在 Administrator@ 上反复测 reset）。known_hosts 已写入 = KEX 已成功；此时
+reset 应首先怀疑用户名/账户有效性。**正确用户名 = Windows 登录名（whoami）**，
+含空格要加引号。
+
+### 16. 用户回传的日志同时审计我自己的脚本 bug
+
+v5 日志暴露两处我的 bug：zip 搜索路径与用户指令不符（O 条）、Test-Sshd 的
+null 连环崩（M 条）。发下一版前先 diff「预期输出 vs 实际输出」，把「上一版
+脚本的 bug」列为排障对象——脚本的 bug 会伪装成系统的故障。
+
+### 17. 修复脚本的清理代码只在确认失败后执行（v7 误杀教训）
+
+v7 成功拉起 sshd（22 LISTENING + KEX 通），但成功判据函数被 stderr 噪音弄崩
+误判失败，随后清理代码把刚拉起的 sshd 杀掉——「修好了又被我关掉」。规则：
+（a）kill/Stop-Process 类清理只在判据**明确失败**分支执行；（b）成功判据用
+Start-Process + RedirectStandardOutput/Error 双文件，勿用 `& exe 2>&1`——
+Windows ssh.exe 的 `Warning: Permanently added` 走 stderr 会产生错误记录对象
+污染 `$out`，match 失败（M 条的再验证）。
+
+### 17b. Windows sftp-server 路径语法 = /盘符:/，无 cygdrive；scp 下载拒带空格用户名
+
+Win32-OpenSSH sftp-server：绝对路径写 `/D:/Epub/...`（正斜杠盘符冒号）；`/cygdrive/d/...`
+不存在（那是 MSYS 语法）；`D:/path`（不带前导斜杠）会被拼接到 HOME。**先 `ls /D:/` 验证
+语法再批量传输**。scp 上传方向容忍带空格用户名，**下载方向报 `invalid user name`**——
+带空格 user 一律走 sftp batch（get/put 均可靠，UTF-8 文件名安全）。
+
+### 18. PowerShell 方法参数中逗号优先级高于 -f（格式化必须加括号）
+
+`$sw.WriteLine('{0}|{1}' -f $a,$b)` 被解析为 WriteLine(format, $a, $b) 多参数 →
+命中 WriteLine(String, params Object[]) 重载 → String.Format 参数越界运行时异常
+（且藏在 catch 里表现为「全部跳过」）。**修**：`$line = ('{0}|{1}' -f $a,$b); $sw.WriteLine($line)`。
+同场加映：foreach 内 FileInfo 对超长路径抛异常会中断整个循环——每文件级 try/catch。
+
+### 18b. NTFS 非法字符与跨平台同步
+
+Linux 文件名可含 `:`（NTFS 禁）→ 推送时映射为全角 `：`；长路径 >260 需
+LongPathsEnabled=1（Win32-OpenSSH sftp-server 清单已声明 longPathAware）。
+跨平台同步的清单比对用 .NET EnumerateFiles 而非 Get-ChildItem -Recurse
+（后者对特殊字符目录树有通配符语义漏文件风险，且两者结果要互相验证）。
+
+### 18. SCM 服务起不来但 exe 能跑 → SYSTEM 开机任务等效兜底
+
+服务模式 7034 意外停止（SCM 拉起即死）而 sshd.exe 手动/任务方式完全正常时：
+`schtasks /create /tn OpenSSH-Server-Task /tr "\"C:\...\sshd.exe\"" /sc onstart
+/ru SYSTEM /rl HIGHEST` 即可开机自启+立即可用，先恢复服务再慢慢查 SCM。
+本项组合最终就是靠它打通的（服务问题原因至今未深挖，P2 遗留）。
+
+## 实战补充 3（2026-08-17 第 14-17 轮：看门狗一劳永逸交付 + bat 编码修坑）
+
+### 19. onstart 开机任务不可靠 → 周期看门狗兜底
+
+`/sc onstart` 开机任务重启后**未可靠拉起 sshd**（15:46 实测 22 关闭，而 14:10 手动 /run 成功）——开机任务在系统/网络/Defender 就绪前运行，失败后**无重试**。一劳永逸解法（install-keepalive.bat）：SYSTEM 计划任务 = AtStartup 触发 + Once/RepetitionInterval 5 分钟 + RepetitionDuration 3650 天（`[TimeSpan]::MaxValue` 在部分 PS 版本报错，用 10 年等效）+ `StartWhenAvailable`（睡眠唤醒后补跑）+ 电池策略 + `ExecutionTimeLimit 2 分钟`（防卡死挡住下次触发）；看门狗脚本逻辑 = netstat 查端口 → 没监听则杀残留进程 + 清 sshd.pid + `Start-Process` 重启 + 记 keepalive.log。**任何断连（重启/睡眠/崩溃）5 分钟内自愈，Linux 侧 `ssh -w` 等待即可**。
+
+### 20. 远端 PowerShell 输出噪音与引号坑
+
+`-EncodedCommand`（UTF-16LE base64）是绕三层引号地狱的基线，但还有两坑：①输出带 CLIXML 噪音（「正在准备首次使用模块」进度对象）→ 脚本首行加 `$ProgressPreference='SilentlyContinue'`；②`Get-CimInstance Win32_LogicalDisk -Filter "DeviceID=\"C:\""` 经 bash heredoc 引号被吞 → FreeSpace=null 显示 0.00GB——**绕开过滤器内引号**，用 `-Filter "DriveType=3"` 或直接查对象属性。
+
+### 21. ssh_config 空格用户名必须引号
+
+`User "Wang Ziyan"`——不引号报 `keyword user extra arguments`（config 解析器把空格当分隔）。连接命令同理：`ssh "Wang Ziyan"@host`。验证：`ssh -G win | grep user` 应输出完整用户名。
+
+### 22. 看门狗验证 = 多端口体检脚本
+
+交付自愈方案后配 Linux 侧 `win-check.sh`：ping（机器在不在）→ 22（sshd 活没活）→ 445（SMB 佐证机器在线）→ `ssh -o BatchMode=yes whoami`（认证链）；`-w` 模式循环探测等看门狗自愈（最长 6 分钟 = 看门狗周期 + 裕量）。断连时一图看清卡在哪一环，而不是盲猜。
+
 ## 变更日志
+
+### 1.4.0 (2026-08-17, 三修)
+- 新增：编写规范 P（bat 纯 ASCII + CRLF，GBK 代码页 UTF-8 解析失败根因 + file 判据 + UAC 失败分支停留）、Q（bat 内嵌 ps1 单文件交付：重定向前置 echo 防句柄坑、内嵌内容禁 cmd 元字符、生成后 ROUND-TRIP 回验）
+- 新增：实战补充 3（19-22 条）——onstart 开机任务不可靠→周期看门狗（AtStartup+5 分钟循环+StartWhenAvailable+ExecutionTimeLimit）、远端 PS 引号/CLIXML 噪音两坑、ssh_config 空格用户名引号、多端口体检脚本验证
+- 同步：index.md 条目 16 描述更新
+
+### 1.3.0 (2026-08-17, 同日二修)
+- 二修：追加 17b（sftp /盘符:/ 语法+scp 空格用户名+逗号优先级坑+每文件 try/catch）、18b（NTFS 冒号映射/长路径/清单枚举）——books-sync.py 实战（五坑连环）
+- 一修：追加 15b（无效用户名=KEX 后 reset，正确用户名=登录名）、17（清理代码只在确认失败后执行+判据双文件方案）、18（SYSTEM 开机任务等效服务兜底）——v7 实战 + 最终打通复盘
+- 新增：编写规范 M/N/O——外部 exe 试运行取退出码（Start-Process 方案）、修复脚本 Start-Transcript 落盘、依赖搜索路径覆盖用户指令路径 + SHA256 内容门禁
+- 新增：排除链 step 0 存在性检查（sc qc 1060 = 服务从未注册）+ TEMP 隔离试跑判别器（路径拦截 vs 内容拦截）
+- 新增：实战补充 2（9-16 条）——吞错组合、空 FileVersion 误诊（身份鉴定三件套）、全盘 A/B 试跑+救援源、/inheritance:r 适用边界、Defender 归责证据化、版本门禁 fail-closed、自带 scp 通道、审计自己的脚本 bug
 
 ### 1.2.0 (2026-08-16)
 - 新增：脚本输出文本规范（ASD-STE100）——脚本编写规范自查新增「E. 输出消息规范」，echo/Write-Host/错误提示/交互询问遵守简化技术英语的短句/祈使/术语一致/状态前缀规范，详见 technical-writing-standard.md 第 7 节
