@@ -1,7 +1,7 @@
 ---
 name: memory-index-condense
 version: 1.3.1
-description: 调查 ~/.pi/agent/memory/，使用多个 reader agent 并行分析 MEMORY.md、SCRATCHPAD.md 和每日日志，合成浓缩的 MEMORY_INDEX.md 快速索引，并添加偏好指引 agents 自动使用。平衡内容压缩与精准关键词提炼。
+description: 调查 ~/.pi/agent/memory/，使用多个 reader agent 并行分析 MEMORY.md、SCRATCHPAD.md 和每日日志，合成浓缩的 MEMORY_INDEX.md 快速索引，并添加偏好指引 agents 自动使用。平衡内容压缩与精准关键词提炼
 triggers:
   - "整理记忆"
   - "清理memory"
@@ -107,7 +107,7 @@ cat ~/.pi/agent/memory/MEMORY_INDEX.md 2>/dev/null || echo "不存在"
 
 **切分策略**（以 31 个日志、4 个 agent 为例）：
 
-```
+```text
 Agent A (explore): 最早的 ~10 个日志 (06-05 至 06-19)
 Agent B (explore): 中间的 ~11 个日志 (06-20 至 07-07)
 Agent C (explore): 最近的 ~10 个日志 (07-08 至 07-24)
@@ -124,7 +124,7 @@ Agent D (deep):    MEMORY.md + SCRATCHPAD.md
 
 **输出格式要求**（每日期一条）：
 
-```
+```text
 YYYY-MM-DD | 关键词标签 | 关键事件摘要 | 服务器信息 | 重要文件路径
 ```
 
@@ -153,7 +153,7 @@ YYYY-MM-DD | 关键词标签 | 关键事件摘要 | 服务器信息 | 重要文�
 
 **结构模板**：
 
-```
+```markdown
 # 🗺️ Memory Index — Quick Reference
 > Last updated: {YYYY-MM-DD} | Compact lookup for agents: read this FIRST.
 > For deep detail → `memory_search({{ query: "KEYWORD", mode: "keyword" }})`
@@ -338,7 +338,7 @@ done
 
 **session 模式输出格式**：
 
-```
+```text
 # 每行一个 session code，直接可复制给 pi --session
 019f4f4d-8512-706f-beef-bb4443168646
 019f8e60-b937-73f5-85d5-a7ac382721c3
@@ -346,7 +346,7 @@ done
 
 **非 session 模式（skills/agents/all）输出格式**：
 
-```
+```markdown
 ## 🔎 Skill/Session 搜索报告
 
 搜索词: "{search_query}"
@@ -373,7 +373,7 @@ done
 
 如果找到的 skill 对日常工作有长期参考价值，可以在 MEMORY_INDEX.md 的 `🏷️ Project Keyword → Daily Log Lookup` 表中新增一行：
 
-```
+```markdown
 | **New Skill** | {关键词} | {文件路径} | {日期} |
 ```
 
@@ -432,3 +432,16 @@ done
 - **密码仅存于 MEMORY_INDEX.md**，不写入 SCRATCHPAD（SCRATCHPAD 会随 session 输出传播）
 - 过期服务器的密码在索引中应移除（而非保留并标记过期），防误用
 - `memory_write` 写入偏好时，使用 `target: "long_term", mode: "append"` 追加而非覆写
+
+---
+
+## 变更日志
+
+### 1.3.1 (2026-08-11)
+- 修复：session 目录列举 `ls -td */` 在 `--` 前缀目录名下被解析为命令行选项 → 假阴性；改 find+sort 列举（head 20→10）
+- 修复：session 搜索 `-maxdepth 2` 漏掉深层 `run-N/session.jsonl`（实测仅覆盖 230/1920 文件，假阴性）→ 全深度 `*.jsonl` + timeout 30
+- 修复：session code 从匹配的 jsonl 文件名提取 UUID（目录名是 cwd 分组，无 UUID）
+- 修改：MEMORY.md 偏好编号 ⑮ → ⑭（对齐实际编号）
+
+### 1.3.0 (2026-08-01)
+- 初始版本（git 可追溯起点）：并行 reader 分析 MEMORY.md / SCRATCHPAD.md / 每日日志 → 合成 ≤7KB MEMORY_INDEX.md；附加 skill / session / agent 内容搜索

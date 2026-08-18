@@ -1,6 +1,6 @@
 ---
 name: coding-skills-index
-version: 1.6.1
+version: 1.7.1
 description: Coding 技能集入口——进入项目时自动加载项目文档协议、检测项目特征并引导加载对应领域技能
 triggers:
   - "进入项目"
@@ -153,7 +153,7 @@ tools:
 | # | Skill | 版本 | 适用领域 | 何时加载 |
 |:--|:---|:---:|:---|---|
 | 9 | [ml-training.md](ml-training.md) | 1.5.0 | ML 深度学习/RL 训练 | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
-| 10 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.1.0 | 量化投资 ML | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据 |
+| 10 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.2.0 | 量化投资 ML（含实盘校准闭环） | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据，或实盘/纸面交易偏差排查 |
 | 11 | [vps-operations.md](vps-operations.md) | 2.2.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
 | 12 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
 | 13 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
@@ -216,7 +216,21 @@ tools:
 
 ---
 
+## 六、项目专属要求
+
+跨项目 skill 之外的**当前项目硬性要求**——进入项目时对照，回归时逐条验证：
+
+| 项目 | 要求 | 参考实现 / 验收标准 |
+|:---|---:|---|
+| `llm-api-check`（~/Desktop/go-projects/LLM-api-check） | 必须像 `~/Desktop/android-projects/api-checkers/` 那样**直接显示限流 API 的限流时限** | 对照 Android `DetailScreen.kt` WindowRow：CountdownText 恒显 + 已限流徽章并存；Go 侧 `internal/render/render.go` RenderAccountDetail——rate-limited 行必须同时输出「已限流」与重置倒计时（如 `已限流 · 4小时20分后重置`），禁止用「已限流」替代倒计时 |
+
 ## 变更日志
+
+### 1.7.1 (2026-08-18)
+- 升级：`quant-ml-falsification.md` 1.1.0 → 1.2.0——新增第五支柱「实盘校准——预测记账与结算闭环」（快慢两层架构 / L0-L4 矫正分级 / 生产信号必备字段 / 实盘数据纪律 / 分散现实检验）+ F26-F28 实盘阶段假 alpha 模式（单日噪声响应过拟合、公式腿单独触发反向信号、重叠口径参照偏差），总模式 25 → 28。来源：VERSION2.5 首轮实盘准备全验证（`docs/2026-08-18_prediction_calibration_design.md`）
+
+### 1.7.0 (2026-08-18)
+- 新增：§六「项目专属要求」——llm-api-check 必须直接显示限流 API 的限流时限（对照 api-checkers WindowRow：已限流徽章与重置倒计时并存，禁止替代）
 
 ### 1.6.1 (2026-08-16)
 - 新增：维护约定补充——front matter 严格 YAML 解析与版本一致性检查规范见 skill_creator.md 检查清单 G 组（防复发：YAML 引号铁律、版本撞号、裸词 trigger、索引同步）
@@ -264,4 +278,4 @@ tools:
 - 新增：步骤 1-4 的明确执行指令
 - 保留原有目录内容供浏览参考
 
-*最后更新: 2026-08-16*
+*最后更新: 2026-08-18*
