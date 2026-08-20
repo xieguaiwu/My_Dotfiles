@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 2.4.0
+version: 2.5.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -60,6 +60,10 @@ triggers:
   - "OOM"
   - "out of memory"
   - "Purging GPU memory"
+  - "Atomic commit failed"
+  - "Page-flip failed"
+  - "显示管线"
+  - "PSR"
   - "subagent 温度异常"
   - "web_search 报错"
   - "provider 不可用"
@@ -203,7 +207,7 @@ journalctl -p err -b --no-pager | tail -20
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
 | 3 | [enospc-tmpfs-check.md](enospc-tmpfs-check.md) | 1.1.0 | ENOSPC/tmpfs 满排查：磁盘 vs 内存盘区分、换出页占配额、孤儿进程清理；先判别 ENOSPC ≠ ENAMETOOLONG | 任何 "no space left"、写入失败、tmpfs 满、ENAMETOOLONG 判别 |
-| 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.1.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足 |
+| 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.2.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流）+ PSR 显示管线风暴修复（Atomic commit failed 日均过万 → i915.enable_psr=0），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足、显示管线报错 |
 | 3.6 | [chrome-leak-reaper.md](chrome-leak-reaper.md) | 1.1.0 | Chrome 内存泄漏排查与 chrome-reaper 维护：chromedp/桥实例/zygote 误杀（PPID 链）/restart 残留/profile 锁冲突 | chrome 吃内存、chrome 进程多、DidStartWorkerFail、bridge 反复重启 |
 | 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.2.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅） | 代理失效、无法上网、订阅失败 |
 | 5 | [fcitx5_punctuation_fix.md](fcitx5_punctuation_fix.md) | 1.0.0 | fcitx5 中文标点问题（半角标点、顿号书名号打不出） | 输入法标点异常 |
@@ -243,7 +247,7 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 16 | [windows-scripting-and-ssh-debug.md](windows-scripting-and-ssh-debug.md) | 1.4.0 | Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/BOM/bsdtar+xz/盘符/exe 取退出码/Transcript/依赖内容门禁/输出规范）+ OpenSSH 远程排障（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 22 条 | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、Windows 脚本编写 |
+| 16 | [windows-scripting-and-ssh-debug.md](windows-scripting-and-ssh-debug.md) | 1.4.1 | Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/BOM/bsdtar+xz/盘符/exe 取退出码/Transcript/依赖内容门禁/输出规范）+ OpenSSH 远程排障（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 27 条（含 books-sync 双机同步：sftp mkdir 已存在 Failure 无害、NTFS 大小写别名、mv 已存在目录=移入内部、冒号映射全角/%3A 共存、规则化排除） | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、Windows 脚本编写 |
 
 ---
 
@@ -254,7 +258,7 @@ journalctl -p err -b --no-pager | tail -20
   └─ enospc-tmpfs-check.md ← 先看 df -h 全部挂载点，别只看根盘
 
 「死机 / 冻结 / 卡死 / 没响应 / 内存不足」
-  └─ freeze-oom-protection.md ← 先看 journalctl -b -1 尾部：Purging GPU memory = 内存 thrash；装 earlyoom + oomd 加固；泄漏源先查 chrome
+  └─ freeze-oom-protection.md ← 先看 journalctl -b -1 尾部：Purging GPU memory = 内存 thrash；装 earlyoom + oomd 加固（⚠️ earlyoom 须 -s 100 -S 100 消除 zram 盲区）；泄漏源先查 chrome；Atomic commit failed 日均过万 → i915.enable_psr=0
 
 「chrome 内存泄漏 / chrome 吃内存 / chrome 进程多 / DidStartWorkerFail / bridge 反复重启」
   └─ chrome-leak-reaper.md ← 进程画像 + reaper 日志 + scope/PPID 链判定 + v3 修复；致死机/ENOSPC 时配合 freeze-oom-protection / enospc-tmpfs-check
@@ -355,6 +359,12 @@ journalctl -p err -b --no-pager | tail -20
 
 ## 变更日志
 
+### 2.5.0 (2026-08-18)
+- 更新：freeze-oom-protection.md 1.1.0 → **1.2.0**（基于 08-18 17:48 第二次死机实战：earlyoom zram 盲区——Fedora 默认内存+swap 双条件在 zram 掩护下永不触发，须 -s 100 -S 100 退化为纯内存阈值；oomd 阈值 80%→60%；新增 PSR 显示管线风暴节——Atomic commit failed 日均 1.2-3.5 万次 = Kaby Lake i915 PSR bug，i915.enable_psr=0 修复 + BLS 条目验证；Phase 1 加 Purging GPU memory 页数对比判读）
+- 新增：triggers「Atomic commit failed」「Page-flip failed」「显示管线」「PSR」
+- 新增：决策树死机分支注释（earlyoom zram 盲区 + PSR 修复）
+- 新增：目录表 3.5 行用途更新（PSR 修复 + 显示管线触发场景）
+
 ### 2.4.0 (2026-08-17)
 - 更新：windows-scripting-and-ssh-debug.md 1.2.0 → 1.3.0（win-ssh-setup 第 11-13 轮：diag v2 定位服务未注册真相、v5 误诊复盘、v6 ACL 判别）
 - 新增：编写规范 M/N/O（exe 试运行取退出码、修复脚本 Start-Transcript、依赖搜索路径∪用户指令路径+SHA256 内容门禁）；排除链 step 0 存在性 + TEMP 隔离试跑判别器；实战补充 2（9-16 条：吞错组合、空 FileVersion 误诊、A/B 试跑救援源、/inheritance:r 适用边界、Defender 归责证据化、版本门禁 fail-closed、自带 scp 通道、审计自己脚本 bug）
@@ -441,4 +451,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-17（index 2.4.0：windows-scripting-and-ssh-debug.md 1.3.0——ACL 拒绝访问判别与第 11-13 轮实战教训；2.3.1：YAML 修复 3 文件；2.3.0：第七类 Windows 远程排障）*
+*最后更新: 2026-08-18（index 2.5.0：freeze-oom-protection 1.2.0——08-18 第二次死机实战沉淀：earlyoom zram 盲区 / oomd 60% / PSR 显示管线风暴 + i915.enable_psr=0；2.4.0：windows-scripting-and-ssh-debug.md 1.3.0——ACL 拒绝访问判别与第 11-13 轮实战教训；2.3.1：YAML 修复 3 文件；2.3.0：第七类 Windows 远程排障）*

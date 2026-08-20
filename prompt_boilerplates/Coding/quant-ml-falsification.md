@@ -1,7 +1,7 @@
 ---
 name: quant-ml-falsification
-version: 1.2.0
-description: 量化投资模型训练的防幻觉方法论——辨别假 alpha、诚实训练、方向饱和后找新方向、实盘阶段预测记账与结算校准闭环
+version: 1.3.0
+description: 量化投资模型训练的防幻觉方法论——辨别假 alpha、诚实训练、方向饱和后找新方向、实盘阶段预测记账与结算校准闭环、公式结构伪装检测（RL/StackVM 公式发现专属）
 triggers:
   - "量化训练"
   - "quant训练"
@@ -69,9 +69,9 @@ tools:
 | 总回报 = +113% | "策略盈利" | "生存偏差估了多少？退市股排除了吗？止损设置是多少？" |
 | maxDD = -19.8% | "回撤可控" | "这是止损截断后的还是真实路径？无止损的 maxDD 是多少？" |
 
-#### 1.2 二十八种假 Alpha 模式——逐项排查清单
+#### 1.2 三十三种假 Alpha 模式——逐项排查清单
 
-以下每种模式都来自真实训练事故（F1-F15 为信号/统计假象，F16-F25 为数据泄露，F26-F28 为实盘阶段假象）。训练完成后，**逐项过一遍**：
+以下每种模式都来自真实训练事故（F1-F15 为信号/统计假象，F16-F25 为数据泄露，F26-F28 为实盘阶段假象，F29-F33 为公式结构伪装）。训练完成后，**逐项过一遍**：
 
 | # | 模式名 | 表现 | 根因 | 检测方法 | 真实案例 |
 |:--|:---|:---|:---|:---|:---|
@@ -103,6 +103,28 @@ tools:
 | F26 | **单日噪声响应过拟合** | 实盘 Day 1-3 偏差就改公式/阈值 | 预期窗口 21/42 天的信号被当成逐日点预测；单日收益 SNR<0.03 | 先分解市场 beta（对大盘回归）vs 残差 alpha；任何参数变更须全历史样本+bootstrap CI | A股 828: Day1 -0.82%=深市-1.09%跟跌，实为 beta |
 | F27 | **公式腿单独触发反向信号** | 多腿公式某腿单独满足时选出负后验股票 | 如「买低位置」×「低波」腿：位置不低但低波股被选 → 买阴跌僵尸股 | 分档后验验证（主导特征分档看各档后验差）；分档差 >3pp 加硬过滤 | A股盐田港: 位置72%被选 h21 -1.8~-2.0% vs 位置<30% +2.4% |
 | F28 | **重叠口径参照偏差** | 用重叠持仓口径收益率当预期（乐观 2-3×） | 滚动窗口每日买入持有 h 天，窗口重叠 → 非独立、均值偏高 | 预期一律用非重叠 episodic 协议口径；重叠口径只作排序参照并显式标注 | A股: 全池 rank1 重叠 +3.5%/42d vs 非重叠 +1.2-1.4%/期 |
+
+#### 1.3 公式结构伪装（F29-F33，RL/StackVM 公式发现专属）
+
+> 来源：VERSION2.5 uv9/lh/pcorr 12-run 全审（`results/uv9_effectiveness_review_20260819.md`，代数化简 + 逐窗 IC 向量精确比对 + 本地金标准复现）。
+> 核心洞察：伪装公式与诚实等价形的 **IC/ICIR/decay 完全相同**（数值上就相等）——只看数值的奖励/门控必然失明，唯一可靠维度是**代数结构（化简后 AST）+ 逐窗 IC 向量比对**。
+
+| # | 模式名 | 表现 | 根因 | 检测方法 | 真实案例 |
+|:--|:--|:--|:--|:--|:--|
+| F29 | **同特征堆叠伪装** | top 公式 IC/ICIR 很高但由同一特征 token 反复 ADD/SUB 凑深度 | 复杂度罚按原始 token 数计，不识别代数等价；算子多样性 bonus 奖励多算子 | 代数化简（有符号多重集消项），化简后若 ≡ 单特征/负单特征 → 伪装 | A股 uv9_s999 top1 `(lu_3d ADD (lu_3d SUB (lu_3d ADD (lu_3d ADD rv_21d))))` ≡ NEG(rv_21d)，corr 0.9991 |
+| F30 | **零列加法** | 公式含 std=0 的僵尸特征列与真特征相加减，IC 与去掉僵尸列完全相同 | 训练前无零列检测；diversity bonus 把零列计为"独立特征" | 逐列面板 std，std<1e-8 列为 dead；`X ADD t_*` vs `X` 逐窗 IC corr | A股 v2 数据 21 个 t_* 列 std=0，全库 112 对 corr≥0.999 |
+| F31 | **ABS/装饰算子恒等** | 公式用 ABS(NEG(...)) 包裹非负特征，剥掉装饰层 IC 不变 | ABS 对 count/EMA 编码等非负特征恒等；无恒等算子检测 | 维护 NONNEG 特征集合，剥装饰层后对比 IC（\|ΔIC\|<0.002 → 装饰无贡献） | A股 `NEG(ABS(zhaban_count_20d))` IC 0.0753 实为 zhaban 本身 |
+| F32 | **DIV 语义陷阱** | `(x DIV x)` 类公式，按数学除法看是常数 1，实为 SIGN | `op_div = a/(\|b\|+EPS)`，a==b 时退化为 sign(a) | 等价性判定必须按算子**实现语义**化简，不能按数学语义 | A股 pcorr_s999[5] `(lu_days_since DIV lu_days_since)` IC 0.0380 = SIGN 因子 |
+| F33 | **僵尸列制造伪多样性** | 同一因子族收敛出大量"等价对"（corr 0.9999），top-5 看似多样 | 多样性/diversity/decay 指标全基于因子值而非 token 结构 | top 公式两两 canonical 去重 + 逐窗 IC corr 矩阵，找 ≥0.99 等价对 | A股 12 run top 公式大量收敛到 NEG(rv_21d) 家族，pcorr_s123[0] 与 rv5_s123[0] 完全同公式 |
+
+**核查命令（训练完成后追加一轮公式体检）**：
+```bash
+python3 scripts/formula_health_gate.py results/{run}/results.json \
+    --registry results/rv5_h42_s42/results.json results/uv_v9_h42_s42/results.json \
+    --production 'NEG(rv_21d)' 'NEG(price_pos_252d) MUL DELAY1(rv_z)'
+# 输出 results/formula_health_{run}.json: 每公式 verdict ∈ {FRESH, DUP, DECOR, DEAD-DEP}
+# DUP/DEAD-DEP 一票否决; DECOR 剥装饰后重判
+```
 
 #### 1.3 三列对照法——证伪的标配操作
 
@@ -809,6 +831,13 @@ slot1:
 ---
 
 ## 变更日志
+
+### 1.3.0 (2026-08-19)
+- **新增第六支柱「公式结构伪装检测」**（来自 VERSION2.5 uv9/lh/pcorr 12-run 全审，`results/uv9_effectiveness_review_20260819.md`）：
+  - 新增 §1.3 公式结构伪装模式 F29-F33：同特征堆叠伪装 / 零列加法 / ABS 装饰算子恒等 / DIV 语义陷阱 / 僵尸列伪多样性
+  - 核心洞察：伪装公式与诚实等价形 IC/ICIR 完全相同——检测唯一可靠维度 = 代数化简后 AST + 逐窗 IC 向量比对
+  - 配套工具：`core/illusion_guard.py`（化简器+audit）+ `scripts/formula_health_gate.py`（FRESH/DUP/DECOR/DEAD-DEP 体检）
+- 总模式数：28 → 33
 
 ### 1.2.0 (2026-08-18)
 - **新增第五支柱「实盘校准——预测记账与结算闭环」**（来自 VERSION2.5 首轮实盘准备的全部验证）：

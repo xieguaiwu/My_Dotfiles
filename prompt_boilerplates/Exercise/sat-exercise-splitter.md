@@ -1,7 +1,7 @@
 ---
 name: sat-exercise-splitter
-version: 1.2.0
-description: 识别多个SAT专题练习文件，按难度分section生成题目与答案+解析两个LaTeX文件，各section题号自 1 重排，tectonic编译。文本层 PDF 直接几何提取：PyMuPDF thin-line 下划线检测、y-gap 段落切分、诗歌逐行排版、答案全量比对。位于 SAT 工具链上游——下游可接入 sat-error-note-generator（Obsidian 错题笔记）或 mistake-practice-generation（AI 练习卷）
+version: 1.3.0
+description: 识别多个SAT专题练习文件，按难度分section生成题目与答案+解析两个LaTeX文件，各section题号自 1 重排，tectonic编译。文本层 PDF 直接几何提取：PyMuPDF thin-line 下划线检测、y-gap 段落切分、诗歌逐行排版、答案全量比对。整卷扫描版有配套可执行脚本（sat-ocr-pipeline/ 目录，多路 vision 转录 + 答案键条带裁剪 + LaTeX 生成全链路，2026-08-19 实战验证 260 题）。位于 SAT 工具链上游——下游可接入 sat-error-note-generator（Obsidian 错题笔记）或 mistake-practice-generation（AI 练习卷）
 triggers:
   - "拆分SAT专题练习"
   - "题目答案解析分离"
@@ -71,6 +71,22 @@ sat-exercise-splitter（本 skill）
 ```
 
 完整闭环：拆分题库 → 积累错题 → 诊断陷阱 → 生成练习。
+
+### 配套脚本（整卷扫描版）
+
+扫描版整卷（无文本层、百页级）直接使用本 skill 的**可执行实现**：`sat-ocr-pipeline/`（与本文档同目录）：
+
+| 阶段 | 脚本 | 说明 |
+|---|---|---|
+| 转录 | `transcribe_worker.py` | 多路云端链（zhipu→omni→nano-vl→gemma），增量保存、断点续跑、TOC 预期题数校验 |
+| 转录 | `local_3b_worker.py` | 本地 GPU（Qwen2.5-VL-3B）免费无限量 lane，15s/页 |
+| 答案键 | `answer_key_transcribe.py` | 整页转录；`answer_key_strip.py` = **密排表格条带裁剪正解** |
+| 修复 | `repair.py` | 漏题/坏页补扫（覆盖写） |
+| 生成 | `build_latex.py` | 解析→清洗→专题分节→tex（BASE/OUTDIR 模块级变量） |
+| 收尾 | `final_build.sh` | 同步→构建→编译→验证→交付一键 |
+| 辅助 | `watchdog_cron.sh` `probe_providers.py` `make_expect_map.py` | 保活 / 探测可用 provider / TOC→expect 映射 |
+
+用法与数据格式见 `sat-ocr-pipeline/README.md`。API key 一律走环境变量（`ZHIPU_API_KEY` / `OPENROUTER_API_KEY` / `SAT_OCR_BASE`），禁止硬编码。
 
 ## 执行流程
 
@@ -348,6 +364,12 @@ Easy: 12 题 | Medium: 12 题 | Hard: 6 题
     ```
 21. **视觉验证降级链**：visual-engineering / multimodal-looker 可能 410/429（2026-08-16 双双 410）→ 降级 **zhipu glm-4.5v**（key 在 `~/.pi/agent/auth.json` 的 `zhipu`，POST `https://open.bigmodel.cn/api/paas/v4/chat/completions`，模型名 `glm-4.5v`，base64 data URL 传图），逐页跑固定 QA 问题集（下划线连续性/诗歌逐行/段落空行/溢出重叠/命令残渣）。**答案页误报规避**：QA prompt 必须说明答案页按设计只含字母+rationale（无下划线、无诗歌排版），否则 glm-4.5v 会把 rationale 里提到的 "the underlined phrase" 误报为缺失下划线
 
+22. **多路转录配额管理（2026-08-19 实战）**：免费源各有坑——zhipu glm-4.5v 会余额耗尽（error 1113，需充值，非限流）；openrouter `:free` 模型 = 50 请求/日/账号（`X-RateLimit-Reset` 北京时间 08:00；充 $10 → 1000/日）；kimi 账号可能被 suspend；nvidia 免费 key 会 403。**写脚本前先 probe（sat-ocr-pipeline/probe_providers.py），每页按链降级**，429 退避 0/15/30/60s，4xx 非限流立即换源。
+23. **密排答案表必须条带裁剪**：整页直读必幻觉（nano-vl 输出 Q1-5 ABCDE 循环；omni 进入推理循环输出 77KB 思维垃圾）。正解：页面横切 4 条（y 10%-92%）、放大 ≤1600px、nano-vl 极简 prompt（"Transcribe this table."）逐条读；复杂 prompt 会触发空响应（'choices' KeyError = 200 状态 + error body，需打印原始响应排查）。分组格式 `1-5: ACDCB` 与逐条格式都需解析器支持。
+24. **页内完全重复题 = 幻觉回声**：同题干**且**同选项组只留一个（按 (q, options) 签名去重）；但同题干**不同**选项是真双题页（SAT 词汇/过渡题常见），不可误删。**双题同干页**（阅读题偶尔出现）omni 修复后常把两题选项合并成两堆 A-D 重复块——校验铁律：`QUESTION 标记数 == 选项组数`，不符则手工拆分（参照 raw_reading.json reading_43 案例）。
+25. **转录数据实时同步本地**：服务器可能因资金停用/恢复被重建（/tmp 全清、host key 变更、SSH 凭据全换）。每完成一批立即 scp 回本地，并保留一份 raw 备份——服务器重建时本地副本是唯一救命稻草（2026-08-19 实战：00:35 同步副本救了全盘）。
+26. **本地 3B 参数红线**：Qwen2.5-VL-3B 单进程串行（双进程互抢显存 OOM）；图像缩放 ≤1024px、max_new_tokens ≤5200（1280px 或 6000 tokens 即 CUDA OOM）；`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` 缓解碎片。下划线（thin-line）在降采样后消失——3B/omni 专注 UL 检测都不可靠（实测 20/20 全 NO_UNDERLINE），有划线句的页只能靠修复轮 prompt 要求 `*[UL_START]*`，不保证成功。
+
 ## 文档写作规范（ASD-STE100）
 
 本 skill 产出的英文试卷是功能性文档。题面指令、解析（rationale）、说明文字遵守 ASD-STE100 简化技术英语（国际标准，现行 Issue 9）核心规则：
@@ -364,6 +386,11 @@ Easy: 12 题 | Medium: 12 题 | Hard: 6 题
 数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
 
 ## 变更日志
+
+### 1.3.0 (2026-08-19)
+- 新增"配套脚本（整卷扫描版）"小节：指向 sat-ocr-pipeline/（与本文档同目录）——transcribe_worker / local_3b_worker / answer_key_transcribe / answer_key_strip / repair / build_latex / final_build 全链路可执行实现
+- 新增注意 #22-26：多路转录配额管理（openrouter 50/日 08:00 重置、zhipu 1113、kimi suspend、nvidia 403）、密排答案表条带裁剪正解（整页直读必幻觉）、页内完全重复题去重 + 双题同干页选项合并校验、转录数据实时同步本地（服务器重建教训）、本地 3B 参数红线与 UL 检测局限
+- 来源：2026-08-19 阅读 160 题 + 语法 100 题整卷扫描版拆分（本地 3B 主转录 + 云端补扫；答案 260/260 与答案键 0 差异）
 
 ### 1.2.0 (2026-08-16)
 - 新增：文档写作规范（ASD-STE100）小节——题面指令、解析、说明文字遵守 STE 核心规则（短句、指令祈使、主动语态、一词一义、数字用数字）
