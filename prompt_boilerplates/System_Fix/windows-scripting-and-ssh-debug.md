@@ -1,6 +1,6 @@
 ---
 name: windows-scripting-and-ssh-debug
-version: 1.4.0
+version: 1.4.1
 description: Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/输出规范）与 OpenSSH 远程排障——KEXINIT reset 排除链、黑盒三测试、前台 vs 服务模式差异定位、ACL 拒绝访问判别、自愈看门狗、脚本化协作闭环
 triggers:
   - "Windows 脚本"
@@ -375,7 +375,33 @@ LongPathsEnabled=1（Win32-OpenSSH sftp-server 清单已声明 longPathAware）�
 
 交付自愈方案后配 Linux 侧 `win-check.sh`：ping（机器在不在）→ 22（sshd 活没活）→ 445（SMB 佐证机器在线）→ `ssh -o BatchMode=yes whoami`（认证链）；`-w` 模式循环探测等看门狗自愈（最长 6 分钟 = 看门狗周期 + 裕量）。断连时一图看清卡在哪一环，而不是盲猜。
 
+## 实战补充 4（2026-08-19：books-sync.py v2 双机同步全流程）
+
+### 23. sftp `-mkdir` 对已存在目录报 Failure 但继续执行
+
+batch 里对已存在父目录 `-mkdir` 输出 `remote mkdir ... Failure`（rc=0 不中止）。push 时父目录大多已存在 → 满屏 FAIL 吓人但无害。修：mkdir 前不探测（探测也贵），接受 Failure 但错误计数时排除 mkdir 行，或 `-mkdir` 后忽略。
+
+### 24. NTFS 大小写别名：枚举返回实际名，push 后 scan 永远报"独有"
+
+Windows 端旧目录 `Syntax and the brain...`（小写），本地新文件用大写路径 put 落盘**成功**（NTFS 不区分大小写，实际存入小写目录），但 .NET EnumerateFiles 返回**实际存储名** → 与本地大写路径字符串不一致 → scan 永远报 Linux 独有 2。解法：**本地目录改名对齐 Windows 实际名**（且常恰好命中既有 EXCLUDE_PATHS，语义更一致）。教训：跨平台同步遇到"怎么推都差 N 个"，先怀疑大小写别名而非传输失败。
+
+### 25. Linux `mv src dst` 当 dst 是已存在目录 = 移入内部
+
+`mv A B` 且 B 是已存在目录 → A 被移成 B/A（不是改名）！本次把大写目录改小写名时小写目录已存在 → 变成两层嵌套。修复：先 `ls -d dst` 判断存在性，或 mv 后用 find 验证层级；嵌套目录先 `mv dir/* .` 再 `rmdir dir`。
+
+### 26. 冒号映射变体多代共存：全角 `：` 与 `%3A` 都有历史文件
+
+8/17 同步把 `:` 映射成全角 `：` 和 `%3A` 两种变体，散落多个目录（当代中国/、笔记/ 等），全被 EXCLUDE_PATHS 排除。本次本地 5 个半角冒号文件重命名为**全角**后与 Windows 端同 size → 自动对齐 same。规则：新文件命名直接全角 `：`，不引入 `%3A`。
+
+### 27. 规则化排除优于逐条枚举（版本目录漂移）
+
+EXCLUDE_PATHS 是 8/17 逐条硬编码，`.pi-subagents`（旧）vs `.pi/subagents`（新）目录名漂移导致 96 个工件漏排除。修：rule_excluded() 规则匹配（`.pi-subagents`/`.pi/subagents` 任一命中、`/.git/`、`~$*`、`*.lnk`、Thumbs.db/desktop.ini、顶层 漫画/、摄影 zip、笔记.7z）。硬编码清单保留（用户确认删除语义），规则层兜底新变体。
+
 ## 变更日志
+
+### 1.4.1 (2026-08-19, 四修)
+- 新增：实战补充 4（23-27 条）——sftp mkdir 已存在报 Failure 无害、NTFS 大小写别名（枚举实际名 vs 推送名）、mv 目标已存在目录=移入内部、冒号映射变体全角/%3A 共存、规则化排除 vs 逐条枚举——books-sync.py v2 双机同步实战
+- 同步：index.md 条目 16 描述更新
 
 ### 1.4.0 (2026-08-17, 三修)
 - 新增：编写规范 P（bat 纯 ASCII + CRLF，GBK 代码页 UTF-8 解析失败根因 + file 判据 + UAC 失败分支停留）、Q（bat 内嵌 ps1 单文件交付：重定向前置 echo 防句柄坑、内嵌内容禁 cmd 元字符、生成后 ROUND-TRIP 回验）

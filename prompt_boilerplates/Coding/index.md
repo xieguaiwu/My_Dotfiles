@@ -1,6 +1,6 @@
 ---
 name: coding-skills-index
-version: 1.7.1
+version: 1.7.2
 description: Coding 技能集入口——进入项目时自动加载项目文档协议、检测项目特征并引导加载对应领域技能
 triggers:
   - "进入项目"
@@ -153,7 +153,7 @@ tools:
 | # | Skill | 版本 | 适用领域 | 何时加载 |
 |:--|:---|:---:|:---|---|
 | 9 | [ml-training.md](ml-training.md) | 1.5.0 | ML 深度学习/RL 训练 | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
-| 10 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.2.0 | 量化投资 ML（含实盘校准闭环） | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据，或实盘/纸面交易偏差排查 |
+| 10 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.3.0 | 量化投资 ML（含实盘校准闭环） | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据，或实盘/纸面交易偏差排查 |
 | 11 | [vps-operations.md](vps-operations.md) | 2.2.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
 | 12 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
 | 13 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
@@ -226,6 +226,9 @@ tools:
 
 ## 变更日志
 
+### 1.7.2 (2026-08-19)
+- 升级：`quant-ml-falsification.md` 1.2.0 → 1.3.0——新增第六支柱「公式结构伪装检测」+ F29-F33 五条 RL/StackVM 公式发现专属假 alpha 模式（同特征堆叠伪装 / 零列加法 / ABS 装饰恒等 / DIV 语义陷阱 / 僵尸列伪多样性），总模式 28 → 33；配套工具 `core/illusion_guard.py` + `scripts/formula_health_gate.py`。来源：VERSION2.5 uv9/lh/pcorr 12-run 全审（`results/uv9_effectiveness_review_20260819.md`）
+
 ### 1.7.1 (2026-08-18)
 - 升级：`quant-ml-falsification.md` 1.1.0 → 1.2.0——新增第五支柱「实盘校准——预测记账与结算闭环」（快慢两层架构 / L0-L4 矫正分级 / 生产信号必备字段 / 实盘数据纪律 / 分散现实检验）+ F26-F28 实盘阶段假 alpha 模式（单日噪声响应过拟合、公式腿单独触发反向信号、重叠口径参照偏差），总模式 25 → 28。来源：VERSION2.5 首轮实盘准备全验证（`docs/2026-08-18_prediction_calibration_design.md`）
 
@@ -278,4 +281,4 @@ tools:
 - 新增：步骤 1-4 的明确执行指令
 - 保留原有目录内容供浏览参考
 
-*最后更新: 2026-08-18*
+*最后更新: 2026-08-19*
