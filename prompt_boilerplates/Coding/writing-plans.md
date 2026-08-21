@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-version: 1.2.0
+version: 1.3.0
 description: 多步骤任务实施前的强制计划编写——零上下文执行者假设、bite-sized 任务粒度、接口契约块、无占位符、自审查三查。核心移植自 obra/superpowers writing-plans（MIT）
 triggers:
   - "写计划"
@@ -80,6 +80,8 @@ docs/plans/YYYY-MM-DD-<feature-name>.md
 > **For agentic workers:** 按本计划任务逐项实施。步骤用 checkbox（`- [ ]`）跟踪。
 
 **Goal:** [一句话描述要构建什么]
+
+**Vision:** [本计划属于长期规划的哪部分——阶段 X/N + 目标编号。长期项目必填，单会话小任务可省。规范见 `long-horizon-planning.md`]
 
 **Architecture:** [2-3 句方法概述]
 
@@ -234,6 +236,7 @@ Task 3 里叫 `clearLayers()`、Task 7 里叫 `clearFullLayers()`——这是 bu
 | `development-quality-gates.md` | 计划的 Global Constraints 应包含质量关卡要求（安全、文档同步、测试真实性） |
 | `resource-aware-delegation.md` | Subagent 驱动执行时，每个 subagent 调用前执行资源检查 |
 | `prometheus`/`metis` agent | 规划类 subagent 的任务即"用本 skill 编写实施计划" |
+| `long-horizon-planning.md` | 长期项目中计划 Header 必填 Vision 字段（阶段 X/N + 目标编号）；计划任务粒度 = 短期目标 S 的实现层；执行完计划后须更新 VISION.md 进度 |
 | `hephaestus` agent | 执行类 subagent 的任务即"按计划文件逐任务实施，每步验证" |
 
 ## 作业要求
@@ -262,6 +265,9 @@ Task 3 里叫 `clearLayers()`、Task 7 里叫 `clearFullLayers()`——这是 bu
 完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
 
 ## 变更日志
+
+### 1.3.0 (2026-08-21)
+- 新增：Header 模板 Vision 字段（长期项目必填）——计划须声明属于长期规划的哪部分（衔接 `long-horizon-planning.md`）
 
 ### 1.2.0 (2026-08-16)
 - 新增：文档写作规范（ASD-STE100）——实施计划文本遵守简化技术英语原则，完整规范见 technical-writing-standard.md

@@ -1,6 +1,6 @@
 ---
 name: ml-training
-version: 1.5.0
+version: 1.6.0
 description: 在远程服务器上进行机器学习训练任务的完整方法论——从环境检查、烟雾测试、看门狗自动化、训练监控、可视化诊断到结果验证的全流程。额外定义结果不理想时的自主优化循环：批判性评估→修复施工→重新训练→再评估
 triggers:
   - "训练模型"
@@ -91,10 +91,11 @@ tools:
 | 2 | **FALSIFICATION_SUMMARY.md**（如存在） | 哪些方向/结论已被推翻，哪些不可信，哪些不必再试 |
 | 3 | **FINAL_HONEST_ASSESSMENT.md**（如存在） | 诚实评估——哪个方向是真实的、哪个是疑似噪音 |
 | 4 | **GOAL.md**（如存在） | 项目目标和当前 Phase |
-| 5 | **ASSET_INVENTORY.md**（如存在） | 目录结构、文件用途、服务器列表 |
-| 6 | 最近的 daily log / scratchpad | 上一个 Agent 在做什么、是否还有训练在运行 |
-| 7 | **ml-training.md**（本文档） | 训练方法论、可视化、验收阈表、自优化循环（§十一） |
-| 8 | **graphify-out/GRAPH_REPORT.md**（如存在，否则先 graphify） | 项目架构图、God Nodes、跨模块依赖关系、社区划分 |
+| 5 | **VISION.md**（如存在） | 愿景规划——短/中/长期目标、当前阶段进度（规范见 `long-horizon-planning.md`） |
+| 6 | **ASSET_INVENTORY.md**（如存在） | 目录结构、文件用途、服务器列表 |
+| 7 | 最近的 daily log / scratchpad | 上一个 Agent 在做什么、是否还有训练在运行 |
+| 8 | **ml-training.md**（本文档） | 训练方法论、可视化、验收阈表、自优化循环（§十一） |
+| 9 | **graphify-out/GRAPH_REPORT.md**（如存在，否则先 graphify） | 项目架构图、God Nodes、跨模块依赖关系、社区划分 |
 
 **如果你不知道项目当前在哪，后面的所有决策都是盲目的。**
 
@@ -187,6 +188,12 @@ GPU:    0 (空闲) / 1 (空闲)
   P0: SGX Z74 — 信噪比最高，最接近实盘
   P1: 期货 AlphaGPT — 信号真但需 walkforward
   ❌ 已推翻: 美股 35 特征选股、SGX 配对交易
+
+本任务在长期规划中的位置（有 VISION.md 时必填）:
+  短期 S: 本次训练验证 Z74 判活因子
+  中期 M: M2（判活因子上线实盘流水线）
+  长期 L: VISION 愿景——私有因子 + 判活闭环上线实盘
+  当前进度: 阶段 3/5 · 本阶段步骤 2/4
 
 本次计划:
   1. 检查 Z74 RL 训练结果
@@ -405,6 +412,7 @@ if step % 50 == 0 or step == 0 or (best_score - prev_best) > 0.01:
 | **ASSET_INVENTORY.md** | 新增/删除模块 | 目录变动、数据文件、服务器信息 |
 | **特征文档** | 特征增删改 | 特征名、定义、计算方式 |
 | **证伪文档**（FALSIFICATION_SUMMARY.md） | 结论变更 | 修正过时结论、添加新证伪 |
+| **VISION.md**（如存在，规范见 `long-horizon-planning.md`） | 阶段推进/目标变更 | 勾选完成目标（S/M/L）、推进阶段、记录「完成长期规划哪部分」 |
 | **自优化迭代日志**（§十一） | 每次自优化循环后 | 迭代次数、诊断报告、改动清单、前后指标对比 |
 | **graphify-out/（知识图谱）** | 架构变更 / 模块增删 | 重建图谱：`graphify update .` → 验证 God Nodes → 确认新模块正确归类 |
 
@@ -445,6 +453,7 @@ cat results/latest.json | python3 -c "import sys,json; d=json.load(sys.stdin); p
   - 全部重写 CONTEXT_FOR_NEXT_AGENT.md（替换旧结果）
   - 更新 ASSET_INVENTORY.md（如目录变动）
   - 更新 FALSIFICATION_SUMMARY.md（如结论变动）
+  - 更新 VISION.md 的阶段进度（如长期规划推进；勾选目标 + 推进阶段）
 
 每次架构变更后:
   - 全部核心文档审查
@@ -1461,6 +1470,7 @@ docs/
 | 角色 | 文件 | 规则 |
 |:---|:---|---|
 | 当前结论 | `CONTEXT_FOR_NEXT_AGENT.md` | 只有一份，每次重写 |
+| 长期规划 | `VISION.md` | 阶段推进时更新，只保留当前规划（规范见 `long-horizon-planning.md`） |
 | 历史记录 | `docs/archive/*.md` | 只追加不修改，按日期前缀 |
 | 方法论文档 | `ml-training.md` | 持续积累，不删除 |
 
@@ -4794,3 +4804,11 @@ subagent:
 ---
 
 *本附录索引会随 §十一 的更新而同步更新。*
+
+---
+
+## 变更日志
+
+### 1.6.0 (2026-08-21)
+- 新增：VISION.md 挂接——§0.1 文档阅读清单（第 5 行）、§0.5 执行摘要「本任务在长期规划中的位置」字段、§7.1 必须更新表、§7.4 更新频率、陷阱 7 角色表
+- 关联：`long-horizon-planning.md`（超长任务愿景与进度管理）——跨多日训练必须声明任务在长期规划中的位置、完成时更新进度

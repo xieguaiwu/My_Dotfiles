@@ -1,6 +1,6 @@
 ---
 name: coding-skills-index
-version: 1.7.2
+version: 1.8.0
 description: Coding 技能集入口——进入项目时自动加载项目文档协议、检测项目特征并引导加载对应领域技能
 triggers:
   - "进入项目"
@@ -127,7 +127,7 @@ tools:
 | # | Skill | 版本 | 用途 | 何时生效 |
 |:--|:---|:---:|:---|---|
 | 1 | [development-quality-gates.md](development-quality-gates.md) | 1.5.0 | 编码质量 13 关卡——写每行代码时自我对照（含关卡 13 用户可见文本，ASD-STE100） | 编码阶段 |
-| 2 | [project-documentation-protocol.md](project-documentation-protocol.md) | 1.1.0 | 文档阅读与更新协议——进入项目时读文档、完成工作时更新文档（含 graphify 知识图谱） | 项目入口 + 项目退出 |
+| 2 | [project-documentation-protocol.md](project-documentation-protocol.md) | 1.2.0 | 文档阅读与更新协议——进入项目时读文档、完成工作时更新文档（含 graphify 知识图谱、VISION.md 长期项目挂接） | 项目入口 + 项目退出 |
 | 3 | [resource-aware-delegation.md](resource-aware-delegation.md) | 1.1.0 | subagent 资源感知调度——启动子代理前检查 CPU/内存/GPU 状态 | subagent 调用前 |
 
 ## 二、通用工作流
@@ -137,10 +137,11 @@ tools:
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|:---|---|
 | 4 | [improvement-loop.md](improvement-loop.md) | 1.4.0 | 修改→审查（momus）→修复（hephaestus）→再审查 的迭代循环 | 代码重构后验证质量、bug 修复后全面检查 |
-| 5 | [writing-plans.md](writing-plans.md) | 1.2.0 | 实施计划编写——零上下文执行者假设、bite-sized 任务粒度、接口契约块、无占位符、Self-Review 三查 | 多步任务（≥3 独立可测任务）实施前必须产出计划 |
+| 5 | [writing-plans.md](writing-plans.md) | 1.3.0 | 实施计划编写——零上下文执行者假设、bite-sized 任务粒度、接口契约块、无占位符、Self-Review 三查 | 多步任务（≥3 独立可测任务）实施前必须产出计划 |
 | 6 | [root-cause-debugging.md](root-cause-debugging.md) | 1.1.0 | 根因调试——先查根因再动手，四阶段流程 + Iron Law，禁止症状修复 | 任何 bug/报错/异常/测试失败/行为不符预期 |
-| 7 | [verification-before-completion.md](verification-before-completion.md) | 1.1.0 | 完成前验证——声称完成/修复/通过必须附新鲜命令输出证据（Gate Function） | 声称完成、提交前、报告结果、信任 agent 报告时 |
+| 7 | [verification-before-completion.md](verification-before-completion.md) | 1.2.0 | 完成前验证——声称完成/修复/通过必须附新鲜命令输出证据（Gate Function），长期项目须带阶段声明 | 声称完成、提交前、报告结果、信任 agent 报告时 |
 | 8 | [interactive-cli-design.md](interactive-cli-design.md) | 1.4.0 | 交互式 CLI/TUI 设计规范——强制键位集、信息密集界面导航与搜索、PTY 自动化测试验收、已有代码资产复用 | 构建/审查任何交互式终端工具时逐条对照 |
+| 9 | [long-horizon-planning.md](long-horizon-planning.md) | 1.0.0 | 超长任务愿景与进度管理——每个 agent 声明短/中/长期目标、提供愿景规划（VISION.md）、完成时说明推进了长期规划哪部分 | 跨多日/多会话/多 agent 协作项目 |
 
 > **与其他 skill 的关系**：
 > - `improvement-loop.md`：循环内「审查」阶段可结合 `development-quality-gates.md` 的关卡清单作为审查标准；循环结束后应触发 `project-documentation-protocol.md` 的阶段 B 更新文档
@@ -152,11 +153,11 @@ tools:
 
 | # | Skill | 版本 | 适用领域 | 何时加载 |
 |:--|:---|:---:|:---|---|
-| 9 | [ml-training.md](ml-training.md) | 1.5.0 | ML 深度学习/RL 训练 | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
-| 10 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.3.0 | 量化投资 ML（含实盘校准闭环） | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据，或实盘/纸面交易偏差排查 |
-| 11 | [vps-operations.md](vps-operations.md) | 2.2.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
-| 12 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
-| 13 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
+| 10 | [ml-training.md](ml-training.md) | 1.6.0 | ML 深度学习/RL 训练 | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
+| 11 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.3.0 | 量化投资 ML（含实盘校准闭环） | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据，或实盘/纸面交易偏差排查 |
+| 12 | [vps-operations.md](vps-operations.md) | 2.2.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
+| 13 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
+| 14 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
 
 ### 领域 skill 加载决策树
 
@@ -206,6 +207,12 @@ tools:
 | `verification-before-completion.md` | `improvement-loop.md` | §5.9 Chain 输出门控是平台层验证，本 skill 是方法论层验证——两层都要 |
 | `verification-before-completion.md` | `ml-training.md` | 训练验收前先用 Gate Function 验证产物（results JSON）真实存在 |
 | `project-documentation-protocol.md` + `writing-plans.md` | [technical-writing-standard.md](../technical-writing-standard.md) | 文档写作规范（ASD-STE100 国际标准）——文档与实施计划写作参照 |
+| `long-horizon-planning.md` | `project-documentation-protocol.md` §A1/B4b | VISION.md 进入文档清单与更新规范——长期项目的状态定位 |
+| `long-horizon-planning.md` | `verification-before-completion.md` §长期项目补充 | 长期项目「完成」= 验证证据 + 长期阶段声明 |
+| `long-horizon-planning.md` | `writing-plans.md` Header Vision 字段 | 实施计划声明所属长期阶段（阶段 X/N + 目标编号） |
+| `long-horizon-planning.md` | `ml-training.md` §0.1/§0.5/§7 | 训练项目：阅读清单含 VISION.md、执行摘要含位置声明、训练后更新进度 |
+| `long-horizon-planning.md` | `root-cause-debugging.md` | 长任务 3 次失败升级讨论应含目标校准（更新 VISION.md 而非硬扛） |
+| `long-horizon-planning.md` | `quant-ml-falsification.md` §3.6 | 方向饱和终态与 VISION.md 阶段终止/复启条件联动 |
 
 ## 五、维护约定
 
@@ -225,6 +232,10 @@ tools:
 | `llm-api-check`（~/Desktop/go-projects/LLM-api-check） | 必须像 `~/Desktop/android-projects/api-checkers/` 那样**直接显示限流 API 的限流时限** | 对照 Android `DetailScreen.kt` WindowRow：CountdownText 恒显 + 已限流徽章并存；Go 侧 `internal/render/render.go` RenderAccountDetail——rate-limited 行必须同时输出「已限流」与重置倒计时（如 `已限流 · 4小时20分后重置`），禁止用「已限流」替代倒计时 |
 
 ## 变更日志
+
+### 1.8.0 (2026-08-21)
+- 新增：通用工作流 #9 `long-horizon-planning.md`（超长任务愿景与进度管理）——每个 agent 进入任务时声明短期/中期/长期目标（VISION.md 三档），完成时明确说明推进了长期规划哪部分；领域专用编号 9-13 → 10-14
+- 联动升级：`project-documentation-protocol` 1.1.0→1.2.0（VISION.md 入 A1/B2/B4b/C1）、`verification-before-completion` 1.1.0→1.2.0（完成声明须带长期阶段）、`writing-plans` 1.2.0→1.3.0（Header Vision 字段）、`ml-training` 1.5.0→1.6.0（§0.1/§0.5/§7 挂接）
 
 ### 1.7.2 (2026-08-19)
 - 升级：`quant-ml-falsification.md` 1.2.0 → 1.3.0——新增第六支柱「公式结构伪装检测」+ F29-F33 五条 RL/StackVM 公式发现专属假 alpha 模式（同特征堆叠伪装 / 零列加法 / ABS 装饰恒等 / DIV 语义陷阱 / 僵尸列伪多样性），总模式 28 → 33；配套工具 `core/illusion_guard.py` + `scripts/formula_health_gate.py`。来源：VERSION2.5 uv9/lh/pcorr 12-run 全审（`results/uv9_effectiveness_review_20260819.md`）
@@ -281,4 +292,4 @@ tools:
 - 新增：步骤 1-4 的明确执行指令
 - 保留原有目录内容供浏览参考
 
-*最后更新: 2026-08-19*
+*最后更新: 2026-08-21*
