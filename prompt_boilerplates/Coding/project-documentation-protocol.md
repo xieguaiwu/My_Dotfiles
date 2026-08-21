@@ -1,6 +1,6 @@
 ---
 name: project-documentation-protocol
-version: 1.1.0
+version: 1.2.0
 description: 跨项目标准化文档协议——进入项目时按规范阅读项目文档（含 graphify 知识图谱）和工作完成后按规范更新项目文档（含 graphify 知识图谱）
 triggers:
   - "标准化文档流程"
@@ -65,6 +65,7 @@ tools:
 | P1 | **FALSIFICATION_SUMMARY.md**（如存在） | 哪些方向/结论已被推翻，哪些不可信 | 推荐 | 多轮实验项目（ML/量化） |
 | P1 | **ASSET_INVENTORY.md**（如存在） | 目录结构、文件用途、服务器列表、密码/端口 | 推荐 | 有远程资源/复杂目录的项目 |
 | P1 | **GOAL.md**（如存在） | 项目目标和当前 Phase | 推荐 | 多阶段项目 |
+| P1 | **VISION.md**（如存在） | 愿景规划——短期/中期/长期目标、当前阶段、完成进度（见 `long-horizon-planning.md`） | 推荐 | 跨多日/多会话项目 |
 | P2 | **FINAL_HONEST_ASSESSMENT.md**（如存在） | 诚实评估——哪个方向是真实的、哪个是疑似噪音 | 推荐 | 多轮实验项目 |
 | P2 | 最近的 daily log / scratchpad | 上一个 Agent 在做什么、训练状态、PID | 推荐 | 多 Agent 协作项目 |
 | P3 | 领域相关的方法论文档（如 `ml-training.md`） | 适用于当前任务的工作方法论 | 按需 | 特定领域 |
@@ -76,7 +77,7 @@ tools:
 # 检查哪些文档存在
 for doc in "graphify-out/GRAPH_REPORT.md" "CONTEXT_FOR_NEXT_AGENT.md" \
            "FALSIFICATION_SUMMARY.md" "ASSET_INVENTORY.md" "GOAL.md" \
-           "FINAL_HONEST_ASSESSMENT.md"; do
+           "VISION.md" "FINAL_HONEST_ASSESSMENT.md"; do
   if [ -f "$doc" ]; then echo "✅ $doc" ; else echo "❌ $doc"; fi
 done
 ```
@@ -265,6 +266,7 @@ head -5 *.cpp *.py 2>/dev/null | grep -qE 'Codeforces|AtCoder|洛谷|洛谷|Leet
 | **graphify-out/（知识图谱）** | — | — | ✅ 重建 | ✅ 重建 | — |
 | **特征/接口文档** | — | ✅ 修复描述 | ✅ 新增描述 | ✅ 重写 | — |
 | **GOAL.md**（如有） | ✅ 阶段更新 | — | ✅ 如有 scope 变化 | ✅ 重写 | ✅ 重写 |
+| **VISION.md**（如有） | ✅ 阶段推进 | — | ✅ 如有 scope 变化 | ✅ 重写 | ✅ 重写 |
 
 #### B3. graphify 知识图谱更新
 
@@ -346,6 +348,17 @@ done
 | 结论过度概括 | "所有方向均已证伪"（实际某方向有信号） | 区分领域、区分模型精准表述 | 多轮实验 |
 | 版本号不一致 | README 写 v2.0，package.json 是 1.5.3 | 以代码中版本号为准，统一全部文档 | 全部 |
 
+#### B4b. VISION.md 更新规范（长期项目）
+
+跨多日/多会话项目（有 VISION.md 时），每次工作完成必须同步更新其进度（规范见 `long-horizon-planning.md`）：
+
+1. **勾选**完成的目标/步骤（短期 S / 中期 M / 长期 L 三档）
+2. **推进**阶段：`当前阶段: 阶段 X/N` → `X+1/N`（如适用）
+3. **声明**：在 CONTEXT 与完成报告中写明「完成长期规划第 X/N 阶段」
+4. 阶段终止/挂起 → 记录原因 + 复启条件（与 FALSIFICATION_SUMMARY.md 联动）
+
+> 职责区分：CONTEXT_FOR_NEXT_AGENT.md 记录「当前状态是什么」，VISION.md 记录「当前状态在长期规划中的位置」。两者互补，缺一不可。
+
 #### B5. CONTEXT_FOR_NEXT_AGENT.md 更新规范
 
 这是最重要的跨 Agent 文档。每次工作完成后必须更新：
@@ -421,6 +434,7 @@ YYYY-MM-DD HH:MM
 docs/
 ├── current/                    # 当前文档（唯一有效）
 │   ├── CONTEXT_FOR_NEXT_AGENT.md
+│   ├── VISION.md                 # 长期项目按需（愿景规划，见 long-horizon-planning.md）
 │   └── FALSIFICATION_SUMMARY.md  # 按需
 ├── archive/                    # 历史归档
 └── experiments/                # 实验记录
@@ -615,6 +629,10 @@ graphify query "社区划分" --graph graphify-out/graph.json
 ---
 
 ## 变更日志
+
+### 1.2.0 (2026-08-21)
+- 新增：VISION.md 挂接——A1 文档清单（P1）、A1 检查命令、B2 更新清单、B4b 更新规范（长期项目）、C1 最小文档集
+- 关联：`long-horizon-planning.md`（超长任务愿景与进度管理）
 
 ### 1.1.0 (2026-08-16)
 - 新增：文档写作规范（ASD-STE100）——项目文档遵守简化技术英语核心规则，完整规范见 technical-writing-standard.md

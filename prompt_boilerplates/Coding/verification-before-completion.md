@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-version: 1.1.0
+version: 1.2.0
 description: 声称工作完成、已修复、已通过之前，必须运行验证命令并确认输出——证据先于断言。核心移植自 obra/superpowers verification-before-completion（MIT）
 triggers:
   - "声称完成"
@@ -69,6 +69,33 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 
 ---
 
+## 长期项目补充：完成声明须带长期阶段（Long-Horizon）
+
+**适用**：项目有 `VISION.md`（跨多日/多会话，见 `long-horizon-planning.md`）。
+
+此时「完成」的完整含义 = **证据 + 位置**：
+
+```text
+1. 证据  验证命令输出确认了工作完成（Gate Function 前 5 步）
+2. 位置  声明完成的是长期规划中的哪一部分：
+        阶段 X/N · 目标编号（S/M/L）· 本阶段步骤 Y/Z
+
+只有证据没有位置 = 做完了，但用户和其他 agent 不知道这推进了项目什么；
+只有位置没有证据 = 声称了，但没有证明（违反 Iron Law）
+```
+
+**示例**：
+```text
+✅ [cat VISION.md | grep 阶段] + [results.json 真实存在] →
+   "完成长期规划第 3/5 阶段（判活因子验证）步骤 2/4；中期目标 M1 勾选"
+❌ "阶段 3 做完了"（无验证输出 / 无阶段声明）
+```
+
+豁免沿用 §适用边界与豁免：探索性试跑、subagent 中间结果等仍按原豁免处理，
+但编排器汇总最终结果时须补位置声明。
+
+---
+
 ## Common Failures（常见失败模式）
 
 | 声称 | 需要 | 不足以证明 |
@@ -83,6 +110,7 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 | 训练完成 | 训练日志/结果 JSON 真实存在 | watchdog 说在跑 |
 | 服务器部署好了 | SSH 登录 + 运行验证命令 | scp 命令没报错 |
 | 文档同步了 | grep 确认新内容在文档中 | 记忆里"应该写了" |
+| 阶段完成（长期项目） | 验证命令输出 + 长期阶段声明（VISION.md 阶段 X/N + 目标编号） | 本地测试通过、"应该推进了" |
 
 ---
 
@@ -163,6 +191,7 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 | `ml-training.md` | §七 快速验收流程（量化验收阈值表）定义"什么是好的训练结果"；本 skill 定义"如何证明结果存在且真实"——先验证后验收 |
 | `development-quality-gates.md` | 关卡 6（测试同步）+ 关卡 11（本地部署）的验证步骤均以本 skill 的 Gate Function 为执行标准 |
 | `project-documentation-protocol.md` | 文档声称的结论（Sharpe、IC）必须与结果 JSON 一致（§B4 文档漂移检测）——这正是 Gate Function 在文档场景的应用 |
+| `long-horizon-planning.md` | 长期项目中「完成」= 验证证据 + 长期阶段声明（§长期项目补充）；VISION.md 进度更新与 Gate Function 配套执行 |
 
 ## 作业要求
 
@@ -177,6 +206,10 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 ---
 
 ## 变更日志
+
+### 1.2.0 (2026-08-21)
+- 新增：「长期项目补充——完成声明须带长期阶段」——长期项目中完成 = 验证证据 + 长期阶段声明（VISION.md 阶段 X/N + 目标编号）
+- 新增：Common Failures 表「阶段完成（长期项目）」行；衔接表 `long-horizon-planning.md` 条目
 
 ### 1.1.0 (2026-08-14)
 - 修复（momus 审查轮）：悬空引用 §2.5 → §B4；豁免表增加「项目已有验证约定优先」；触发词「完成」→「声称完成」去泛化
