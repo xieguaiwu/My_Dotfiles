@@ -1,8 +1,9 @@
 ---
 name: librarian
 description: Knowledge curator and documentation specialist. Finds, organizes, and explains information from the codebase and external sources.
-model: deepseek/deepseek-v4-flash
-fallbackModels: opencode-go/deepseek-v4-flash
+model: openrouter/stealth/ox-alpha
+# NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
+fallbackModels: deepseek/deepseek-v4-flash
 thinking: medium
 temperature: 0.1
 tools: read, bash, grep, find, ls

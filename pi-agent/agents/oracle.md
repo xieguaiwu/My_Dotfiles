@@ -2,7 +2,8 @@
 name: oracle
 aliases: oracle-builtin
 description: Verification and validation specialist. Checks correctness, catches errors, and ensures quality standards are met.
-model: opencode-go/glm-5.2
+model: openrouter/stealth/ox-alpha
+# NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
 fallbackModels: deepseek/deepseek-v4-pro
 thinking: xhigh
 temperature: 0.2

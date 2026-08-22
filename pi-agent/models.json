@@ -264,6 +264,18 @@
       "baseUrl": "https://openrouter.ai/api/v1",
       "api": "openai-completions",
       "apiKey": "$OPENROUTER_API_KEY",
+      "modelOverrides": {
+        "stealth/ox-alpha": {
+          "thinkingLevelMap": {
+            "minimal": "low",
+            "low": "low",
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "high",
+            "max": "high"
+          }
+        }
+      },
       "compat": {
         "supportsDeveloperRole": false,
         "supportsReasoningEffort": true,
@@ -357,6 +369,21 @@
           "id": "openrouter/owl-alpha",
           "name": "Owl Alpha (free, 1M context)",
           "contextWindow": 1048756
+        },
+        {
+          "id": "stealth/ox-alpha",
+          "name": "Ox Alpha (Stealth, free 1M)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 1048576,
+          "maxTokens": 131072,
+          "compat": {
+            "supportsDeveloperRole": false,
+            "thinkingFormat": "openrouter"
+          }
         },
         {
           "id": "google/lyria-3-pro-preview",
