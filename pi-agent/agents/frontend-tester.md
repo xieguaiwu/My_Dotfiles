@@ -1,7 +1,8 @@
 ---
 name: frontend-tester
 description: Frontend testing specialist. Analyzes UI screenshots, renders, and generates visual regression tests with precision.
-model: opencode-go/qwen3.6-plus
+model: openrouter/stealth/ox-alpha
+# NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
 fallbackModels: nvidia/qwen/qwen3.5-397b-a17b
 thinking: low
 temperature: 0.3

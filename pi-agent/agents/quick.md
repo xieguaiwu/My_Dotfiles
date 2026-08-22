@@ -1,8 +1,9 @@
 ---
 name: quick
 description: Fast, lightweight agent for simple tasks. Minimal context, rapid execution.
-model: deepseek/deepseek-v4-flash
-fallbackModels: opencode-go/deepseek-v4-flash
+model: openrouter/stealth/ox-alpha
+# NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
+fallbackModels: deepseek/deepseek-v4-flash
 thinking: medium
 temperature: 0.2
 tools: read, bash, edit, write, grep, find, ls
