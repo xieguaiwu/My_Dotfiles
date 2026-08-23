@@ -1,63 +1,63 @@
 ---
 name: ml-training
-version: 1.6.0
+version: 1.7.0
 description: 在远程服务器上进行机器学习训练任务的完整方法论——从环境检查、烟雾测试、看门狗自动化、训练监控、可视化诊断到结果验证的全流程。额外定义结果不理想时的自主优化循环：批判性评估→修复施工→重新训练→再评估
 triggers:
-  - "训练模型"
-  - "跑训练"
-  - "远程训练"
-  - "ML训练"
-  - "GPU训练"
-  - "启动训练"
-  - "模型训练"
-  - "看门狗"
-  - "watchdog"
-  - "自动化训练"
-  - "自优化"
-  - "改进循环"
-  - "训练不满意"
-  - "结果不好"
-  - "自我改进"
-  - "多领域训练"
-  - "并行训练"
-  - "训练可视化"
-  - "训练图"
-  - "loss曲线"
-  - "plot"
-  - "可视化诊断"
-  - "训练仪表板"
-  - "dashboard"
+- 训练模型
+- 跑训练
+- 远程训练
+- ML训练
+- GPU训练
+- 启动训练
+- 模型训练
+- 看门狗
+- watchdog
+- 自动化训练
+- 自优化
+- 改进循环
+- 训练不满意
+- 结果不好
+- 自我改进
+- 多领域训练
+- 并行训练
+- 训练可视化
+- 训练图
+- loss曲线
+- plot
+- 可视化诊断
+- 训练仪表板
+- dashboard
 inputs:
-  - name: server
-    description: 服务器地址 (user@host:port 或 ssh alias)
-    required: false
-    default: "从上下文推断"
-  - name: train_command
-    description: 训练命令或脚本路径
-    required: false
-    default: "从上下文推断"
-  - name: gpu_id
-    description: 指定GPU编号 (0/1/2...)
-    required: false
-    default: "0"
-  - name: steps
-    description: 目标训练步数
-    required: false
-    default: "500"
-  - name: max_optimization_iterations
-    description: 自优化循环最大迭代次数（训练结果不理想时自动进入循环）
-    required: false
-    default: "3"
-  - name: acceptance_threshold
-    description: 验收阈值级别（通过/有风险/需重训）
-    required: false
-    default: "通过"
+- name: server
+  description: 服务器地址 (user@host:port 或 ssh alias)
+  required: false
+  default: 从上下文推断
+- name: train_command
+  description: 训练命令或脚本路径
+  required: false
+  default: 从上下文推断
+- name: gpu_id
+  description: 指定GPU编号 (0/1/2...)
+  required: false
+  default: '0'
+- name: steps
+  description: 目标训练步数
+  required: false
+  default: '500'
+- name: max_optimization_iterations
+  description: 自优化循环最大迭代次数（训练结果不理想时自动进入循环）
+  required: false
+  default: '3'
+- name: acceptance_threshold
+  description: 验收阈值级别（通过/有风险/需重训）
+  required: false
+  default: 通过
 tools:
-  - bash
-  - read
-  - write
-  - edit
-  - web_search
+- bash
+- read
+- write
+- edit
+- web_search
 ---
 
 # ML 训练方法论
@@ -91,15 +91,15 @@ tools:
 | 2 | **FALSIFICATION_SUMMARY.md**（如存在） | 哪些方向/结论已被推翻，哪些不可信，哪些不必再试 |
 | 3 | **FINAL_HONEST_ASSESSMENT.md**（如存在） | 诚实评估——哪个方向是真实的、哪个是疑似噪音 |
 | 4 | **GOAL.md**（如存在） | 项目目标和当前 Phase |
-| 5 | **VISION.md**（如存在） | 愿景规划——短/中/长期目标、当前阶段进度（规范见 `long-horizon-planning.md`） |
+| 5 | **VISION.md**（如存在） | 愿景规划——短/中/长期目标、当前阶段进度（规范见 `~/prompt_boilerplates/Coding/long-horizon-planning.md`） |
 | 6 | **ASSET_INVENTORY.md**（如存在） | 目录结构、文件用途、服务器列表 |
 | 7 | 最近的 daily log / scratchpad | 上一个 Agent 在做什么、是否还有训练在运行 |
-| 8 | **ml-training.md**（本文档） | 训练方法论、可视化、验收阈表、自优化循环（§十一） |
+| 8 | **~/prompt_boilerplates/Coding/ml-training.md**（本文档） | 训练方法论、可视化、验收阈表、自优化循环（§十一） |
 | 9 | **graphify-out/GRAPH_REPORT.md**（如存在，否则先 graphify） | 项目架构图、God Nodes、跨模块依赖关系、社区划分 |
 
 **如果你不知道项目当前在哪，后面的所有决策都是盲目的。**
 
-> **统一文档阅读协议**：本清单是对 `project-documentation-protocol.md` §阶段A 的 ML 领域特化。非 ML 项目或首次进入项目时，先执行通用协议的文档清单检查（含 graphify 时效性检测和领域 skill 加载判断）。
+> **统一文档阅读协议**：本清单是对 `~/prompt_boilerplates/Coding/project-documentation-protocol.md` §阶段A 的 ML 领域特化。非 ML 项目或首次进入项目时，先执行通用协议的文档清单检查（含 graphify 时效性检测和领域 skill 加载判断）。
 
 > 📐 **知识图谱**：项目若有 `graphify-out/` 目录，优先通过 `graphify-out/GRAPH_REPORT.md` 了解架构，再用 `graphify query/path/explain` 深入查询模块关系。
 
@@ -398,7 +398,7 @@ if step % 50 == 0 or step == 0 or (best_score - prev_best) > 0.01:
 
 训练**不是**终点。结果被记录在项目文档中才算一次完整的训练循环。**不更新文档的训练等于没跑**——后续 Agent 无从知晓你的发现。
 
-> **统一文档协议**：本章的文档更新清单和频率约定遵循 `project-documentation-protocol.md` 的通用协议。
+> **统一文档协议**：本章的文档更新清单和频率约定遵循 `~/prompt_boilerplates/Coding/project-documentation-protocol.md` 的通用协议。
 > ML 训练项目特有的文档（实验记录、FALSIFICATION_SUMMARY、graphify 重建）是对通用协议的领域特化。
 
 #### 7.1 必须更新的文档
@@ -412,7 +412,7 @@ if step % 50 == 0 or step == 0 or (best_score - prev_best) > 0.01:
 | **ASSET_INVENTORY.md** | 新增/删除模块 | 目录变动、数据文件、服务器信息 |
 | **特征文档** | 特征增删改 | 特征名、定义、计算方式 |
 | **证伪文档**（FALSIFICATION_SUMMARY.md） | 结论变更 | 修正过时结论、添加新证伪 |
-| **VISION.md**（如存在，规范见 `long-horizon-planning.md`） | 阶段推进/目标变更 | 勾选完成目标（S/M/L）、推进阶段、记录「完成长期规划哪部分」 |
+| **VISION.md**（如存在，规范见 `~/prompt_boilerplates/Coding/long-horizon-planning.md`） | 阶段推进/目标变更 | 勾选完成目标（S/M/L）、推进阶段、记录「完成长期规划哪部分」 |
 | **自优化迭代日志**（§十一） | 每次自优化循环后 | 迭代次数、诊断报告、改动清单、前后指标对比 |
 | **graphify-out/（知识图谱）** | 架构变更 / 模块增删 | 重建图谱：`graphify update .` → 验证 God Nodes → 确认新模块正确归类 |
 
@@ -1470,9 +1470,9 @@ docs/
 | 角色 | 文件 | 规则 |
 |:---|:---|---|
 | 当前结论 | `CONTEXT_FOR_NEXT_AGENT.md` | 只有一份，每次重写 |
-| 长期规划 | `VISION.md` | 阶段推进时更新，只保留当前规划（规范见 `long-horizon-planning.md`） |
+| 长期规划 | `VISION.md` | 阶段推进时更新，只保留当前规划（规范见 `~/prompt_boilerplates/Coding/long-horizon-planning.md`） |
 | 历史记录 | `docs/archive/*.md` | 只追加不修改，按日期前缀 |
-| 方法论文档 | `ml-training.md` | 持续积累，不删除 |
+| 方法论文档 | `~/prompt_boilerplates/Coding/ml-training.md` | 持续积累，不删除 |
 
 **实施步骤**：
 1. 每轮 Session 结束时：将旧的结论文档移入 `archive/` 目录
@@ -3964,7 +3964,7 @@ chain:
   - agent: momus                     # 对照阈表二次审核
     task: |
       Read verdict from previous step. Compare against the quantitative
-      thresholds defined in ml-training.md §量化验收阈表. Flag any discrepancy.
+      thresholds defined in ~/prompt_boilerplates/Coding/ml-training.md §量化验收阈表. Flag any discrepancy.
 ```
 
 **模式 2：仅看图（异步任务）**——让视觉代理先行分析，主 agent 做交叉验证
@@ -4371,7 +4371,7 @@ subagent:
   chain:
     - agent: momus           # 批判性评估——先独立审查结果
       task: |
-        审查以下训练结果，对照 ml-training.md §量化验收阈表 逐项检查：
+        审查以下训练结果，对照 ~/prompt_boilerplates/Coding/ml-training.md §量化验收阈表 逐项检查：
         - training_metrics.json 内容
         - loss_curve_final.png 的收敛状态
         - walkforward_panel_final.png 的窗口稳定性
@@ -4811,4 +4811,4 @@ subagent:
 
 ### 1.6.0 (2026-08-21)
 - 新增：VISION.md 挂接——§0.1 文档阅读清单（第 5 行）、§0.5 执行摘要「本任务在长期规划中的位置」字段、§7.1 必须更新表、§7.4 更新频率、陷阱 7 角色表
-- 关联：`long-horizon-planning.md`（超长任务愿景与进度管理）——跨多日训练必须声明任务在长期规划中的位置、完成时更新进度
+- 关联：`~/prompt_boilerplates/Coding/long-horizon-planning.md`（超长任务愿景与进度管理）——跨多日训练必须声明任务在长期规划中的位置、完成时更新进度

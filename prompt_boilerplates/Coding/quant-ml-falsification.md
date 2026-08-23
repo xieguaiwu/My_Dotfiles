@@ -1,45 +1,46 @@
 ---
 name: quant-ml-falsification
-version: 1.3.0
-description: 量化投资模型训练的防幻觉方法论——辨别假 alpha、诚实训练、方向饱和后找新方向、实盘阶段预测记账与结算校准闭环、公式结构伪装检测（RL/StackVM 公式发现专属）
+version: 1.4.0
+description: 量化投资模型训练的防幻觉方法论——辨别假 alpha、诚实训练、方向饱和后找新方向、实盘阶段预测记账与结算校准闭环、公式结构伪装检测（RL/StackVM
+  公式发现专属）
 triggers:
-  - "量化训练"
-  - "quant训练"
-  - "alpha幻觉"
-  - "Sharpe证伪"
-  - "信号饱和"
-  - "因子失效"
-  - "模型不显著"
-  - "找新方向"
-  - "预测校准"
-  - "实盘偏差"
+- 量化训练
+- quant训练
+- alpha幻觉
+- Sharpe证伪
+- 信号饱和
+- 因子失效
+- 模型不显著
+- 找新方向
+- 预测校准
+- 实盘偏差
 inputs:
-  - name: market
-    description: 目标市场（sgx / ashare / futures / jp / us 等）
-    required: false
-    default: ""
-  - name: claimed_sharpe
-    description: 当前声称的 Sharpe 值，用于判断是否需要进入证伪流程
-    required: false
-    default: ""
-  - name: model_type
-    description: 模型类型（ridge / xgboost / rl / lstm / ctm / mamba 等）
-    required: false
-    default: ""
+- name: market
+  description: 目标市场（sgx / ashare / futures / jp / us 等）
+  required: false
+  default: ''
+- name: claimed_sharpe
+  description: 当前声称的 Sharpe 值，用于判断是否需要进入证伪流程
+  required: false
+  default: ''
+- name: model_type
+  description: 模型类型（ridge / xgboost / rl / lstm / ctm / mamba 等）
+  required: false
+  default: ''
 tools:
-  - read
-  - write
-  - edit
-  - bash
-  - grep
-  - subagent
-  - memory_search
-  - todo_create
+- read
+- write
+- edit
+- bash
+- grep
+- subagent
+- memory_search
+- todo_create
 ---
 
 # 量化投资模型训练防幻觉方法论
 
-> **本 skill 是认知框架，不是操作手册。** 操作细节（烟雾测试、看门狗、GPU 隔离、输出缓冲）见 `ml-training.md`。本 skill 专注于：高幻觉模型（DeepSeek V4 Pro / Flash 等）在量化训练中如何**不骗自己、不骗用户、在信号不存在时承认不存在、在方向饱和后找到正确出路**。
+> **本 skill 是认知框架，不是操作手册。** 操作细节（烟雾测试、看门狗、GPU 隔离、输出缓冲）见 `~/prompt_boilerplates/Coding/ml-training.md`。本 skill 专注于：高幻觉模型（DeepSeek V4 Pro / Flash 等）在量化训练中如何**不骗自己、不骗用户、在信号不存在时承认不存在、在方向饱和后找到正确出路**。
 
 > **核心信念**：在量化投资模型训练中，**默认状态是「无信号」**。日频 OHLCV 衍生特征的 OOS IC 典型值是 0.00--0.03，net Sharpe 在交易成本后通常为负或可忽略。这不是失败——这是金融 ML 的统计天花板。每一个声称的正面结果**必须经过证伪才能被采信**。
 
@@ -147,7 +148,7 @@ python3 scripts/formula_health_gate.py results/{run}/results.json \
 
 #### 1.4 诊断必须由批判性子代理执行
 
-证伪诊断**不能由施工 agent 自诊自修**（它有确认偏误）。按 `ml-training.md` §11.3，诊断必须由 `deep` / `momus` / `oracle` 等**只读批判性 agent** 执行：
+证伪诊断**不能由施工 agent 自诊自修**（它有确认偏误）。按 `~/prompt_boilerplates/Coding/ml-training.md` §11.3，诊断必须由 `deep` / `momus` / `oracle` 等**只读批判性 agent** 执行：
 
 ```python
 subagent({
@@ -292,7 +293,7 @@ echo "文档: $DOC_SHARPE, JSON: $JSON_SHARPE"
 | Ridge 基线 ≈ XGBoost ≈ RL | 多模型对比 | 差距 < 0.05 |
 | 复杂模型不优于线性模型 | RL/XGB vs Ridge | ΔIC < 0.02 |
 
-**黄金法则**（来自 `ml-training.md` §11.13）：
+**黄金法则**（来自 `~/prompt_boilerplates/Coding/ml-training.md` §11.13）：
 
 > 自优化循环修复的是**实现缺陷**，不是**方法论天花板**。如果信号在当前特征池中已耗尽，刷参数、调超参、换模型架构都不会让 α 从 0 变正——因为没有信号可挖。
 
@@ -382,7 +383,7 @@ echo "文档: $DOC_SHARPE, JSON: $JSON_SHARPE"
   - 换频率（日频 → 分钟级 / 周频）
 ```
 
-更新以下文档（按 `ml-training.md` §11.7）：
+更新以下文档（按 `~/prompt_boilerplates/Coding/ml-training.md` §11.7）：
 - `FALSIFICATION_SUMMARY.md`：列出已证伪的结论（F1--Fn），后续 agent 不得在无新证据下重启
 - `CONTEXT_FOR_NEXT_AGENT.md`：当前 Phase 标记为「方向饱和」，写明复启条件
 - 迭代日志：iter0 → iter1 的指标对比表
@@ -796,9 +797,9 @@ slot1:
 | **禁止** 在方向饱和后继续在原数据上刷参数 | 浪费算力，§11.13 黄金法则 |
 | **禁止** 在未更新 FALSIFICATION_SUMMARY.md 的情况下关闭方向 | 后续 agent 会重复已证伪的实验 |
 
-### 与 ml-training.md 的分工
+### 与 ~/prompt_boilerplates/Coding/ml-training.md 的分工
 
-| 本 skill（认知框架） | ml-training.md（操作手册） |
+| 本 skill（认知框架） | ~/prompt_boilerplates/Coding/ml-training.md（操作手册） |
 |:---|:---|
 | 如何辨别假 alpha（§1） | 如何跑烟雾测试（§Step 1） |
 | 如何诚实报告（§2） | 如何用看门狗自动化（§扩展） |
@@ -806,7 +807,7 @@ slot1:
 | 15 种假 alpha 模式 | 训练事故模式 A--L |
 | 种子/基线/止损协议 | GPU 隔离 / 输出缓冲 / 监控 |
 
-两个 skill 配合使用：先用本 skill 建立认知框架（怀疑一切、证伪优先），再用 `ml-training.md` 执行具体操作（烟雾测试、看门狗、可视化）。
+两个 skill 配合使用：先用本 skill 建立认知框架（怀疑一切、证伪优先），再用 `~/prompt_boilerplates/Coding/ml-training.md` 执行具体操作（烟雾测试、看门狗、可视化）。
 
 ### 真实案例索引
 
@@ -871,4 +872,4 @@ slot1:
 - 基于真实训练历史（2026-06-10 至 2026-07-29，SGX / HK / 期货 / A 股 / JP 多市场）
 - 15 种假 alpha 模式来自 `~/.pi/agent/memory/daily/` 真实事故记录
 - 三支柱结构：辨别问题（§1）→ 完成训练（§2）→ 找方向（§3）
-- 与 `ml-training.md` 互补：认知框架 vs 操作手册
+- 与 `~/prompt_boilerplates/Coding/ml-training.md` 互补：认知框架 vs 操作手册

@@ -1,51 +1,59 @@
 ---
 name: error-checklist-creator
-version: 1.7.0
-description: 按学科生成超紧凑LaTeX易错点清单——三轨排版：文科轨（liberal_arts，AP_Lang 表格型 + Tip/Rule + Quick Checklist）、理科轨（science，common_necessaties / physics_common 双栏公式速查）、计算机轨（cs，最终CSA易错点整理 代码驱动型）；新特性：章节分组（grouping=chapters）+ Core Principles 前置、陷阱分类系统（Trap Taxonomy）、双 agent 并行审查（momus+ultrabrain）、SAT 中文分析模式（language=sat_cn）；v1.6.0 新增 TikZ 示意图规范（图+公式成对、V 上 SA 下）、glm-4.5v 视觉验证闭环、红黑变色节制原则；只积累普遍性易错规律、禁止照搬具体错题。v1.7.0 新增文档写作规范（ASD-STE100）
+version: 1.8.0
+description: 按学科生成超紧凑LaTeX易错点清单——三轨排版：文科轨（liberal_arts，AP_Lang 表格型 + Tip/Rule + Quick
+  Checklist）、理科轨（science，common_necessaties / physics_common 双栏公式速查）、计算机轨（cs，最终CSA易错点整理
+  代码驱动型）；新特性：章节分组（grouping=chapters）+ Core Principles 前置、陷阱分类系统（Trap Taxonomy）、双 agent
+  并行审查（momus+ultrabrain）、SAT 中文分析模式（language=sat_cn）；v1.6.0 新增 TikZ 示意图规范（图+公式成对、V
+  上 SA 下）、glm-4.5v 视觉验证闭环、红黑变色节制原则；只积累普遍性易错规律、禁止照搬具体错题。v1.7.0 新增文档写作规范（ASD-STE100）
 triggers:
-  - "易错点清单"
-  - "生成错题清单"
-  - "生成SAT错题清单"
-  - "error checklist"
-  - "错误清单排版"
-  - "学科易错点"
-  - "易错总结"
-  - "清单排版"
+- 易错点清单
+- 生成错题清单
+- 生成SAT错题清单
+- error checklist
+- 错误清单排版
+- 学科易错点
+- 易错总结
+- 清单排版
 inputs:
-  - name: subject
-    description: 学科名称（如 AP English、AP Physics、German、AP Biology、SAT Reading & Writing 等）
-    required: true
-  - name: topics
-    description: 需覆盖的主题列表（逗号分隔）
-    required: false
-    default: "all"
-  - name: output_dir
-    description: 输出目录
-    required: false
-    default: "."
-  - name: output_name
-    description: 输出文件名（不含扩展名）
-    required: false
-    default: "{subject}_Error_Checklist"
-  - name: style
-    description: 排版轨道（liberal_arts=文科表格型[默认] / science=理科公式速查型 / cs=计算机代码型 / biology=9pt错题表格型[文科变体]；ap_lang、physics 为兼容别名）
-    required: false
-    default: "liberal_arts"
-  - name: grouping
-    description: 大型清单的分组方式（flat=平铺 Part [默认] / chapters=章节分组，含 Core Principles 前置 + 按章节分 Part；仅文科轨适用）
-    required: false
-    default: "flat"
-  - name: language
-    description: 输出语言（en=全英文[默认] / sat_cn=SAT 中文分析模式：题干/选项/示例保留英文，分析/表头/callout/Quick Checklist 用中文）
-    required: false
-    default: "en"
+- name: subject
+  description: 学科名称（如 AP English、AP Physics、German、AP Biology、SAT Reading & Writing
+    等）
+  required: true
+- name: topics
+  description: 需覆盖的主题列表（逗号分隔）
+  required: false
+  default: all
+- name: output_dir
+  description: 输出目录
+  required: false
+  default: .
+- name: output_name
+  description: 输出文件名（不含扩展名）
+  required: false
+  default: '{subject}_Error_Checklist'
+- name: style
+  description: 排版轨道（liberal_arts=文科表格型[默认] / science=理科公式速查型 / cs=计算机代码型 / biology=9pt错题表格型[文科变体]；ap_lang、physics
+    为兼容别名）
+  required: false
+  default: liberal_arts
+- name: grouping
+  description: 大型清单的分组方式（flat=平铺 Part [默认] / chapters=章节分组，含 Core Principles 前置 +
+    按章节分 Part；仅文科轨适用）
+  required: false
+  default: flat
+- name: language
+  description: 输出语言（en=全英文[默认] / sat_cn=SAT 中文分析模式：题干/选项/示例保留英文，分析/表头/callout/Quick
+    Checklist 用中文）
+  required: false
+  default: en
 tools:
-  - read
-  - write
-  - edit
-  - bash
-  - grep
-  - subagent
+- read
+- write
+- edit
+- bash
+- grep
+- subagent
 ---
 
 # 易错点清单生成器 (Error Checklist Creator)
@@ -540,7 +548,7 @@ Ambiguous subject & Clear, intended subject \\
 2. **每行独立可读**：陷阱名 + 定义 + 错例模式 + 正确模式，四列完整
 3. **列结构统一**：`Trap Type | What It Says | Wrong Distractor | Right Subject`（视领域可调，如语法 → `Wrong Form | Right Form | Rule`）
 4. **普遍性优先**：示例不引用具体考题，用可复现的模式描述
-5. **陷阱升级阶梯**：如需基于陷阱表设计"由浅入深"的练习（配合 mistake-practice-generation 出卷），按 `difficulty-escalation-framework.md` 的维度矩阵升级——同陷阱更难的子类型 = 更深的维度（文科：句法复杂度/推理层级；理科：边界情况/推理链），禁止靠加计算量/加长句堆难度
+5. **陷阱升级阶梯**：如需基于陷阱表设计"由浅入深"的练习（配合 mistake-practice-generation 出卷），按 `~/prompt_boilerplates/Exercise/difficulty-escalation-framework.md` 的维度矩阵升级——同陷阱更难的子类型 = 更深的维度（文科：句法复杂度/推理层级；理科：边界情况/推理链），禁止靠加计算量/加长句堆难度
 
 **适用场景**：
 - SAT 文法：修饰语陷阱、代词指代歧义、时态混用、平行结构断裂
@@ -739,7 +747,7 @@ System.out.println(s1.equals(s2));   // true (contents equal)
 - **条件前置**：关键条件放句首（If ..., then ...）
 - **列表平行**：编号步骤动词开头、结构平行
 
-数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](~/prompt_boilerplates/Writing/technical-writing-standard.md)。
 
 ---
 
@@ -803,13 +811,13 @@ System.out.println(s1.equals(s2));   // true (contents equal)
 - 不要超过表格宽度（用 `p{宽度}` 控制，确保不溢出）
 
 ### Git 安全
-需遵守 [Git 安全网规范](../git_safety_net.md)（本 skill 产出 `.tex` 源文件，需要可回滚历史）：
+需遵守 [Git 安全网规范](~/prompt_boilerplates/git_safety_net.md)（本 skill 产出 `.tex` 源文件，需要可回滚历史）：
 1. 确认目标 `.tex` 文件不存在时才用 `write` 创建
 2. 文件已存在时用 `edit` 追加/修改
 3. 修改前 git 快照，修改后 git commit
 
 ### 知识边界
-遵守 [知识边界规范](../knowledge_boundary.md)：
+遵守 [知识边界规范](~/prompt_boilerplates/knowledge_boundary.md)：
 - 对公式、语法规则等没有十足把握时，通过查阅确认而非猜测硬写
 - 知识浓度高（每页应承载该学科核心易错点的 80%+）
 - 存疑条目标注 "Verify" 而非编造

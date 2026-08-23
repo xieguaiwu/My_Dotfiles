@@ -1,42 +1,42 @@
 ---
 name: latex-academic-writing-assist
-version: 1.1.0
+version: 1.2.0
 description: 学术论文LaTeX排版、格式检查、编译调试与样式优化
 triggers:
-  - "LaTeX辅助"
-  - "论文排版"
-  - "参考文献格式"
-  - "LaTeX编译"
-  - "学术写作排版"
-  - "LaTeX格式检查"
+- LaTeX辅助
+- 论文排版
+- 参考文献格式
+- LaTeX编译
+- 学术写作排版
+- LaTeX格式检查
 inputs:
-  - name: tex_file
-    description: 主LaTeX文件路径
-    required: true
-  - name: bib_file
-    description: 参考文献.bib文件路径
-    required: false
-    default: ""
-  - name: output_dir
-    description: 编译输出目录
-    required: false
-    default: "."
-  - name: template
-    description: 论文模板（article, report, book, beamer等）
-    required: false
-    default: "article"
+- name: tex_file
+  description: 主LaTeX文件路径
+  required: true
+- name: bib_file
+  description: 参考文献.bib文件路径
+  required: false
+  default: ''
+- name: output_dir
+  description: 编译输出目录
+  required: false
+  default: .
+- name: template
+  description: 论文模板（article, report, book, beamer等）
+  required: false
+  default: article
 tools:
-  - read
-  - write
-  - edit
-  - bash
-  - glob
-  - grep
-  - websearch_web_search_exa
-  - webfetch
-  - look_at
-  - task
-  - todowrite
+- read
+- write
+- edit
+- bash
+- glob
+- grep
+- websearch_web_search_exa
+- webfetch
+- look_at
+- task
+- todowrite
 ---
 
 # 学术论文 LaTeX 排版辅助
@@ -533,7 +533,7 @@ latexmk -pdf -interaction=nonstopmode "{tex_file}"
 - **数字用数字**：写 5、25，不用 five、twenty-five
 - **一词一义**：避免一词多义造成的歧义
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+完整规范见 [technical-writing-standard.md](~/prompt_boilerplates/Writing/technical-writing-standard.md)。
 
 ## 输出格式
 
@@ -620,7 +620,7 @@ project/
 
 ## ⚡ Git 安全网 + 文件写入安全
 
-本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行所有 `write`/`edit` 操作前，必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。
+本 skill 遵守 [Git 安全网规范](~/prompt_boilerplates/git_safety_net.md)。执行所有 `write`/`edit` 操作前，必须先读取并执行 `~/prompt_boilerplates/git_safety_net.md` 中的 git 版本追踪指令。
 
 同时遵守以下基本写入安全规则：
 1. **写入前先检查**：使用 `glob` 或 `read` 确认目标文件是否已存在

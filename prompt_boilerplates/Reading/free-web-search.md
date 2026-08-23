@@ -3,41 +3,43 @@ name: free-web-search
 version: 1.0.1
 description: 用 curl 抓搜索引擎 HTML 与 opencli 公开 API 适配器组合，在 web_search 不可用时作为零成本替代方案
 triggers:
-  - "web_search 不可用"
-  - "免费搜索"
-  - "无 API key 搜索"
-  - "curl 搜索"
-  - "opencli 搜索"
-  - "搜索替代方案"
-  - "search fallback"
+- web_search 不可用
+- 免费搜索
+- 无 API key 搜索
+- curl 搜索
+- opencli 搜索
+- 搜索替代方案
+- search fallback
 inputs:
-  - name: query
-    description: 搜索关键词（中英文均可）
-    required: true
-  - name: mode
-    description: 搜索模式——auto（自动选路）、public-api（仅 opencli 公开 API）、html-scrape（仅 curl 抓 DDG/Bing HTML）、fetch（已知 URL 直接抓正文）
-    required: false
-    default: "auto"
-  - name: lang
-    description: 查询语言偏好——en（英文优先）、zh（中文优先）、auto（按 query 自动判）
-    required: false
-    default: "auto"
-  - name: max_results
-    description: 最大返回结果数
-    required: false
-    default: 10
-  - name: fetch_full
-    description: 是否对前 N 个结果调用 fetch_content 抓取正文
-    required: false
-    default: false
+- name: query
+  description: 搜索关键词（中英文均可）
+  required: true
+- name: mode
+  description: 搜索模式——auto（自动选路）、public-api（仅 opencli 公开 API）、html-scrape（仅 curl 抓
+    DDG/Bing HTML）、fetch（已知 URL 直接抓正文）
+  required: false
+  default: auto
+- name: lang
+  description: 查询语言偏好——en（英文优先）、zh（中文优先）、auto（按 query 自动判）
+  required: false
+  default: auto
+- name: max_results
+  description: 最大返回结果数
+  required: false
+  default: 10
+- name: fetch_full
+  description: 是否对前 N 个结果调用 fetch_content 抓取正文
+  required: false
+  default: false
 tools:
-  - bash
-  - fetch_content
-  - get_search_content
-  - read
-  - write
-  - edit
-  - subagent
+- bash
+- fetch_content
+- get_search_content
+- read
+- write
+- edit
+- subagent
+source: ~/prompt_boilerplates/Reading/free-web-search.md
 ---
 
 # 免费网页搜索（web_search 零成本替代方案）

@@ -1,52 +1,55 @@
 ---
 name: sat-exercise-splitter
-version: 1.3.0
-description: 识别多个SAT专题练习文件，按难度分section生成题目与答案+解析两个LaTeX文件，各section题号自 1 重排，tectonic编译。文本层 PDF 直接几何提取：PyMuPDF thin-line 下划线检测、y-gap 段落切分、诗歌逐行排版、答案全量比对。整卷扫描版有配套可执行脚本（sat-ocr-pipeline/ 目录，多路 vision 转录 + 答案键条带裁剪 + LaTeX 生成全链路，2026-08-19 实战验证 260 题）。位于 SAT 工具链上游——下游可接入 sat-error-note-generator（Obsidian 错题笔记）或 mistake-practice-generation（AI 练习卷）
+version: 1.4.0
+description: 识别多个SAT专题练习文件，按难度分section生成题目与答案+解析两个LaTeX文件，各section题号自 1 重排，tectonic编译。文本层
+  PDF 直接几何提取：PyMuPDF thin-line 下划线检测、y-gap 段落切分、诗歌逐行排版、答案全量比对。整卷扫描版有配套可执行脚本（sat-ocr-pipeline/
+  目录，多路 vision 转录 + 答案键条带裁剪 + LaTeX 生成全链路，2026-08-19 实战验证 260 题）。位于 SAT 工具链上游——下游可接入
+  sat-error-note-generator（Obsidian 错题笔记）或 mistake-practice-generation（AI 练习卷）
 triggers:
-  - "拆分SAT专题练习"
-  - "题目答案解析分离"
-  - "生成SAT练习LaTeX"
-  - "SAT exercise split"
-  - "专题练习转LaTeX"
-  - "按难度分组SAT题目"
+- 拆分SAT专题练习
+- 题目答案解析分离
+- 生成SAT练习LaTeX
+- SAT exercise split
+- 专题练习转LaTeX
+- 按难度分组SAT题目
 inputs:
-  - name: source_dir
-    description: 专题练习文件所在目录
-    required: false
-    default: "./"
-  - name: output_dir
-    description: 输出目录
-    required: false
-    default: "./"
-  - name: output_name
-    description: 输出文件名前缀（不含扩展名）
-    required: false
-    default: "SAT_Practice"
-  - name: topic_order
-    description: 专题顺序（逗号分隔），缺省 auto 按文件名自然排序
-    required: false
-    default: "auto"
-  - name: show_topic
-    description: 题目文件是否标注每题专题来源
-    required: false
-    default: false
-  - name: answer_space
-    description: 题目文件每题末尾是否留作答横线
-    required: false
-    default: false
-  - name: compile
-    description: 是否用 tectonic 编译为 PDF
-    required: false
-    default: true
+- name: source_dir
+  description: 专题练习文件所在目录
+  required: false
+  default: ./
+- name: output_dir
+  description: 输出目录
+  required: false
+  default: ./
+- name: output_name
+  description: 输出文件名前缀（不含扩展名）
+  required: false
+  default: SAT_Practice
+- name: topic_order
+  description: 专题顺序（逗号分隔），缺省 auto 按文件名自然排序
+  required: false
+  default: auto
+- name: show_topic
+  description: 题目文件是否标注每题专题来源
+  required: false
+  default: false
+- name: answer_space
+  description: 题目文件每题末尾是否留作答横线
+  required: false
+  default: false
+- name: compile
+  description: 是否用 tectonic 编译为 PDF
+  required: false
+  default: true
 tools:
-  - read
-  - write
-  - edit
-  - bash
-  - grep
-  - find
-  - glob
-  - subagent
+- read
+- write
+- edit
+- bash
+- grep
+- find
+- glob
+- subagent
 ---
 
 # SAT 专题练习拆分器
@@ -300,10 +303,10 @@ Easy: 12 题 | Medium: 12 题 | Hard: 6 题
 - [ ] 无残留 `—` `–` `’` `“` 等 Unicode 排版字符
 
 ## 注意事项
-1. **文件安全**：目标 `.tex` 已存在时，先 `read` 察现状，用 `edit` 更新或询用户后覆写；禁盲目 `write` 覆写（遵 `../git_safety_net.md`）
+1. **文件安全**：目标 `.tex` 已存在时，先 `read` 察现状，用 `edit` 更新或询用户后覆写；禁盲目 `write` 覆写（遵 `~/prompt_boilerplates/git_safety_net.md`）
 2. **无文本层 PDF**：pdftotext 输出为空即提示用户，勿静默猜测。
    - **不要用 tesseract**——数学/表格 OCR 质量不够用。
-   - 正确路径：指向 `exam-paper-cloner.md` §0.3a 的 Vision OCR 完整流水线（doubao / nemotron-nano 视觉模型 + 图形裁剪两轮 + 答案交叉验证）。
+   - 正确路径：指向 `~/prompt_boilerplates/Exercise/exam-paper-cloner.md` §0.3a 的 Vision OCR 完整流水线（doubao / nemotron-nano 视觉模型 + 图形裁剪两轮 + 答案交叉验证）。
    - tesseract 仅在无 vision API key 且用户接受低质量结果的纯文本题时作为降级方案。
    - **整卷扫描版**（如手机拍照的全套题 PDF，57 页级）：见 §0.3a.11 服务器端扫描（RapidOCR 或 vision API）；先确认服务器资源再部署，勿在本机硬跑。
 3. **难度以题内标记为准**：文件名与 `Question Difficulty` 不符时，以题内为准并报告
@@ -383,7 +386,7 @@ Easy: 12 题 | Medium: 12 题 | Hard: 6 题
 - **条件前置**：关键条件放句首（If ..., then ...）
 - **列表平行**：编号步骤动词开头、结构平行
 
-数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](~/prompt_boilerplates/Writing/technical-writing-standard.md)。
 
 ## 变更日志
 

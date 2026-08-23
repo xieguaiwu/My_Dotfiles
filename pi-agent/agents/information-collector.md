@@ -3,7 +3,7 @@ name: information-collector
 description: Information gathering specialist. Collects, organizes, and synthesizes data from visual content, documents, and web sources.
 model: openrouter/stealth/ox-alpha
 # NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
-fallbackModels: nvidia/qwen/qwen3.5-397b-a17b
+fallbackModels: deepseek/deepseek-v4-flash-vision-exp, nvidia/qwen/qwen3.5-397b-a17b
 thinking: low
 temperature: 0.2
 tools: read, bash, grep, find, ls

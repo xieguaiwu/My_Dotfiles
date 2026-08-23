@@ -1,7 +1,19 @@
 ---
 name: book-download
-description: "Search and download books/papers from Z-Library, Anna's Archive, and Liber3. Uses bookdl (multi-source CLI) for search/download, and OpenCLI zlibrary adapter for lightweight discovery."
 version: 1.0.0
+description: "Search and download books/papers from Z-Library, Anna's Archive, and Liber3. Uses bookdl (multi-source CLI) for search/download, and OpenCLI zlibrary adapter for lightweight discovery."
+triggers:
+  - "下载书"
+  - "找书"
+  - "找电子书"
+  - "下载论文"
+  - "Z-Library"
+  - "bookdl"
+  - "Anna's Archive"
+tools:
+  - read
+  - bash
+  - grep
 author: pi-agent
 tags: [book, download, zlibrary, annas-archive, liber3, pdf, epub, research, paper, academic]
 ---

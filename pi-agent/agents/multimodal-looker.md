@@ -3,7 +3,7 @@ name: multimodal-looker
 description: Vision analysis specialist. Analyzes images, screenshots, diagrams, and visual content with detailed precision.
 model: openrouter/stealth/ox-alpha
 # NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
-fallbackModels: nvidia/meta/llama-4-maverick-17b-128e-instruct
+fallbackModels: deepseek/deepseek-v4-flash-vision-exp, nvidia/meta/llama-4-maverick-17b-128e-instruct
 thinking: high
 temperature: 0.3
 tools: read, bash

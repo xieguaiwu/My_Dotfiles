@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 2.5.0
+version: 2.7.1
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -97,6 +97,14 @@ triggers:
   - "tor 浏览器用不了"
   - "tor 连不上"
   - "系统健康检查"
+  - "蓝牙耳机连不上"
+  - "蓝牙扫描不到"
+  - "蓝牙配对失败"
+  - "机场wifi"
+  - "公共wifi"
+  - "验证页弹不出"
+  - "captive portal"
+  - "公共网络加固"
 inputs:
   - name: symptom
     description: 用户描述的症状/报错信息
@@ -209,7 +217,9 @@ journalctl -p err -b --no-pager | tail -20
 | 3 | [enospc-tmpfs-check.md](enospc-tmpfs-check.md) | 1.1.0 | ENOSPC/tmpfs 满排查：磁盘 vs 内存盘区分、换出页占配额、孤儿进程清理；先判别 ENOSPC ≠ ENAMETOOLONG | 任何 "no space left"、写入失败、tmpfs 满、ENAMETOOLONG 判别 |
 | 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.2.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流）+ PSR 显示管线风暴修复（Atomic commit failed 日均过万 → i915.enable_psr=0），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足、显示管线报错 |
 | 3.6 | [chrome-leak-reaper.md](chrome-leak-reaper.md) | 1.1.0 | Chrome 内存泄漏排查与 chrome-reaper 维护：chromedp/桥实例/zygote 误杀（PPID 链）/restart 残留/profile 锁冲突 | chrome 吃内存、chrome 进程多、DidStartWorkerFail、bridge 反复重启 |
+| 3.7 | [bluetooth-pairing-troubleshoot.md](bluetooth-pairing-troubleshoot.md) | 1.2.0 | 蓝牙设备连接排查：适配器判活、USB autosuspend（-16）修复、长扫描捕获配对窗口、非 tty 配对坑、默认输出切换、日常使用维护 | 蓝牙耳机连不上、扫描不到、配对失败、连上无声音 |
 | 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.2.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅） | 代理失效、无法上网、订阅失败 |
+| 4.5 | [public-wifi-security.md](public-wifi-security.md) | 1.0.0 | 公共 WiFi 三合一：验证页弹不出（Clash 代理劫持根因）、网络安全调查（加密/DNS/暴露面/证书/evil twin）、加固/恢复双脚本 [airport-harden.sh](airport-harden.sh) + [airport-restore.sh](airport-restore.sh)（入站 SSH/Samba/LLMNR） | 机场wifi、公共wifi、验证页弹不出、captive portal、公共网络加固 |
 | 5 | [fcitx5_punctuation_fix.md](fcitx5_punctuation_fix.md) | 1.0.0 | fcitx5 中文标点问题（半角标点、顿号书名号打不出） | 输入法标点异常 |
 | 6 | [cleanup_shutdown_issue.sh](cleanup_shutdown_issue.sh) | — (脚本) | 关机/重启清理脚本（systemd 守卫、ABRT 处理） | 关机慢、关机报错 |
 
@@ -266,6 +276,9 @@ journalctl -p err -b --no-pager | tail -20
 「代理不工作 / 无法上网 / 订阅失败」
   └─ clash-verge-diagnose-and-fix.md
 
+「机场wifi / 公共wifi / 验证页弹不出 / captive portal / 公共网络加固」
+  └─ public-wifi-security.md ← 先查 Clash 代理（7897）是否劫持浏览器流量；调查四步法；加固/恢复脚本 airport-harden.sh / airport-restore.sh（出站训练 SSH 不受影响）
+
 「输入法标点打不出 / 半角标点」
   └─ fcitx5_punctuation_fix.md
 
@@ -311,6 +324,9 @@ journalctl -p err -b --no-pager | tail -20
 「想自动跑系统健康检查」
   └─ system_fix.fish ← 只读检查，先 --dry
 
+「蓝牙耳机连不上 / 蓝牙扫描不到 / 蓝牙配对失败 / 连上无声音」
+  └─ bluetooth-pairing-troubleshoot.md ← 先适配器判活（服务/rfkill/控制器）→ USB autosuspend（-16 元凶，Intel 高发，修复后须重启彻底生效）→ 长扫描 60-100s 捕获配对窗口（短扫描必漏）→ 配对连接（非 tty 事件刷屏坑）→ 默认输出切换（连接成功 ≠ 声音从耳机出）
+
 「以上都不是 / 综合症状 / 说不清楚」
   └─ system_diagnostics_and_repair.md（全面诊断）
        └─ 发现具体问题 → 回到上方对应文档
@@ -330,9 +346,12 @@ journalctl -p err -b --no-pager | tail -20
 | `enospc-tmpfs-check.md` 先判别 | `pi-subagents-ENAMETOOLONG-fix.md` | /tmp 下 `name too long`（路径组件 >255B）不是 ENOSPC，路由到该文档 |
 | `ghostwriter-math-check-and-fix.md` 第三层 | `dotfiles-sync-and-audit.md` | 配置修正后需同步 My_Dotfiles 备份副本 |
 | `clash-verge-diagnose-and-fix.md` | `system_diagnostics_and_repair.md` Phase 1.5 网络 | 网络层诊断先跑通用检查再深入 Clash |
+| `clash-verge-diagnose-and-fix.md` | `public-wifi-security.md` | 验证页弹不出/公共网络场景同源——代理劫持浏览器流量时先查 Clash 再查门户 |
+| `system_diagnostics_and_repair.md` Phase 1.5 网络 | `public-wifi-security.md` | 公共网络场景安全调查深入（加密/DNS/暴露面/证书） |
 | `tor-browser-check-and-fix.md` 前置 | `clash-verge-diagnose-and-fix.md` | Tor 经本地代理引导，代理失效时先修 Clash 再修 Tor |
 | `video-playback-decode-fix.md` | `system_diagnostics_and_repair.md` | 播放类故障先查系统 ffmpeg 解码能力，再深入播放器自身；GPU 无硬件加速时驱动安装/VAAPI 能力对照收拢于 video skill |
 | `dotfiles-sync-and-audit.md` | `memory-index-condense.md` | 两者都涉及 pi-agent 配置文件的备份/维护 |
+| `bluetooth-pairing-troubleshoot.md` | `system_diagnostics_and_repair.md` 1.8 节 | 适配器判活失败时回到全面诊断的蓝牙节；HCI -16 修复命令两处一致 |
 | 任何 pi-agent 层文档修复后 | `memory-index-condense.md` | 修复后如记忆/索引涉及，需重新浓缩 |
 | `windows-scripting-and-ssh-debug.md` 排障产出 | `win-ssh-setup` 工具包（~/Downloads/win-ssh-setup） | Windows 端脚本均按该 skill 规范编写：fix-sshd-service.bat（阶梯修复）/ diag-sshd3.bat（前台调试）/ install-rsync.bat（MSYS2+rsync） |
 
@@ -358,6 +377,19 @@ journalctl -p err -b --no-pager | tail -20
 ---
 
 ## 变更日志
+
+### 2.7.1 (2026-08-22)
+- 更新：bluetooth-pairing-troubleshoot.md 1.1.0 → **1.2.0**（新增「日常使用与维护」章节：自动重连、电量查看 bluetoothctl info Battery Percentage、A2DP AAC 音质/通话降质、多设备切换、blueman GUI）
+
+### 2.7.0 (2026-08-22)
+- 新增：系统层 3.7 — `bluetooth-pairing-troubleshoot.md` 1.0.0 → **1.1.0**（2026-08-22 华为 FreeArc 配对实战：适配器正常但 12-20 秒短扫描 4 次全空、100 秒长扫描捕获；Intel 蓝牙 USB autosuspend（-16 EBUSY）修复；随机 MAC 设备以名字为线索；非 tty 下 bluetoothctl 事件刷屏对策；步骤 7 补默认输出切换——连接成功 ≠ 声音从耳机出，set-default-sink + move-sink-input）
+- 更新：system_diagnostics_and_repair.md 1.1.0 → **1.2.0**（1.8 蓝牙节扩充 USB autosuspend 检查 + 交叉引用新 skill；Phase 3/5 蓝牙注释补充）
+- 新增：triggers「蓝牙耳机连不上」「蓝牙扫描不到」「蓝牙配对失败」+ 决策树蓝牙分支 + 交叉引用 1 条
+
+### 2.6.0 (2026-08-22)
+- 新增：系统层 — `public-wifi-security.md` 1.0.0 + 脚本 `airport-harden.sh` / `airport-restore.sh`（2026-08-22 香港机场实战：验证页弹不出根因=Clash 代理劫持浏览器流量；安全调查四步法；加固=入站 SSH/Samba/LLMNR，出站训练 SSH 不受影响；恢复脚本含白名单 rich rule 清理）
+- 新增：triggers「机场wifi」「公共wifi」「验证页弹不出」「captive portal」「公共网络加固」
+- 新增：决策树分支 + 交叉引用 2 条（clash-verge ↔ public-wifi-security 同源；system_diagnostics 网络层 → 公共网络调查）
 
 ### 2.5.0 (2026-08-18)
 - 更新：freeze-oom-protection.md 1.1.0 → **1.2.0**（基于 08-18 17:48 第二次死机实战：earlyoom zram 盲区——Fedora 默认内存+swap 双条件在 zram 掩护下永不触发，须 -s 100 -S 100 退化为纯内存阈值；oomd 阈值 80%→60%；新增 PSR 显示管线风暴节——Atomic commit failed 日均 1.2-3.5 万次 = Kaby Lake i915 PSR bug，i915.enable_psr=0 修复 + BLS 条目验证；Phase 1 加 Purging GPU memory 页数对比判读）
@@ -451,4 +483,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-18（index 2.5.0：freeze-oom-protection 1.2.0——08-18 第二次死机实战沉淀：earlyoom zram 盲区 / oomd 60% / PSR 显示管线风暴 + i915.enable_psr=0；2.4.0：windows-scripting-and-ssh-debug.md 1.3.0——ACL 拒绝访问判别与第 11-13 轮实战教训；2.3.1：YAML 修复 3 文件；2.3.0：第七类 Windows 远程排障）*
+*最后更新: 2026-08-22（index 2.7.1：bluetooth-pairing-troubleshoot.md 1.2.0 新增日常使用与维护章节；2.7.0：新增 bluetooth-pairing-troubleshoot.md——华为 FreeArc 配对实战：长扫描捕获配对窗口、USB autosuspend -16 修复、默认输出切换；system_diagnostics_and_repair.md 1.2.0 蓝牙节扩充；2.6.0：public-wifi-security 1.0.0——机场验证页/网络调查/加固恢复实战沉淀；2.5.0：freeze-oom-protection 1.2.0——earlyoom zram 盲区 / oomd 60% / PSR；2.4.0：windows-scripting-and-ssh-debug.md 1.3.0）*

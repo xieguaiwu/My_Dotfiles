@@ -61,7 +61,40 @@
             "xhigh": "xhigh"
           }
         }
-      }
+      },
+      "models": [
+        {
+          "id": "ox-alpha-free",
+          "name": "Ox Alpha Free (OpenCode Go)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 1000000,
+          "maxTokens": 131072,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "compat": {
+            "supportsStore": false,
+            "supportsDeveloperRole": false,
+            "maxTokensField": "max_tokens"
+          },
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": "low",
+            "medium": null,
+            "high": "high",
+            "xhigh": null,
+            "max": "max"
+          }
+        }
+      ]
     },
     "deepseek": {
       "baseUrl": "https://api.deepseek.com",
@@ -91,7 +124,25 @@
           }
         },
         {
-          "id": "deepseek-v4-flash",
+          "id": "deepseek-v4-flash-vision-exp",
+          "name": "DeepSeek V4 Flash Vision Exp",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "compat": {
+            "thinkingFormat": "deepseek"
+          },
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "medium",
+            "high": "max",
+            "xhigh": "max"
+          }
+        },
+    {
+     "id": "deepseek-v4-flash",
           "name": "DeepSeek V4 Flash",
           "reasoning": true,
           "contextWindow": 1000000,
@@ -585,6 +636,49 @@
             "thinkingFormat": "deepseek",
             "supportsReasoningEffort": false,
             "maxTokensField": "max_tokens"
+          }
+        }
+      ]
+    },
+    "opencode": {
+      "baseUrl": "https://opencode.ai/zen/v1",
+      "api": "openai-completions",
+      "apiKey": "$OPENCODE_API_KEY",
+      "compat": {
+        "supportsStore": false,
+        "supportsDeveloperRole": false,
+        "maxTokensField": "max_tokens"
+      },
+      "models": [
+        {
+          "id": "x-preview-f-free",
+          "name": "Ox Alpha Free (OpenCode Zen)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 1000000,
+          "maxTokens": 131072,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "compat": {
+            "supportsStore": false,
+            "supportsDeveloperRole": false,
+            "maxTokensField": "max_tokens"
+          },
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": "low",
+            "medium": null,
+            "high": "high",
+            "xhigh": null,
+            "max": "max"
           }
         }
       ]

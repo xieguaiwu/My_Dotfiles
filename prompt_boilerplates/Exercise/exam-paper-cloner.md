@@ -1,63 +1,69 @@
 ---
 name: exam-paper-cloner
-version: 1.4.0
-description: 阅读现有试卷作为模板和/或根据知识点描述，生成全英文LaTeX试卷，使用tectonic编译，极致节省纸张。支持扫描版PDF作为模板（§0.3a Vision OCR 流水线）。v1.2.0 新增难度升级专项（§1.7）：按学科分轨（数理禁堆计算量/文科允许句法复杂度），12+10 维度矩阵与反堆料检查清单，难度档案标注（规范见 difficulty-escalation-framework.md）。v1.3.0 更新 §0.3a：vision 模型可用性实测表+fallback 链+增量保存+rationale 缺失检测+新增 §0.3a.11 服务器端扫描（资源确认/SSH 不稳应对/RapidOCR 版本坑）。v1.4.0 新增文档写作规范（ASD-STE100）
+version: 1.5.0
+description: 阅读现有试卷作为模板和/或根据知识点描述，生成全英文LaTeX试卷，使用tectonic编译，极致节省纸张。支持扫描版PDF作为模板（§0.3a
+  Vision OCR 流水线）。v1.2.0 新增难度升级专项（§1.7）：按学科分轨（数理禁堆计算量/文科允许句法复杂度），12+10 维度矩阵与反堆料检查清单，难度档案标注（规范见
+  ~/prompt_boilerplates/Exercise/difficulty-escalation-framework.md）。v1.3.0 更新 §0.3a：vision
+  模型可用性实测表+fallback 链+增量保存+rationale 缺失检测+新增 §0.3a.11 服务器端扫描（资源确认/SSH 不稳应对/RapidOCR
+  版本坑）。v1.4.0 新增文档写作规范（ASD-STE100）
 triggers:
-  - "clone exam"
-  - "生成试卷"
-  - "generate paper"
-  - "make exam"
-  - "出卷"
-  - "exam cloner"
+- clone exam
+- 生成试卷
+- generate paper
+- make exam
+- 出卷
+- exam cloner
 inputs:
-  - name: template_path
-    description: 作为模板参考的现有试卷路径（可选；不提供则根据知识点从头生成）
-    required: false
-    default: ""
-  - name: topics
-    description: 要考察的知识点列表（提供template_path时作为补充约束；无模板时作为出题依据）
-    required: false
-    default: ""
-  - name: question_count
-    description: 目标题目数量（0=自动根据模板或知识点决定）
-    required: false
-    default: 0
-  - name: output_name
-    description: 输出文件名（不含扩展名）
-    required: false
-    default: Generated_Exam
-  - name: options_count
-    description: 每题选项数（4 或 5）
-    required: false
-    default: 4
-  - name: subject
-    description: 科目名称（如 AP Calculus BC、Linear Algebra），用于文件命名
-    required: false
-    default: ""
-  - name: exam_type
-    description: 试卷类型标签（如 Practice_Test、Quiz_Midterm），用于文件命名
-    required: false
-    default: "Practice"
-  - name: difficulty
-    description: 难度模式（standard=30/50/20[默认] / hard=15/40/45 / max=0/30/70 / auto=沿用模板难度分布）。升级维度选择见 §1.7 与 difficulty-escalation-framework.md
-    required: false
-    default: "auto"
-  - name: escalation_focus
-    description: 难度升级维度清单（可选，逗号分隔，如 "D1,D6" 或 "L2,L3"；维度编码见 §1.7 / difficulty-escalation-framework.md §3-4）
-    required: false
-    default: ""
-  - name: output_dir
-    description: 输出目录（默认当前工作目录）
-    required: false
-    default: "."
+- name: template_path
+  description: 作为模板参考的现有试卷路径（可选；不提供则根据知识点从头生成）
+  required: false
+  default: ''
+- name: topics
+  description: 要考察的知识点列表（提供template_path时作为补充约束；无模板时作为出题依据）
+  required: false
+  default: ''
+- name: question_count
+  description: 目标题目数量（0=自动根据模板或知识点决定）
+  required: false
+  default: 0
+- name: output_name
+  description: 输出文件名（不含扩展名）
+  required: false
+  default: Generated_Exam
+- name: options_count
+  description: 每题选项数（4 或 5）
+  required: false
+  default: 4
+- name: subject
+  description: 科目名称（如 AP Calculus BC、Linear Algebra），用于文件命名
+  required: false
+  default: ''
+- name: exam_type
+  description: 试卷类型标签（如 Practice_Test、Quiz_Midterm），用于文件命名
+  required: false
+  default: Practice
+- name: difficulty
+  description: 难度模式（standard=30/50/20[默认] / hard=15/40/45 / max=0/30/70 / auto=沿用模板难度分布）。升级维度选择见
+    §1.7 与 ~/prompt_boilerplates/Exercise/difficulty-escalation-framework.md
+  required: false
+  default: auto
+- name: escalation_focus
+  description: 难度升级维度清单（可选，逗号分隔，如 "D1,D6" 或 "L2,L3"；维度编码见 §1.7 / ~/prompt_boilerplates/Exercise/difficulty-escalation-framework.md
+    §3-4）
+  required: false
+  default: ''
+- name: output_dir
+  description: 输出目录（默认当前工作目录）
+  required: false
+  default: .
 tools:
-  - write
-  - bash
-  - read
-  - grep
-  - edit
-  - subagent
-  - fetch_content
+- write
+- bash
+- read
+- grep
+- edit
+- subagent
+- fetch_content
 ---
 
 # 试卷克隆生成器 (Exam Paper Cloner & Generator)
@@ -494,7 +500,7 @@ vision 转录与本地 OCR 是两条独立管道：OCR 行文本+坐标可验证
 
 #### 1.7 难度升级专项（Difficulty Escalation）⚠️ 核心能力
 
-> 完整规范见 `difficulty-escalation-framework.md`（同目录）。本节为强制执行浓缩版。
+> 完整规范见 `~/prompt_boilerplates/Exercise/difficulty-escalation-framework.md`（同目录）。本节为强制执行浓缩版。
 
 **铁律：难度 = 认知负荷的类型与深度，不是任务量。** 升级难度必须改变"考什么能力"，而不是延长"做什么"。
 
@@ -976,7 +982,7 @@ Q3: A → 验证: ... ❌ 计算错误，应为 B（已修复）
 | hard | 15% | 40% | 45% | 强化/考前冲刺 |
 | max | 0% | 30% | 70% | 竞赛/拔尖选拔 |
 
-**难度升级的维度选择、操作规则与禁止项见 §1.7 与 `difficulty-escalation-framework.md`**。数理轨严禁以堆砌计算量提升难度；文科轨可用句法复杂度（L1）等维度提升难度。
+**难度升级的维度选择、操作规则与禁止项见 §1.7 与 `~/prompt_boilerplates/Exercise/difficulty-escalation-framework.md`**。数理轨严禁以堆砌计算量提升难度；文科轨可用句法复杂度（L1）等维度提升难度。
 
 ---
 
@@ -1047,17 +1053,17 @@ Q3: A → 验证: ... ❌ 计算错误，应为 B（已修复）
 - **数学/科学公式必须逐步验证**，不能仅靠直觉判断正确性
 - **若某知识点超出模型训练数据的可靠范围**，明确标记"建议由领域专家审核此部分"
 
-参见 [知识边界规范](../knowledge_boundary.md)。
+参见 [知识边界规范](~/prompt_boilerplates/knowledge_boundary.md)。
 
 ---
 
 ## Git 安全网 + 文件写入安全
 
-本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。
+本 skill 遵守 [Git 安全网规范](~/prompt_boilerplates/git_safety_net.md)。
 
 执行 `write` 或 `edit` 前必须：
 
-1. 读取 `git_safety_net.md` 并执行 git 版本追踪指令
+1. 读取 `~/prompt_boilerplates/git_safety_net.md` 并执行 git 版本追踪指令
 2. 用 `find` 或 `read` 检查目标文件是否已存在
 3. 文件已存在时优先用 `edit` 修改，不用 `write` 覆写
 4. 确需覆写时先告知用户
@@ -1075,7 +1081,7 @@ Q3: A → 验证: ... ❌ 计算错误，应为 B（已修复）
 - **条件前置**：关键条件放句首（If ..., then ...）
 - **列表平行**：编号步骤动词开头、结构平行
 
-数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](~/prompt_boilerplates/Writing/technical-writing-standard.md)。
 
 ## 变更日志
 

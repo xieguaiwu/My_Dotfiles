@@ -1,30 +1,30 @@
 ---
 name: system-diagnostics-and-repair
-version: 1.1.0
+version: 1.3.0
 description: 排查 Linux 桌面系统问题（Fedora/Arch/Debian），收集硬件、内核、服务、日志信息，诊断常见缺陷并给出无需重启的修复方案
 triggers:
-  - "系统问题排查"
-  - "电脑问题检测"
-  - "系统诊断"
-  - "修复系统错误"
-  - "检查系统bug"
-  - "machine check"
-  - "system health check"
-  - "检查系统缺陷"
+- 系统问题排查
+- 电脑问题检测
+- 系统诊断
+- 修复系统错误
+- 检查系统bug
+- machine check
+- system health check
+- 检查系统缺陷
 inputs:
-  - name: os_hint
-    description: 已知的 OS 类型，如 fedora/arch/ubuntu
-    required: false
-    default: "auto-detect"
+- name: os_hint
+  description: 已知的 OS 类型，如 fedora/arch/ubuntu
+  required: false
+  default: auto-detect
 tools:
-  - bash
-  - read
-  - write
-  - edit
-  - grep
-  - glob
-  - todo_create
-  - subagent
+- bash
+- read
+- write
+- edit
+- grep
+- glob
+- todo_create
+- subagent
 ---
 
 # Linux 系统诊断与修复 Skill
@@ -58,7 +58,7 @@ zramctl
 cat /proc/sys/vm/swappiness
 ```
 
-> ⚠️ **df -h 不要过滤掉 tmpfs**：`/run/user/1000`、`/tmp` 等 tmpfs 满时根盘可能仍然空闲，但任何写入都会 ENOSPC。若发现 tmpfs 挂载点 Use% 接近 100%，或用户报「no space left」但磁盘显示正常，**切换到 [enospc-tmpfs-check.md](enospc-tmpfs-check.md)** 按专门流程排查（含 swap 压力、换出页占配额、孤儿进程清理）。
+> ⚠️ **df -h 不要过滤掉 tmpfs**：`/run/user/1000`、`/tmp` 等 tmpfs 满时根盘可能仍然空闲，但任何写入都会 ENOSPC。若发现 tmpfs 挂载点 Use% 接近 100%，或用户报「no space left」但磁盘显示正常，**切换到 [enospc-tmpfs-check.md](~/prompt_boilerplates/System_Fix/enospc-tmpfs-check.md)** 按专门流程排查（含 swap 压力、换出页占配额、孤儿进程清理）。
 
 #### 1.3 内核与驱动日志
 ```bash
@@ -101,7 +101,13 @@ cat /sys/devices/system/cpu/vulnerabilities/* 2>/dev/null
 systemctl status bluetooth 2>/dev/null | head -10
 rfkill list
 journalctl -k --grep='bluetooth|hci' -b --no-pager 2>/dev/null | grep -i 'fail\|error' | tail -10
+# USB 自动挂起检查（Intel 蓝牙 -16 错误常见元凶）：
+lsusb | grep -i blue
+cat /sys/bus/usb/devices/*/power/control 2>/dev/null        # auto = 允许挂起
+cat /sys/bus/usb/devices/*/power/runtime_status 2>/dev/null # suspended = 已挂起
 ```
+
+> 蓝牙设备**扫描不到/配对失败/无声音**的完整排查见 [bluetooth-pairing-troubleshoot.md](~/prompt_boilerplates/System_Fix/bluetooth-pairing-troubleshoot.md)；此处仅负责适配器层快速判活。
 
 #### 1.9 包管理器状态
 ```bash
@@ -174,6 +180,8 @@ systemctl --user daemon-reload
 
 **蓝牙 HCI 错误**（类型 B）：
 ```fish
+# ⚠️ usbcore autosuspend=-1 为模块参数：重载 btusb 不回溯，彻底生效须重启
+# ⚠️ agent 环境无 passwordless sudo 时：打包脚本交用户执行（见 Phase 4）
 echo 'options usbcore autosuspend=-1' | sudo tee /etc/modprobe.d/disable-usb-autosuspend.conf
 sudo modprobe -r btusb; and sudo modprobe btusb
 ```
@@ -201,7 +209,7 @@ sudo dnf install mesa-dri-drivers mesa-libGL  # Fedora
 sudo dnf install intel-media-driver  # Intel VAAPI（iHD，新平台）
 # 老平台（Gen9/Gen9.5，如 Kaby Lake）iHD 无 HEVC 硬解 → 需 legacy i965 驱动：
 #   sudo dnf install libva-intel-driver   # RPM Fusion
-# VAAPI 能力对照与播放器硬解修复全流程见 video-playback-decode-fix.md
+# VAAPI 能力对照与播放器硬解修复全流程见 ~/prompt_boilerplates/System_Fix/video-playback-decode-fix.md
 ```
 
 **包依赖修复**（类型 B）：
@@ -242,7 +250,7 @@ sudo modprobe -r btusb; and sudo modprobe btusb
 | USB autosuspend | `cat /etc/modprobe.d/disable-usb-autosuspend.conf` 存在 |
 | Portal drop-in | `test -f ~/.config/systemd/user/xdg-desktop-portal-gtk.service.d/10-delay.conf` |
 | SELinux 策略 | 修复后 `ausearch -m avc -ts recent` 不再有相关条目 |
-| 蓝牙 | 重载后 `rfkill list` 无阻塞，`systemctl status bluetooth` active |
+| 蓝牙 | 重载后 `rfkill list` 无阻塞，`systemctl status bluetooth` active；耳机链路验证 `pactl list sinks short \| grep bluez`（全流程见 ~/prompt_boilerplates/System_Fix/bluetooth-pairing-troubleshoot.md） |
 | 硬件加速 | `glxinfo -B \| grep Accelerated` → yes |
 | 网络连通 | `ping -c1 8.8.8.8` → 成功 |
 
@@ -256,7 +264,7 @@ sudo modprobe -r btusb; and sudo modprobe btusb
 - **状态消息**：固定前缀模板（[OK] / [FAIL] / [WARN]），机器可读且人可读
 - **错误消息**：先说原因再说动作，附可执行建议
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md) 第 7 节。
+完整规范见 [technical-writing-standard.md](~/prompt_boilerplates/Writing/technical-writing-standard.md) 第 7 节。
 
 ## 输出格式
 
@@ -294,3 +302,17 @@ sudo modprobe -r btusb; and sudo modprobe btusb
    - 设备是否最终可用
 7. **不要过度诊断**：`snd_hda_codec_conexant: vmaster hook`、`polkitd JS error` 等 warning 是 cosmetic，无功能影响，标记为 info 即可。
 8. **btrfs 用户**：对 btrfs 环境检查 `sudo btrfs device stats /` 和 `sudo btrfs filesystem usage /`。
+
+## 变更日志
+
+### 1.2.0 (2026-08-22)
+- 扩充：1.8 蓝牙节——新增 USB 自动挂起检查命令（lsusb + power/control + runtime_status），交叉引用 ~/prompt_boilerplates/System_Fix/bluetooth-pairing-troubleshoot.md
+- 补充：Phase 3 蓝牙 HCI 错误修复注释（usbcore 参数须重启生效、无 passwordless sudo 时打包脚本）
+- 补充：Phase 5 蓝牙验证——pactl 耳机链路验证
+- 背景：2026-08-22 华为 FreeArc 配对实战——Intel 蓝牙适配器 USB autosuspend 致间歇性 `Reading supported features failed (-16)`，12-20 秒短扫描 4 次全空、100 秒长扫描捕获设备
+
+### 1.1.0 (2026-08-16)
+- 新增：脚本输出文本规范（ASD-STE100，见 ~/prompt_boilerplates/Writing/technical-writing-standard.md 第 7 节）
+
+### 1.0.0 (初始版本)
+- 初始发布

@@ -1,47 +1,53 @@
 ---
 name: mistake-practice-generation
-version: 1.3.0
-description: 不限科目，支持诊断驱动生成与目录扫描双模式。从错题诊断（trap type + difficulty）或错题文件直接生成全英文 LaTeX 选择题练习卷。SAT 模式支持 CB 官方拟真格式（Question ID + Assessment 头 + Rationale 逐项解析）。内置语义甄别专项模式、难度递进设计、答案分布均衡算法、系列化增量生成。v1.2.0 新增升级维度规则（反堆料铁律）：同陷阱家族升级 = 换更深的维度而非加计算/加长句（规范见 difficulty-escalation-framework.md）。v1.3.0 新增文档写作规范（ASD-STE100）
+version: 1.4.0
+description: 不限科目，支持诊断驱动生成与目录扫描双模式。从错题诊断（trap type + difficulty）或错题文件直接生成全英文 LaTeX
+  选择题练习卷。SAT 模式支持 CB 官方拟真格式（Question ID + Assessment 头 + Rationale 逐项解析）。内置语义甄别专项模式、难度递进设计、答案分布均衡算法、系列化增量生成。v1.2.0
+  新增升级维度规则（反堆料铁律）：同陷阱家族升级 = 换更深的维度而非加计算/加长句（规范见 ~/prompt_boilerplates/Exercise/difficulty-escalation-framework.md）。v1.3.0
+  新增文档写作规范（ASD-STE100）
 triggers:
-  - "错题重排"
-  - "生成错题卷"
-  - "生成练习卷"
-  - "生成SAT练习卷"
-  - "同类错题练习"
-  - "mistake practice"
-  - "错题积累"
-  - "诊断出题"
-  - "陷阱练习"
+- 错题重排
+- 生成错题卷
+- 生成练习卷
+- 生成SAT练习卷
+- 同类错题练习
+- mistake practice
+- 错题积累
+- 诊断出题
+- 陷阱练习
 inputs:
-  - name: target_dir
-    description: 错题文件所在目录（默认为当前工作目录）。diagnostic_specs 提供时忽略。
-    required: false
-  - name: output_name
-    description: 输出文件名前缀（不含扩展名、不含 _Practice_N 后缀）
-    required: false
-    default: Mistake_Practice
-  - name: question_count
-    description: 目标题目数量（0=自动根据文件数量决定）
-    required: false
-    default: 0
-  - name: diagnostic_specs
-    description: '诊断规格对象。{ trap_families: [{family, difficulty?, count?}], format: "sat"|"generic" }。提供时跳过目录扫描，直接进入陷阱→题目设计。trap_family 可选值含 "semantic-discrimination" "subject-verb-agreement" "modifier-placement" "transitions" "boundaries" "form-structure-sense" 等。'
-    required: false
-  - name: format
-    description: 输出格式（"generic" 或 "sat"）。sat 模式使用 CB 官方拟真格式。
-    required: false
-    default: "generic"
-  - name: series
-    description: '系列生成参数。{ set_number: 1, continue_from: null }。continue_from 为前一册的 Practice_N 编号，新册自动递增。'
-    required: false
+- name: target_dir
+  description: 错题文件所在目录（默认为当前工作目录）。diagnostic_specs 提供时忽略。
+  required: false
+- name: output_name
+  description: 输出文件名前缀（不含扩展名、不含 _Practice_N 后缀）
+  required: false
+  default: Mistake_Practice
+- name: question_count
+  description: 目标题目数量（0=自动根据文件数量决定）
+  required: false
+  default: 0
+- name: diagnostic_specs
+  description: '诊断规格对象。{ trap_families: [{family, difficulty?, count?}], format: "sat"|"generic"
+    }。提供时跳过目录扫描，直接进入陷阱→题目设计。trap_family 可选值含 "semantic-discrimination" "subject-verb-agreement"
+    "modifier-placement" "transitions" "boundaries" "form-structure-sense" 等。'
+  required: false
+- name: format
+  description: 输出格式（"generic" 或 "sat"）。sat 模式使用 CB 官方拟真格式。
+  required: false
+  default: generic
+- name: series
+  description: '系列生成参数。{ set_number: 1, continue_from: null }。continue_from 为前一册的
+    Practice_N 编号，新册自动递增。'
+  required: false
 tools:
-  - write
-  - bash
-  - read
-  - grep
-  - edit
-  - subagent
-  - todo_create
+- write
+- bash
+- read
+- grep
+- edit
+- subagent
+- todo_create
 ---
 
 # 错题练习卷生成 (Mistake Practice Generation) v1.1.0
@@ -326,7 +332,7 @@ Hard:   代词逻辑反证 / 隐藏主语
 
 ### 升级维度规则（反堆料铁律）⚠️
 
-> 完整规范见 `difficulty-escalation-framework.md`（同目录）。本节为强制执行浓缩版。
+> 完整规范见 `~/prompt_boilerplates/Exercise/difficulty-escalation-framework.md`（同目录）。本节为强制执行浓缩版。
 
 **同一陷阱家族升级难度 = 换更深的维度，不是加计算量/加长句。** 按学科分轨执行：
 
@@ -372,7 +378,7 @@ Difficulty: Easy}
 | 12   | 3    | 5      | 4    |
 | 15   | 4    | 6      | 5    |
 
-> **偏离说明**：本表是错题/陷阱诊断卷的专用分布（偏重易错密度、Easy 占比低），与 difficulty-escalation-framework.md 的三档 canonical 分布（standard 30/50/20 / hard 15/40/45 / max 0/30/70）不同——**整卷标准化考试一律按框架三档执行**，本表仅适用于陷阱诊断练习，且难度升级仍须遵守 §升级维度规则（反堆料铁律）。
+> **偏离说明**：本表是错题/陷阱诊断卷的专用分布（偏重易错密度、Easy 占比低），与 ~/prompt_boilerplates/Exercise/difficulty-escalation-framework.md 的三档 canonical 分布（standard 30/50/20 / hard 15/40/45 / max 0/30/70）不同——**整卷标准化考试一律按框架三档执行**，本表仅适用于陷阱诊断练习，且难度升级仍须遵守 §升级维度规则（反堆料铁律）。
 
 同一陷阱家族的题目从 Easy 到 Hard 连续排列（便于学生感知递进），不同家族之间再随机打乱。
 
@@ -907,7 +913,7 @@ D: 重力与压力的组合 → 常见错误：认为所有数值相等的力都
 
 ### 知识边界约束
 
-本 skill 遵守 [知识边界规范](../knowledge_boundary.md)。涉及的科目可能超出模型训练数据的准确覆盖范围。
+本 skill 遵守 [知识边界规范](~/prompt_boilerplates/knowledge_boundary.md)。涉及的科目可能超出模型训练数据的准确覆盖范围。
 
 - **题目设计时**：对公式推导、定理应用、数值计算没有十足把握时，通过计算验证而非猜测硬答。
 - **干扰项设计时**：每个错误选项必须有明确的常见误解来源，不能编造"看起来合理"但实际无依据的选项。
@@ -916,9 +922,9 @@ D: 重力与压力的组合 → 常见错误：认为所有数值相等的力都
 
 ### Git 安全网 + 文件操作
 
-本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。
+本 skill 遵守 [Git 安全网规范](~/prompt_boilerplates/git_safety_net.md)。
 
-- 执行 `write`/`edit` 前必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令
+- 执行 `write`/`edit` 前必须先读取并执行 `~/prompt_boilerplates/git_safety_net.md` 中的 git 版本追踪指令
 - 使用 `write` 前必须先用 `read` 确认目标 `.tex` 文件是否已存在
 - 若文件已存在，用 `edit` 追加而非 `write` 覆写；确需覆写须先告知用户
 - **系列生成时**：自动 `git init`（如尚未初始化）并逐次 `git add` + `git commit`
@@ -988,7 +994,7 @@ AP1_Mistake_Practice_Answers.tex        → 答案
 - **条件前置**：关键条件放句首（If ..., then ...）
 - **列表平行**：编号步骤动词开头、结构平行
 
-数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](~/prompt_boilerplates/Writing/technical-writing-standard.md)。
 
 ---
 

@@ -1,29 +1,29 @@
 ---
 name: verification-before-completion
-version: 1.2.0
+version: 1.3.0
 description: 声称工作完成、已修复、已通过之前，必须运行验证命令并确认输出——证据先于断言。核心移植自 obra/superpowers verification-before-completion（MIT）
 triggers:
-  - "声称完成"
-  - "修好了"
-  - "测试通过"
-  - "完成声明"
-  - "验证结果"
-  - "确认结果"
-  - "提交前"
-  - "报告完成"
+- 声称完成
+- 修好了
+- 测试通过
+- 完成声明
+- 验证结果
+- 确认结果
+- 提交前
+- 报告完成
 inputs:
-  - name: claim
-    description: 要声明的完成结论（如"测试通过"、"bug 已修复"、"训练完成"）
-    required: true
-  - name: verification_command
-    description: 能证明该结论的命令（缺省时由 agent 自行确定）
-    required: false
-    default: ""
+- name: claim
+  description: 要声明的完成结论（如"测试通过"、"bug 已修复"、"训练完成"）
+  required: true
+- name: verification_command
+  description: 能证明该结论的命令（缺省时由 agent 自行确定）
+  required: false
+  default: ''
 tools:
-  - read
-  - bash
-  - grep
-  - find
+- read
+- bash
+- grep
+- find
 ---
 
 # Verification Before Completion — 完成前验证
@@ -71,7 +71,7 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 
 ## 长期项目补充：完成声明须带长期阶段（Long-Horizon）
 
-**适用**：项目有 `VISION.md`（跨多日/多会话，见 `long-horizon-planning.md`）。
+**适用**：项目有 `VISION.md`（跨多日/多会话，见 `~/prompt_boilerplates/Coding/long-horizon-planning.md`）。
 
 此时「完成」的完整含义 = **证据 + 位置**：
 
@@ -187,11 +187,11 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 
 | 相关 skill | 关系 |
 |:--|:--|
-| `improvement-loop.md` | §5.9 Chain 输出门控是**平台层**的输出验证（turnBudget 防止空输出）；本 skill 是**方法论层**的完成验证（任何声明都要证据）。审查 agent 用本 skill 的 Gate Function 核对实现 agent 的完成声明 |
-| `ml-training.md` | §七 快速验收流程（量化验收阈值表）定义"什么是好的训练结果"；本 skill 定义"如何证明结果存在且真实"——先验证后验收 |
-| `development-quality-gates.md` | 关卡 6（测试同步）+ 关卡 11（本地部署）的验证步骤均以本 skill 的 Gate Function 为执行标准 |
-| `project-documentation-protocol.md` | 文档声称的结论（Sharpe、IC）必须与结果 JSON 一致（§B4 文档漂移检测）——这正是 Gate Function 在文档场景的应用 |
-| `long-horizon-planning.md` | 长期项目中「完成」= 验证证据 + 长期阶段声明（§长期项目补充）；VISION.md 进度更新与 Gate Function 配套执行 |
+| `~/prompt_boilerplates/Coding/improvement-loop.md` | §5.9 Chain 输出门控是**平台层**的输出验证（turnBudget 防止空输出）；本 skill 是**方法论层**的完成验证（任何声明都要证据）。审查 agent 用本 skill 的 Gate Function 核对实现 agent 的完成声明 |
+| `~/prompt_boilerplates/Coding/ml-training.md` | §七 快速验收流程（量化验收阈值表）定义"什么是好的训练结果"；本 skill 定义"如何证明结果存在且真实"——先验证后验收 |
+| `~/prompt_boilerplates/Coding/development-quality-gates.md` | 关卡 6（测试同步）+ 关卡 11（本地部署）的验证步骤均以本 skill 的 Gate Function 为执行标准 |
+| `~/prompt_boilerplates/Coding/project-documentation-protocol.md` | 文档声称的结论（Sharpe、IC）必须与结果 JSON 一致（§B4 文档漂移检测）——这正是 Gate Function 在文档场景的应用 |
+| `~/prompt_boilerplates/Coding/long-horizon-planning.md` | 长期项目中「完成」= 验证证据 + 长期阶段声明（§长期项目补充）；VISION.md 进度更新与 Gate Function 配套执行 |
 
 ## 作业要求
 
@@ -209,7 +209,7 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 
 ### 1.2.0 (2026-08-21)
 - 新增：「长期项目补充——完成声明须带长期阶段」——长期项目中完成 = 验证证据 + 长期阶段声明（VISION.md 阶段 X/N + 目标编号）
-- 新增：Common Failures 表「阶段完成（长期项目）」行；衔接表 `long-horizon-planning.md` 条目
+- 新增：Common Failures 表「阶段完成（长期项目）」行；衔接表 `~/prompt_boilerplates/Coding/long-horizon-planning.md` 条目
 
 ### 1.1.0 (2026-08-14)
 - 修复（momus 审查轮）：悬空引用 §2.5 → §B4；豁免表增加「项目已有验证约定优先」；触发词「完成」→「声称完成」去泛化

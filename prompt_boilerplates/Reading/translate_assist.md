@@ -1,22 +1,22 @@
 ---
 name: translate-assist
-version: 1.2.0
+version: 1.3.0
 description: 翻译英文论文至中文Markdown文档
 triggers:
-  - "翻译论文"
-  - "translate paper"
-  - "英文翻译"
+- 翻译论文
+- translate paper
+- 英文翻译
 inputs:
-  - name: source
-    description: 源文件路径
-    required: true
-  - name: output
-    description: 输出文件路径
-    required: false
-    default: AI中译*.md
+- name: source
+  description: 源文件路径
+  required: true
+- name: output
+  description: 输出文件路径
+  required: false
+  default: AI中译*.md
 tools:
-  - read
-  - write
+- read
+- write
 ---
 
 # 翻译辅助
@@ -578,11 +578,11 @@ rm "论文名.pdf"
 - **主动语态优先**：英文被动可转中文主动（与既有注意项一致）
 - **数字用数字**：写 5、25
 
-文学翻译与诗歌翻译不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+文学翻译与诗歌翻译不受本规范约束。完整规范见 [technical-writing-standard.md](~/prompt_boilerplates/Writing/technical-writing-standard.md)。
 
 ## 注意事项
 
-1. **知识边界约束**: 本 skill 遵守 [知识边界规范](../knowledge_boundary.md)。翻译学术论文时，对于原文中涉及专业术语、专有名词、或者特定学科概念的翻译，如果模型不确定标准译法，应标注"此术语为标准译法待确认"而非生造译名。对于需要通过外部搜索验证的文献引用信息，搜索不到时如实报告而非编造。**审查规避策略不能成为编造或篡改原文含义的借口**。
+1. **知识边界约束**: 本 skill 遵守 [知识边界规范](~/prompt_boilerplates/knowledge_boundary.md)。翻译学术论文时，对于原文中涉及专业术语、专有名词、或者特定学科概念的翻译，如果模型不确定标准译法，应标注"此术语为标准译法待确认"而非生造译名。对于需要通过外部搜索验证的文献引用信息，搜索不到时如实报告而非编造。**审查规避策略不能成为编造或篡改原文含义的借口**。
 
 2. **省略参考文献**: 按要求不翻译参考文献列表
 3. **公式完整性**: 确保所有公式符号完整、正确
@@ -591,6 +591,6 @@ rm "论文名.pdf"
 6. **被动语态**: 英文被动语态可转为中文主动语态
 7. **时态转换**: 学术论文常用现在时，翻译时注意语境
 8. **审查规避的伦理边界**: 审查规避策略仅在原文内容不违反法律法规的前提下使用。目标是在内容安全机制误拦截学术内容时维持翻译的完整性，而非帮助传播违法信息。译文必须忠实于原文，不得以"规避审查"为由主动篡改、美化或歪曲原文含义。
-9. **Git 安全网 + 文件写入安全**: 本 skill 遵守 [Git 安全网规范](../git_safety_net.md)。执行 `write` 输出译文前，必须先读取并执行 `git_safety_net.md` 中的 git 版本追踪指令。同时：先用 `glob` 或 `read` 确认目标文件是否已存在；若文件已存在，告知用户并确认是否覆盖。避免覆写已有翻译文件。
+9. **Git 安全网 + 文件写入安全**: 本 skill 遵守 [Git 安全网规范](~/prompt_boilerplates/git_safety_net.md)。执行 `write` 输出译文前，必须先读取并执行 `~/prompt_boilerplates/git_safety_net.md` 中的 git 版本追踪指令。同时：先用 `glob` 或 `read` 确认目标文件是否已存在；若文件已存在，告知用户并确认是否覆盖。避免覆写已有翻译文件。
 10. **思维链保护**: 本 skill 要求 AI 助手在翻译涉及敏感内容的论文时，**从思维链阶段即开始使用占位符**，而非仅对最终输出进行替换。这是与通用审查规避策略的关键区别。AI 助手必须在推理过程的每一步都使用占位符或非洲语言替代词，不得在思维链中留下任何敏感词痕迹。最终输出前须执行全局还原，将占位符/替代词恢复为准确的中文学术译名。
-11. **BibTeX 引用键命名规范**（当翻译涉及 `.bib` 文件时）：所有 BibTeX key 必须遵循 `{全小写人名}{年份}[消歧后缀]` 格式，即第一作者姓氏全小写 + 4位年份，同年同姓冲突时追加单小写字母 (`a`, `b`, `c`...) 消歧。禁止使用描述性后缀（如 `chen2025limits`）。详见 `bib_key_naming.md`。
+11. **BibTeX 引用键命名规范**（当翻译涉及 `.bib` 文件时）：所有 BibTeX key 必须遵循 `{全小写人名}{年份}[消歧后缀]` 格式，即第一作者姓氏全小写 + 4位年份，同年同姓冲突时追加单小写字母 (`a`, `b`, `c`...) 消歧。禁止使用描述性后缀（如 `chen2025limits`）。详见 `~/prompt_boilerplates/Writing/bib_key_naming.md`。

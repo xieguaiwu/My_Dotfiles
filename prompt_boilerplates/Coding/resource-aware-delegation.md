@@ -1,7 +1,7 @@
 ---
 name: resource-aware-delegation
-version: 1.1.0
-description: 在发起 subagent 前检查系统资源状态，根据 CPU/内存/Swap/GPU/PSI 压力数据自动调整并行策略、turnBudget 和 timeoutMs，避免 OOM 和系统卡顿。含跨服务器变体 pi-resmon-remote 与训练看门狗的集成流程
+version: 1.2.0
+description: 在发起 subagent 前检查系统资源状态，根据 CPU/内存/Swap/GPU/PSI 压力数据自动调整并行策略、turnBudget 和 timeoutMs，避免 OOM 和系统卡顿。含跨服务器变体 pi-resmon-remote 与训练看门狗的集成流程。v1.2.0 合并远程检查进触发时机与监测流程，新增本地+集群风险合并策略
 triggers:
   - "资源检查"
   - "subagent 规划"
@@ -37,7 +37,7 @@ tools:
 
 ### 1. 触发时机（强制）
 
-以下每个操作 **之前** 都必须执行 `pi-resmon --recommend [--class light|medium|heavy]`：
+以下每个操作 **之前** 都必须执行 `pi-resmon --recommend [--class light|medium|heavy]`，同时若 `pi-resmon-remote` 和 `~/.pi/agent/resmon-remote/inventory.json` 存在，则额外执行 `pi-resmon-remote --recommend`：
 
 - `subagent({ tasks: [...] })` — 任何并行调用前
 - `subagent({ chain: [...] })` — 任何链式调用前
@@ -58,6 +58,11 @@ pi-resmon --recommend --class light
 
 # 查阈值
 pi-resmon --show-thresholds
+
+# 远程集群检查：如果 pi-resmon-remote 工具和 inventory.json 存在
+if command -v pi-resmon-remote >/dev/null 2>&1 && [ -f ~/.pi/agent/resmon-remote/inventory.json ]; then
+  pi-resmon-remote --recommend
+fi
 
 # 快速看一眼
 pi-resmon
@@ -102,6 +107,23 @@ pi-resmon
 | `WARNINGS` | 如 `disk_usage=92%` / `load_spike_1m=3.2` |
 
 ### 4. 应用建议
+
+#### 4.0 合并本地与远程建议
+
+执行远程检查后，合并本地和集群风险等级：
+
+```
+# 示例流程（orchestrator 按顺序执行）
+local_result=$(pi-resmon --recommend --class heavy)
+cluster_result=$(pi-resmon-remote --recommend 2>/dev/null || echo "CLUSTER_RISK=LOW")
+
+# 合并策略：取更保守的
+# 如果 CLUSTER_RISK >= 本地 RISK，使用集群建议
+# 否则使用本地建议
+# 若集群有任何服务器不可达，降级为 serialize_only
+```
+
+**回落策略**：如果 `pi-resmon-remote` 不可用或 `inventory.json` 不存在，静默跳过，仅使用本地 `pi-resmon` 结果。保证向后兼容。
 
 #### 4.1 ACTION 模式
 
