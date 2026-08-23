@@ -380,9 +380,15 @@ echo -n "Agent createLoop:    "; grep -q "temperature: this.temperature" "$AGENT
 
 ---
 
-## ✅ 当前状态（2026-08-14）
+## ✅ 当前状态（2026-08-24）
 
-温度链已全部修复并验证通过 ✅ （**21/21 检查点**，pi-coding-agent **v0.84.2**，pi-subagents **v0.49.0**）。
+温度链已全部修复并验证通过 ✅ （**21 检查点全绿，其中 spawnRunner 1 项按 v0.55+ 新架构标记 N/A**；pi-coding-agent **v0.84.2**，pi-subagents **v0.55.0**）。
+
+**2026-08-24 v0.55.0 适配（reapply.sh v2.17.0，第 15 次删除 + 架构变更）**：pi-subagents 升至 v0.55.0 再次删除全部 13 个 src 检查点，且 **spawnRunner 重构**——不再内联构建 steps（旧 6-tab 插入点消失），只序列化 cfg JSON 后 spawn runner 子进程。新数据流：buildSeqStep `temperature: a.temperature` 入 cfg → subagent-runner 三处 `step.temperature`（1553 buildPiArgs / 2399 状态存储 / 3501 revival 路径）出 env。适配：① 6-tab 检查点版本条件化（≥0.55 标 N/A）② agents.ts Pick 列表新增 modelProvider 致旧长锚点失配 → 改短锚点 ③ subagent-runner store 断言放宽 ≥1 ④ 手工补 Pick 缺失的 `"temperature"`。--apply 重打后全绿，无漂移警告、幂等复验通过。
+
+---
+
+### 历史状态（2026-08-14，v2.15.0）
 
 **2026-08-14 v0.49.0/v0.84.2 适配（v2.15.0，第 13 次删除）**：pi-subagents 升至 v0.49.0，再次删除全部 13 个 src 检查点（npm pack 原始 tarball 验证：pi-args.ts/agents.ts 中 temperature 0 引用）。CHANGELOG 显示 v0.49.0 新增单 child 运行（#1059）/debug.run（#1037）/tools: inherit（#1047）/终端示例等（均为功能新增，未触碰 temperature 结构）——src 层已由 postinstall 自动重打 13/13 ✅。**dist 层特殊状况**：本次 `pi update`（0.84.1→0.84.2）使用 `--ignore-scripts`（npm 参数），**postinstall 钩子不触发** → pi-coding-agent 的 8 个 dist 检查点被新版本覆盖为原生无温度且无人自动重打，reapply.sh 检测报 8 缺失。手动 `--apply` 一次重打 21/21 成功（无漂移警告），运行时断链模拟三场景全部验证通过：① 无 env → YAML 兜底读 explore.md = **0.1** ✅ ② `PI_SUBAGENT_TEMPERATURE=0.7` → **0.7** 优先于 YAML ✅。优先级链：CLI > env > YAML 兜底。reapply.sh 版本声明已更新（v2.15.0 / `pi-subagents <= v0.49.x`）。
 
