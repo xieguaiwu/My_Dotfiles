@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 2.7.1
+version: 2.8.1
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -53,6 +53,9 @@ triggers:
   - "备份验证"
   - "恢复演练"
   - "助记词备份"
+  - "同步电子书"
+  - "BOOKS 备份"
+  - "电子书同步"
   - "死机"
   - "冻结"
   - "卡死"
@@ -215,7 +218,7 @@ journalctl -p err -b --no-pager | tail -20
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
 | 3 | [enospc-tmpfs-check.md](enospc-tmpfs-check.md) | 1.1.0 | ENOSPC/tmpfs 满排查：磁盘 vs 内存盘区分、换出页占配额、孤儿进程清理；先判别 ENOSPC ≠ ENAMETOOLONG | 任何 "no space left"、写入失败、tmpfs 满、ENAMETOOLONG 判别 |
-| 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.2.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流）+ PSR 显示管线风暴修复（Atomic commit failed 日均过万 → i915.enable_psr=0），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足、显示管线报错 |
+| 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.3.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流）+ PSR 显示管线风暴修复（Atomic commit failed 日均过万 → i915.enable_psr=0），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足、显示管线报错 |
 | 3.6 | [chrome-leak-reaper.md](chrome-leak-reaper.md) | 1.1.0 | Chrome 内存泄漏排查与 chrome-reaper 维护：chromedp/桥实例/zygote 误杀（PPID 链）/restart 残留/profile 锁冲突 | chrome 吃内存、chrome 进程多、DidStartWorkerFail、bridge 反复重启 |
 | 3.7 | [bluetooth-pairing-troubleshoot.md](bluetooth-pairing-troubleshoot.md) | 1.2.0 | 蓝牙设备连接排查：适配器判活、USB autosuspend（-16）修复、长扫描捕获配对窗口、非 tty 配对坑、默认输出切换、日常使用维护 | 蓝牙耳机连不上、扫描不到、配对失败、连上无声音 |
 | 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.2.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅） | 代理失效、无法上网、订阅失败 |
@@ -257,7 +260,7 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 16 | [windows-scripting-and-ssh-debug.md](windows-scripting-and-ssh-debug.md) | 1.4.1 | Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/BOM/bsdtar+xz/盘符/exe 取退出码/Transcript/依赖内容门禁/输出规范）+ OpenSSH 远程排障（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 27 条（含 books-sync 双机同步：sftp mkdir 已存在 Failure 无害、NTFS 大小写别名、mv 已存在目录=移入内部、冒号映射全角/%3A 共存、规则化排除） | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、Windows 脚本编写 |
+| 16 | [windows-scripting-and-ssh-debug.md](windows-scripting-and-ssh-debug.md) | 1.5.0 | Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/BOM/bsdtar+xz/盘符/exe 取退出码/Transcript/依赖内容门禁/输出规范）+ OpenSSH 远程排障（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 34 条（含 books-sync 双机同步：sftp mkdir 已存在 Failure 无害、NTFS 大小写别名、mv 已存在目录=移入内部、冒号映射全角/%3A 共存、规则化排除；电子书备份日常运维指南：四步同步流程、差异分类语义、排除规则、快照策略、断连处理） | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、Windows 脚本编写、同步电子书、BOOKS 备份、电子书同步 |
 
 ---
 
@@ -268,7 +271,7 @@ journalctl -p err -b --no-pager | tail -20
   └─ enospc-tmpfs-check.md ← 先看 df -h 全部挂载点，别只看根盘
 
 「死机 / 冻结 / 卡死 / 没响应 / 内存不足」
-  └─ freeze-oom-protection.md ← 先看 journalctl -b -1 尾部：Purging GPU memory = 内存 thrash；装 earlyoom + oomd 加固（⚠️ earlyoom 须 -s 100 -S 100 消除 zram 盲区）；泄漏源先查 chrome；Atomic commit failed 日均过万 → i915.enable_psr=0
+  └─ freeze-oom-protection.md ← 先看 journalctl -b -1 尾部：Purging GPU memory = 内存 thrash；装 earlyoom + oomd 加固（⚠️ earlyoom 须 `-m 8 -s 100` 纯内存阈值消除 zram 盲区，**严禁加 -M/-S（单位是 KiB 且覆盖 -m/-s，曾致 0% 阈值哑火两次死机）**，改完必须 journalctl -u earlyoom 验证 8.00%）；泄漏源先查 chrome；Atomic commit failed 日均过万 → i915.enable_psr=0
 
 「chrome 内存泄漏 / chrome 吃内存 / chrome 进程多 / DidStartWorkerFail / bridge 反复重启」
   └─ chrome-leak-reaper.md ← 进程画像 + reaper 日志 + scope/PPID 链判定 + v3 修复；致死机/ENOSPC 时配合 freeze-oom-protection / enospc-tmpfs-check
@@ -320,6 +323,9 @@ journalctl -p err -b --no-pager | tail -20
 
 「SSH 连不上 Windows / KEXINIT / Connection reset / Windows OpenSSH / 火绒拦截 SSH」
   └─ windows-scripting-and-ssh-debug.md ← 黑盒三测试定位 → 排除链 0-10 步（存在性 1060→杀软→防火墙→密钥权限→密钥内容→重建→算法→前台 vs 服务→重启→重注册→内置）；拒绝访问用 TEMP 隔离判别器分路径拦截/内容拦截；/inheritance:r 只用于密钥类；身份鉴定用大小+SHA256+试运行三件套
+
+「同步电子书 / BOOKS 备份 / 电子书同步」
+  └─ windows-scripting-and-ssh-debug.md ← 先 win-check.sh 体检链路；断连等看门狗 5 分钟（-w 最长 6 分钟），不恢复则 Windows 侧双击 install-keepalive.bat；通后 books-sync.py scan → all → 复扫归零；快照语义=被推覆盖的 Windows 旧版在 backup/linux-YYYYMMDD；拉方向无自动快照
 
 「想自动跑系统健康检查」
   └─ system_fix.fish ← 只读检查，先 --dry
@@ -377,6 +383,19 @@ journalctl -p err -b --no-pager | tail -20
 ---
 
 ## 变更日志
+
+### 2.8.1 (2026-08-24)
+- 更新：windows-scripting-and-ssh-debug.md 1.4.1 → 1.5.0（新增实战补充 5「BOOKS 电子书双机同步日常运维指南」：四步同步流程/差异分类语义/排除规则/快照策略/断连处理；triggers 新增 同步电子书、BOOKS 备份、电子书同步）
+- 新增：决策树分支「同步电子书 / BOOKS 备份 / 电子书同步」+ triggers 3 个
+
+### 2.8.0 (2026-08-24)
+- 更新：freeze-oom-protection.md 1.2.0 → **1.3.0**（08-24 22:17 OOM 重启实战：earlyoom
+  -M/-S 单位 KiB 坑实锤——08-18 配置 `-m 8 -M 5 -s 100 -S 100` 实际 0% 阈值全程哑火，
+  两次死机都没出手；修正为 `-m 8 -s 100`；新增强制验证命令
+  `journalctl -u earlyoom -b 0 | grep SIGTERM` 必须 8.00%/100.00%）
+- 新增：决策树死机分支注释（严禁 -M/-S + 验证命令）
+- 案例：08-24 OOM（6 天 uptime 渐进泄漏：白天 3 次低压 1.7G→663MB→1.25G → 22:17:30
+  全局 OOM 连杀 8 进程 → 22:18:40 电源键自救 → 22:20 重启；oomd 出手太晚；PSR 本次重启才生效）
 
 ### 2.7.1 (2026-08-22)
 - 更新：bluetooth-pairing-troubleshoot.md 1.1.0 → **1.2.0**（新增「日常使用与维护」章节：自动重连、电量查看 bluetoothctl info Battery Percentage、A2DP AAC 音质/通话降质、多设备切换、blueman GUI）
@@ -483,4 +502,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-22（index 2.7.1：bluetooth-pairing-troubleshoot.md 1.2.0 新增日常使用与维护章节；2.7.0：新增 bluetooth-pairing-troubleshoot.md——华为 FreeArc 配对实战：长扫描捕获配对窗口、USB autosuspend -16 修复、默认输出切换；system_diagnostics_and_repair.md 1.2.0 蓝牙节扩充；2.6.0：public-wifi-security 1.0.0——机场验证页/网络调查/加固恢复实战沉淀；2.5.0：freeze-oom-protection 1.2.0——earlyoom zram 盲区 / oomd 60% / PSR；2.4.0：windows-scripting-and-ssh-debug.md 1.3.0）*
+*最后更新: 2026-08-24（index 2.8.1：windows-scripting-and-ssh-debug 1.5.0——BOOKS 电子书双机同步日常运维指南入册）*

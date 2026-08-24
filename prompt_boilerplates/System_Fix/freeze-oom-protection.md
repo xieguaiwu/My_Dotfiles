@@ -1,7 +1,7 @@
 ---
 name: freeze-oom-protection
-version: 1.2.0
-description: 死机/OOM thrash 冻结排查与一劳永逸防护——earlyoom 兜底 + systemd-oomd 加固 + 进程限流 + i915 PSR 显示管线风暴修复。基于两次死机实战（2026-08-10 20:09 chrome 泄漏引爆 + 2026-08-18 17:48 zram 盲区 thrash）：Kaby Lake i915 + sway + zram，15GB RAM
+version: 1.3.0
+description: 死机/OOM thrash 冻结排查与一劳永逸防护——earlyoom 兜底 + systemd-oomd 加固 + 进程限流 + i915 PSR 显示管线风暴修复。基于三次死机实战（2026-08-10 20:09 chrome 泄漏引爆 + 2026-08-18 17:48 zram 盲区 thrash + 2026-08-24 22:17 OOM 重启）：Kaby Lake i915 + sway + zram，15GB RAM
 triggers:
   - "死机"
   - "冻结"
@@ -54,9 +54,16 @@ chrome 泄漏排查全流程见 [chrome-leak-reaper.md](chrome-leak-reaper.md)�
 **earlyoom zram 盲区（2026-08-18 实锤）**：Fedora 默认参数 `-m 4 -M 409600` 的
 SIGTERM 条件是**内存可用 <4% 且 swap free <10%**（双条件 AND）。zram 是压缩内存，
 8G zram 掩护下 swap free 几乎不紧张 → 条件永不满足 → **earlyoom 全程哑火**——
-08-18 死机时它装了但没出手。修复：`-s 100 -S 100`（swap 条件恒真）退化为纯内存阈值，
-配合 `-m 8 -M 5`。判定方法：`ps aux | grep earlyoom | grep -v grep` 看 cmdline 有无显式 `-s/-S`，
-无则用默认 10%（有盲区）。
+08-18 死机时它装了但没出手。修复：`-s 100`（swap 条件恒真）退化为纯内存阈值，
+配合 `-m 8`（SIGKILL 自动为 8/2=4%）。
+
+**⚠️ -M/-S 单位坑（2026-08-24 实锤，两次死机 earlyoom 都没出手的根因）**：
+earlyoom 1.8.2 的 `-M`/`-S` 参数单位是 **KiB**（不是百分比），且 **-M/-S 覆盖 -m/-s**。
+08-18 写的 `-m 8 -M 5 -s 100 -S 100` 实际被解析为 **5 KiB / 100 KiB ≈ 0% 阈值**——
+启动日志显示 `SIGTERM when mem avail <= 0.00%` 即哑火。08-18 到 08-24 之间
+earlyoom 一直用 0% 阈值跑（ps 看 cmdline 参数正确但实际不生效）。
+判定方法：`journalctl -u earlyoom -b 0 | grep SIGTERM` 必须显示 **8.00%/100.00%**；
+若显示 0.00% = 配置没生效（改完必须看日志验证，不能只看 ps）。
 
 **oomd 迟钝（2026-08-18 实测）**：默认 `ManagedOOMMemoryPressureLimit=80%` + 15s
 采样在快速 thrash（几分钟内从 1GB 可用跌到 0）下来不及出手。降到 60% + 缩短
@@ -74,7 +81,8 @@ journalctl -b -1 --no-pager | grep "Purging GPU memory" | head   # ⚠️ 看 pa
 journalctl -b -1 --no-pager | grep -c "Atomic commit failed"     # 显示管线风暴计数（正常 0，日均 1.2-3.5 万 = PSR bug 嫌疑，见下节）
 free -h && zramctl                                     # 内存与 zram 现状
 systemctl status systemd-oomd --no-pager               # oomd 是否真的会响应
-ps aux | grep earlyoom | grep -v grep                  # 检查 cmdline 有无 -s/-S（无 = zram 盲区）
+ps aux | grep earlyoom | grep -v grep                  # cmdline 须有 -m 8 -s 100 且无 -M/-S（有 -M/-S = 单位坑哑火）
+journalctl -u earlyoom -b 0 | grep SIGTERM              # ⚠️ 必须显示 8.00%/100.00%（0.00% = 配置未生效）
 ```
 
 ## Phase 2：一劳永逸防护（一键脚本 `freeze-oom-protect.sh`）
@@ -84,12 +92,13 @@ ps aux | grep earlyoom | grep -v grep                  # 检查 cmdline 有无 -
 1. **earlyoom（第一道，最关键）**：内存可用 <10% 杀最大进程，死机前 30 秒救回系统
    ```bash
    sudo dnf install -y earlyoom
-   # 2026-08-18 死机后精进：-s 100 -S 100 消除 zram 盲区，纯内存阈值 8%/5%
-   # （Fedora 默认 -m 4 需 swap free<10% 双条件，zram 下永远哑火）
+   # 2026-08-24 修正（⚠️ 勿再加 -M/-S——单位是 KiB 且覆盖 -m/-s，08-18 配置因此哑火两次死机）
+   # 正确：-m 8 -s 100 = SIGTERM 8% / SIGKILL 4%，swap 100% 恒真 = 纯内存阈值
    sudo tee /etc/default/earlyoom >/dev/null <<'EOT'
-   EARLYOOM_ARGS="-r 0 -m 8 -M 5 -s 100 -S 100 --prefer '^(Web Content|Isolated Web Co)$' --avoid '^(dnf|packagekitd|gnome-shell|gnome-session-c|gnome-session-b|lightdm|sddm|sddm-helper|gdm|gdm-wayland-ses|gdm-session-wor|gdm-x-session|Xorg|Xwayland|systemd|systemd-logind|dbus-daemon|dbus-broker|cinnamon|cinnamon-sessio|kwin_x11|kwin_wayland|plasmashell|ksmserver|plasma_session|startplasma-way|sway|i3|xfce4-session|mate-session|marco|lxqt-session|openbox|cryptsetup)$'"
+   EARLYOOM_ARGS="-r 0 -m 8 -s 100 --prefer '^(Web Content|Isolated Web Co)$' --avoid '^(dnf|packagekitd|gnome-shell|gnome-session-c|gnome-session-b|lightdm|sddm|sddm-helper|gdm|gdm-wayland-ses|gdm-session-wor|gdm-x-session|Xorg|Xwayland|systemd|systemd-logind|dbus-daemon|dbus-broker|cinnamon|cinnamon-sessio|kwin_x11|kwin_wayland|plasmashell|ksmserver|plasma_session|startplasma-way|sway|i3|xfce4-session|mate-session|marco|lxqt-session|openbox|cryptsetup)$'"
    EOT
    sudo systemctl restart earlyoom
+   # ⚠️ 改完必须验证：journalctl -u earlyoom -b 0 | grep SIGTERM → 显示 8.00%/100.00%
    # 参数依据（15GB 内存）：-m 8 ≈ 1.27GB 出手（08-18 12:47 avail=923MB 时正好会救）；
    # -m 10 过激（编译/大任务时误杀多），-m 8 平衡。重启失败=回滚配置，勿留无保护状态
    ```
@@ -167,6 +176,18 @@ systemctl show user@$(loginctl list-users --no-legend | awk '$1!=0{print $1;exit
   （--prefer 优先杀 Web Content，pi/bun 不在 avoid 列表）——设计权衡：宁杀进程不冻死整机
 
 ## 变更记录
+
+### 1.3.0 (2026-08-24)
+- **修复：earlyoom -M/-S 单位坑**——1.8.2 的 -M/-S 是 KiB 且覆盖 -m/-s；08-18 配置
+  `-m 8 -M 5 -s 100 -S 100` = 5 KiB/100 KiB ≈ 0% 阈值，全程哑火（两次死机都没出手）。
+  修正为 `-m 8 -s 100`（8%/4% + swap 恒真），并新增强制验证命令
+  `journalctl -u earlyoom -b 0 | grep SIGTERM`（必须 8.00%/100.00%，0.00%=哑火）
+- 新增：判定方法升级——不能只看 ps cmdline（参数正确≠生效），必须看启动日志阈值
+- 案例：2026-08-24 22:17 OOM 重启（6 天 uptime；08-24 白天 3 次低压 1.7G→663MB→1.25G；
+  22:17:30 全局 OOM 连杀 8 进程含 QtWebEngine/gnome-software/wsdd/portal；Purging GPU
+  memory 剩 2053 页=8MB 临界枯竭；session-3 peak 14.1G+7.8G swap；oomd 22:17:47 出手
+  杀 localsearch 但太晚；earlyoom 0% 阈值全程哑火；22:18:40 用户按电源键自救关机；
+  PSR 参数本次重启才生效——boot -1 期间 Atomic commit failed 27.3 万次）
 
 ### 1.2.0 (2026-08-18)
 - 新增：earlyoom zram 盲区认知（Fedora 默认双条件 AND：内存 <4% 且 swap free <10%，

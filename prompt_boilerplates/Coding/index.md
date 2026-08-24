@@ -1,6 +1,6 @@
 ---
 name: coding-skills-index
-version: 1.9.0
+version: 2.0.1
 description: Coding 技能集入口——进入项目时自动加载项目文档协议、检测项目特征并引导加载对应领域技能
 triggers:
   - "进入项目"
@@ -159,6 +159,7 @@ tools:
 | 13 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
 | 14 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
 | 15 | [fdroid-publishing.md](fdroid-publishing.md) | 1.0.0 | 安卓应用 F-Droid 上线——合规审查、fastlane 元数据、可复现构建、fdroiddata 提交、发版纪律 | 需要安卓应用上架 F-Droid / fdroid 收录 / 发布类工作 |
+| 16 | [android-development.md](android-development.md) | 1.1.0 | 安卓 Kotlin/Compose 开发全流程——脚手架、Activity 入口测试、触摸交互测试、安全存储、平台强制项与踩坑库 | 安卓项目开发/回归、Compose 交互问题、Robolectric 测试、APK 构建 |
 
 ### 领域 skill 加载决策树
 
@@ -176,6 +177,11 @@ tools:
 
 需要安卓应用上架 F-Droid？
   └─ 是 → 加载 fdroid-publishing.md（合规审查 → fastlane 元数据 → 可复现构建 → fdroiddata MR）
+
+项目是安卓（Kotlin/Compose/Gradle）？
+  ├─ 是 → 加载 android-development.md（脚手架模板 → Activity 入口测试 → performTouchInput 交互测试 → 安全存储 → 构建发布）
+  │    └─ 需要上架 F-Droid？ → 同时加载 fdroid-publishing.md
+  └─ 否 → 继续
 
 审查算法竞赛代码？
   └─ 是 → 加载 cp-review-fix.md
@@ -210,6 +216,8 @@ tools:
 | `root-cause-debugging.md` | `quant-ml-falsification.md` | 量化假 alpha 排查 = 根因调查的领域特化（先插桩取证再下结论） |
 | `fdroid-publishing.md` | `copr_packaging.md` | 同为发布类 skill——RPM 与安卓分发流程并列，发布工程化理念互通 |
 | `fdroid-publishing.md` §3.3 | `verification-before-completion.md` | 可复现性验证须附双构建哈希证据，禁止裸声称「可复现」 |
+| `android-development.md` §2/§3 | `verification-before-completion.md` | Activity 入口与触摸交互测试的完成声明须附测试运行输出 |
+| `android-development.md` §8 | `fdroid-publishing.md` | 安卓构建发布流程中 F-Droid 上架细节走专用 skill |
 | `verification-before-completion.md` | `improvement-loop.md` | §5.9 Chain 输出门控是平台层验证，本 skill 是方法论层验证——两层都要 |
 | `verification-before-completion.md` | `ml-training.md` | 训练验收前先用 Gate Function 验证产物（results JSON）真实存在 |
 | `project-documentation-protocol.md` + `writing-plans.md` | [technical-writing-standard.md](../technical-writing-standard.md) | 文档写作规范（ASD-STE100 国际标准）——文档与实施计划写作参照 |
@@ -238,6 +246,14 @@ tools:
 | `llm-api-check`（~/Desktop/go-projects/LLM-api-check） | 必须像 `~/Desktop/android-projects/api-checkers/` 那样**直接显示限流 API 的限流时限** | 对照 Android `DetailScreen.kt` WindowRow：CountdownText 恒显 + 已限流徽章并存；Go 侧 `internal/render/render.go` RenderAccountDetail——rate-limited 行必须同时输出「已限流」与重置倒计时（如 `已限流 · 4小时20分后重置`），禁止用「已限流」替代倒计时 |
 
 ## 变更日志
+
+### 2.0.1 (2026-08-24)
+- 同步：android-development 1.0.0→1.1.0（新增 §9 平台强制项 / §10 Compose 重组纪律 / §11 工具链版本纪律，泛化自 2025-2026 社区与官方文档调查）
+
+### 2.0.0 (2026-08-24)
+- 新增：领域专用 #16 `android-development.md`（安卓 Kotlin/Compose 开发全流程）——脚手架模板、Activity 入口接线（MainActivity 占位代码上线教训）、performTouchInput 物理注入交互测试（readOnly TextField 消费点击教训）、数据层接口注入、Keystore AES-GCM 安全存储、momus 审查循环、版本纪律、华为 USB 调试坑。经验沉淀自 currency-transfer 与 pocket-llm-api-checker 两项目实战（2026-08-24）
+- 新增：决策树安卓项目分支（android-development 为主、fdroid-publishing 为发布补充）
+- 新增：交叉引用表 2 条（§2/§3 ↔ verification-before-completion 测试证据；§8 ↔ fdroid-publishing）
 
 ### 1.9.0 (2026-08-24)
 - 新增：领域专用 #15 `fdroid-publishing.md`（安卓应用 F-Droid 上线）——合规审查、反特性评估、fastlane 元数据、可复现构建验证、fdroiddata 提交、发版纪律六步流程，经验沉淀自 pocket-llm-api-checker 实战（2026-08-24 完成 Phase 1）
