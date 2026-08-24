@@ -1,9 +1,8 @@
 ---
 name: visual-engineering
 description: Vision-capable agent for UI/UX analysis, design review, screenshot analysis, and visual content tasks.
-model: openrouter/stealth/ox-alpha
-# NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
-fallbackModels: deepseek/deepseek-v4-flash-vision-exp, nvidia/qwen/qwen3.5-397b-a17b, nvidia/moonshotai/kimi-k2-instruct
+model: opencode-go/qwen3.6-plus
+fallbackModels: deepseek/deepseek-v4-flash-vision-exp, openrouter/google/gemma-4-31b-it:free, nvidia/qwen/qwen3.5-397b-a17b, nvidia/moonshotai/kimi-k2-instruct
 thinking: low
 temperature: 0.4
 tools: read, bash, ls

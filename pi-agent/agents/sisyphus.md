@@ -1,9 +1,8 @@
 ---
 name: sisyphus
 description: Senior orchestrator agent. Detects user intent, delegates to specialist subagents, synthesizes results, and drives work to completion.
-model: openrouter/stealth/ox-alpha
-# NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
-fallbackModels: deepseek/deepseek-v4-flash
+model: deepseek/deepseek-v4-flash
+fallbackModels: opencode-go/deepseek-v4-flash
 thinking: high
 temperature: 0.4
 completionGuard: false

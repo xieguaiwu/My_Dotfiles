@@ -1,9 +1,8 @@
 ---
 name: ultrabrain
 description: Maximum reasoning capacity agent. For the hardest problems requiring deep analysis and creative solutions.
-model: openrouter/stealth/ox-alpha
-# NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
-fallbackModels: deepseek/deepseek-v4-pro
+model: opencode-go/glm-5.3
+fallbackModels: openrouter/z-ai/glm-5.2:free, deepseek/deepseek-v4-pro
 thinking: xhigh
 temperature: 0.2
 tools: read, bash, edit, write, grep, find, ls, mcp:sequential-thinking

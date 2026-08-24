@@ -61,40 +61,7 @@
             "xhigh": "xhigh"
           }
         }
-      },
-      "models": [
-        {
-          "id": "ox-alpha-free",
-          "name": "Ox Alpha Free (OpenCode Go)",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "contextWindow": 1000000,
-          "maxTokens": 131072,
-          "cost": {
-            "input": 0,
-            "output": 0,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "compat": {
-            "supportsStore": false,
-            "supportsDeveloperRole": false,
-            "maxTokensField": "max_tokens"
-          },
-          "thinkingLevelMap": {
-            "off": null,
-            "minimal": null,
-            "low": "low",
-            "medium": null,
-            "high": "high",
-            "xhigh": null,
-            "max": "max"
-          }
-        }
-      ]
+      }
     },
     "deepseek": {
       "baseUrl": "https://api.deepseek.com",
@@ -127,7 +94,10 @@
           "id": "deepseek-v4-flash-vision-exp",
           "name": "DeepSeek V4 Flash Vision Exp",
           "reasoning": true,
-          "input": ["text", "image"],
+          "input": [
+            "text",
+            "image"
+          ],
           "contextWindow": 1000000,
           "maxTokens": 384000,
           "compat": {
@@ -141,8 +111,8 @@
             "xhigh": "max"
           }
         },
-    {
-     "id": "deepseek-v4-flash",
+        {
+          "id": "deepseek-v4-flash",
           "name": "DeepSeek V4 Flash",
           "reasoning": true,
           "contextWindow": 1000000,
@@ -315,18 +285,6 @@
       "baseUrl": "https://openrouter.ai/api/v1",
       "api": "openai-completions",
       "apiKey": "$OPENROUTER_API_KEY",
-      "modelOverrides": {
-        "stealth/ox-alpha": {
-          "thinkingLevelMap": {
-            "minimal": "low",
-            "low": "low",
-            "medium": "medium",
-            "high": "high",
-            "xhigh": "high",
-            "max": "high"
-          }
-        }
-      },
       "compat": {
         "supportsDeveloperRole": false,
         "supportsReasoningEffort": true,
@@ -422,21 +380,6 @@
           "contextWindow": 1048756
         },
         {
-          "id": "stealth/ox-alpha",
-          "name": "Ox Alpha (Stealth, free 1M)",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "contextWindow": 1048576,
-          "maxTokens": 131072,
-          "compat": {
-            "supportsDeveloperRole": false,
-            "thinkingFormat": "openrouter"
-          }
-        },
-        {
           "id": "google/lyria-3-pro-preview",
           "name": "Lyria 3 Pro Preview (free)",
           "contextWindow": 1048576
@@ -498,6 +441,14 @@
           "id": "qwen/qwen-2.5-coder-32b-instruct",
           "name": "Qwen2.5 Coder 32B Instruct (paid, ~$0.20/M tokens) ⚠️",
           "contextWindow": 131072
+        },
+        {
+          "id": "z-ai/glm-5.2:free",
+          "name": "Z.ai: GLM 5.2 (free) ⚠️高峰期上游拥堵429",
+          "contextWindow": 256000,
+          "input": [
+            "text"
+          ]
         }
       ]
     },
@@ -636,49 +587,6 @@
             "thinkingFormat": "deepseek",
             "supportsReasoningEffort": false,
             "maxTokensField": "max_tokens"
-          }
-        }
-      ]
-    },
-    "opencode": {
-      "baseUrl": "https://opencode.ai/zen/v1",
-      "api": "openai-completions",
-      "apiKey": "$OPENCODE_API_KEY",
-      "compat": {
-        "supportsStore": false,
-        "supportsDeveloperRole": false,
-        "maxTokensField": "max_tokens"
-      },
-      "models": [
-        {
-          "id": "x-preview-f-free",
-          "name": "Ox Alpha Free (OpenCode Zen)",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "contextWindow": 1000000,
-          "maxTokens": 131072,
-          "cost": {
-            "input": 0,
-            "output": 0,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "compat": {
-            "supportsStore": false,
-            "supportsDeveloperRole": false,
-            "maxTokensField": "max_tokens"
-          },
-          "thinkingLevelMap": {
-            "off": null,
-            "minimal": null,
-            "low": "low",
-            "medium": null,
-            "high": "high",
-            "xhigh": null,
-            "max": "max"
           }
         }
       ]

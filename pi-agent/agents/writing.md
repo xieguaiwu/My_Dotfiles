@@ -1,9 +1,8 @@
 ---
 name: writing
 description: Writing specialist. Creates clear, engaging prose for documentation, blog posts, emails, and general communication.
-model: openrouter/stealth/ox-alpha
-# NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
-fallbackModels: deepseek/deepseek-v4-flash
+model: deepseek/deepseek-v4-flash
+fallbackModels: opencode-go/deepseek-v4-flash
 thinking: medium
 temperature: 0.5
 tools: read, bash, edit, write, grep, find, ls

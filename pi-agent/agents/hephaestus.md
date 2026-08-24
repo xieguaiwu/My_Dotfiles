@@ -2,9 +2,8 @@
 name: hephaestus
 aliases: worker, builder
 description: Master builder. Crafts robust implementations from plans, writes clean code, and handles the full build-test cycle.
-model: openrouter/stealth/ox-alpha
-# NOTE: ox-alpha free preview expected to end ~2026-08-27; revert model+fallback if it goes paid or 404s
-fallbackModels: deepseek/deepseek-v4-pro
+model: deepseek/deepseek-v4-pro
+fallbackModels: openrouter/z-ai/glm-5.2:free, opencode-go/deepseek-v4-pro
 thinking: xhigh
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls

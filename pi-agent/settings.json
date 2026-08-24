@@ -1,6 +1,6 @@
 {
-  "defaultProvider": "openrouter",
-  "defaultModel": "stealth/ox-alpha",
+  "defaultProvider": "deepseek",
+  "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "xhigh",
   "hideThinkingBlock": true,
   "theme": "opencode",
