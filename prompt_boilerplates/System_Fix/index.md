@@ -237,7 +237,7 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 11 | [dotfiles-sync-and-audit.md](dotfiles-sync-and-audit.md) | 1.2.1 | 配置同步到 My_Dotfiles + Git 仓库审计（有上游不推送） | 定期备份、配置审计 |
+| 11 | [dotfiles-sync-and-audit.md](dotfiles-sync-and-audit.md) | 1.3.0 | 配置同步到 My_Dotfiles + Git 仓库审计（有上游不推送） | 定期备份、配置审计 |
 
 ## 五、应用层（桌面应用故障）
 
