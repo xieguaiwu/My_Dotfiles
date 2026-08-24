@@ -1,8 +1,8 @@
 ---
 name: frontend-tester
 description: Frontend testing specialist. Analyzes UI screenshots, renders, and generates visual regression tests with precision.
-model: opencode-go/qwen3.6-plus
-fallbackModels: deepseek/deepseek-v4-flash-vision-exp, openrouter/google/gemma-4-31b-it:free, nvidia/qwen/qwen3.5-397b-a17b
+model: deepseek/deepseek-v4-flash-vision-exp
+fallbackModels: opencode-go/qwen3.6-plus, openrouter/google/gemma-4-31b-it:free, nvidia/qwen/qwen3.5-397b-a17b
 thinking: low
 temperature: 0.3
 tools: read, bash, write, edit
