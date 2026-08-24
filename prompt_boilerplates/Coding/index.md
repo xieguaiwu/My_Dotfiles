@@ -1,6 +1,6 @@
 ---
 name: coding-skills-index
-version: 1.8.0
+version: 1.9.0
 description: Coding 技能集入口——进入项目时自动加载项目文档协议、检测项目特征并引导加载对应领域技能
 triggers:
   - "进入项目"
@@ -158,6 +158,7 @@ tools:
 | 12 | [vps-operations.md](vps-operations.md) | 2.2.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
 | 13 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
 | 14 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
+| 15 | [fdroid-publishing.md](fdroid-publishing.md) | 1.0.0 | 安卓应用 F-Droid 上线——合规审查、fastlane 元数据、可复现构建、fdroiddata 提交、发版纪律 | 需要安卓应用上架 F-Droid / fdroid 收录 / 发布类工作 |
 
 ### 领域 skill 加载决策树
 
@@ -172,6 +173,9 @@ tools:
 
 项目中有 .spec 文件或需要 RPM 发布？
   └─ 是 → 加载 copr_packaging.md
+
+需要安卓应用上架 F-Droid？
+  └─ 是 → 加载 fdroid-publishing.md（合规审查 → fastlane 元数据 → 可复现构建 → fdroiddata MR）
 
 审查算法竞赛代码？
   └─ 是 → 加载 cp-review-fix.md
@@ -204,6 +208,8 @@ tools:
 | `writing-plans.md` | `resource-aware-delegation.md` | Subagent 驱动执行时，每个 subagent 调用前检查资源 |
 | `root-cause-debugging.md` | `verification-before-completion.md` | Phase 4 修复后验证用 Gate Function，禁止裸声称 |
 | `root-cause-debugging.md` | `quant-ml-falsification.md` | 量化假 alpha 排查 = 根因调查的领域特化（先插桩取证再下结论） |
+| `fdroid-publishing.md` | `copr_packaging.md` | 同为发布类 skill——RPM 与安卓分发流程并列，发布工程化理念互通 |
+| `fdroid-publishing.md` §3.3 | `verification-before-completion.md` | 可复现性验证须附双构建哈希证据，禁止裸声称「可复现」 |
 | `verification-before-completion.md` | `improvement-loop.md` | §5.9 Chain 输出门控是平台层验证，本 skill 是方法论层验证——两层都要 |
 | `verification-before-completion.md` | `ml-training.md` | 训练验收前先用 Gate Function 验证产物（results JSON）真实存在 |
 | `project-documentation-protocol.md` + `writing-plans.md` | [technical-writing-standard.md](../technical-writing-standard.md) | 文档写作规范（ASD-STE100 国际标准）——文档与实施计划写作参照 |
@@ -232,6 +238,11 @@ tools:
 | `llm-api-check`（~/Desktop/go-projects/LLM-api-check） | 必须像 `~/Desktop/android-projects/api-checkers/` 那样**直接显示限流 API 的限流时限** | 对照 Android `DetailScreen.kt` WindowRow：CountdownText 恒显 + 已限流徽章并存；Go 侧 `internal/render/render.go` RenderAccountDetail——rate-limited 行必须同时输出「已限流」与重置倒计时（如 `已限流 · 4小时20分后重置`），禁止用「已限流」替代倒计时 |
 
 ## 变更日志
+
+### 1.9.0 (2026-08-24)
+- 新增：领域专用 #15 `fdroid-publishing.md`（安卓应用 F-Droid 上线）——合规审查、反特性评估、fastlane 元数据、可复现构建验证、fdroiddata 提交、发版纪律六步流程，经验沉淀自 pocket-llm-api-checker 实战（2026-08-24 完成 Phase 1）
+- 新增：决策树 F-Droid 分支
+- 新增：交叉引用表 2 条（fdroid-publishing ↔ copr_packaging 发布类并列；§3.3 ↔ verification-before-completion 哈希证据）
 
 ### 1.8.0 (2026-08-21)
 - 新增：通用工作流 #9 `long-horizon-planning.md`（超长任务愿景与进度管理）——每个 agent 进入任务时声明短期/中期/长期目标（VISION.md 三档），完成时明确说明推进了长期规划哪部分；领域专用编号 9-13 → 10-14
@@ -292,4 +303,4 @@ tools:
 - 新增：步骤 1-4 的明确执行指令
 - 保留原有目录内容供浏览参考
 
-*最后更新: 2026-08-21*
+*最后更新: 2026-08-24*

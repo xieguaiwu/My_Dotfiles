@@ -382,7 +382,9 @@ echo -n "Agent createLoop:    "; grep -q "temperature: this.temperature" "$AGENT
 
 ## ✅ 当前状态（2026-08-24）
 
-温度链已全部修复并验证通过 ✅ （**21 检查点全绿，其中 spawnRunner 1 项按 v0.55+ 新架构标记 N/A**；pi-coding-agent **v0.84.2**，pi-subagents **v0.55.0**）。
+温度链已全部修复并验证通过 ✅ （**21 检查点全绿，其中 spawnRunner 1 项按 v0.55+ 新架构标记 N/A**；pi-coding-agent **v0.84.3**（bundle 架构），pi-subagents **v0.56.0**）。
+
+**2026-08-24 v0.84.3 bundle 架构适配（reapply.sh v2.18.0，第 16 次删除 + 架构变更）**：pi-coding-agent 升至 v0.84.3 改用 **esbuild bundle 架构**——bin 入口 `dist/bundle/cli.js` 只 re-export `dist/bundle/chunks/*.js`（7.2MB 全内联），**散装 `dist/*.js`（sdk.js/main.js/args.js/agent-session-services.js）运行时根本不加载**。v2.17.0 的 dist 层 8 检查点全部假阳性（补丁打在无人加载的文件上，reapply.sh 报 21/21 全绿但运行时温度链 0 处存在——实测 TEMP_DEBUG 永不触发才暴露）。适配：① 新增 bundle 检测（bin 入口存在 + 引用 chunk-E5KXRMZK → bundle 模式）② 7 个注入点全在 chunk-E5KXRMZK.js（CLI `--temperature` 解析 / buildSessionOptions / main→services / services 透传 / createAgentSession env+YAML 兜底 / Agent 构造 this.temperature / createLoopConfig）③ 踩坑：`let temperature=...` 插进 let 声明链中间导致 SyntaxError——必须插在 `extensionRunnerRef={};` 分号后独立语句位置 ④ 运行时三场景实测：无 env → YAML 兜底 explore.md=**0.1** ✅，env 0.7 → **0.7** ✅，CLI 0.3 → **0.3** ✅（CLI > env > YAML）。
 
 **2026-08-24 v0.55.0 适配（reapply.sh v2.17.0，第 15 次删除 + 架构变更）**：pi-subagents 升至 v0.55.0 再次删除全部 13 个 src 检查点，且 **spawnRunner 重构**——不再内联构建 steps（旧 6-tab 插入点消失），只序列化 cfg JSON 后 spawn runner 子进程。新数据流：buildSeqStep `temperature: a.temperature` 入 cfg → subagent-runner 三处 `step.temperature`（1553 buildPiArgs / 2399 状态存储 / 3501 revival 路径）出 env。适配：① 6-tab 检查点版本条件化（≥0.55 标 N/A）② agents.ts Pick 列表新增 modelProvider 致旧长锚点失配 → 改短锚点 ③ subagent-runner store 断言放宽 ≥1 ④ 手工补 Pick 缺失的 `"temperature"`。--apply 重打后全绿，无漂移警告、幂等复验通过。
 
@@ -536,6 +538,7 @@ npm update / pi update
 3. **默认值行为**：`temperature` 未设置（`undefined`）时，provider 使用 API 默认温度，与修复前一致。
 4. **版本要求**：`pi-subagents >= 0.36.0`，`pi-coding-agent >= 0.82.1`。
 5. **Git 安全网不适用**：修改的是 `~/.pi/agent/npm/` 和 `~/.npm-global/` 下的 `node_modules` 文件。补丁脚本在 `~/.pi/patches/temperature/` 下。
-6. **版本升级**：若 pi-coding-agent 升级到 0.83+ 且 auto-apply 失败，用 pi agent 运行本 skill 进行适配。
-7. **补丁生效需重启 pi 主进程**：pi 主进程启动时通过 tsx 加载 pi-subagents TS 源码并缓存模块，运行中修改 `src/` 文件不会热生效。静态检查通过但运行中的主进程仍执行旧代码（2026-08-02 实测两次：补丁前启动的主进程不传 env；禁用补丁后主进程仍继续传 env——缓存是双向的）。补丁后必须重启 pi（退出当前会话/重启服务），并用真实子代理 `echo $PI_SUBAGENT_TEMPERATURE` 验证（explore=0.1 应输出 0.1）。
-8. **断链模拟测试法**（验证兜底，无需重启）：手动 spawn 子进程并故意不设 `PI_SUBAGENT_TEMPERATURE`——`env -i HOME=$HOME PATH=$PATH PI_SUBAGENT_CHILD_AGENT=explore pi --mode json -p "task"`，观察子进程日志中温度解析结果（临时在 sdk.js 加 `console.error('[TEMP] ' + temperature)` 可见）。子进程每次全新加载最新代码，不受主进程缓存影响。
+6. **v0.84.3+ bundle 架构（2026-08-24）**：pi-coding-agent 运行时只加载 `dist/bundle/chunks/chunk-E5KXRMZK.js`（esbuild 全内联），散装 `dist/*.js` 不被加载——reapply.sh 已自动检测 bundle 模式并打 7 个 bundle 注入点（含 YAML 兜底）。注意 bundle 是压缩单行 JS，手工改必须跑 `node --check` 验证语法；`let temperature` 声明必须插在独立语句位置（`extensionRunnerRef={};` 之后），插入 let 声明链中间会 SyntaxError。
+7. **版本升级**：若 pi-coding-agent 升级到 0.83+ 且 auto-apply 失败，用 pi agent 运行本 skill 进行适配。
+8. **补丁生效需重启 pi 主进程**：pi 主进程启动时通过 tsx 加载 pi-subagents TS 源码并缓存模块，运行中修改 `src/` 文件不会热生效。静态检查通过但运行中的主进程仍执行旧代码（2026-08-02 实测两次：补丁前启动的主进程不传 env；禁用补丁后主进程仍继续传 env——缓存是双向的）。补丁后必须重启 pi（退出当前会话/重启服务），并用真实子代理 `echo $PI_SUBAGENT_TEMPERATURE` 验证（explore=0.1 应输出 0.1）。
+9. **断链模拟测试法**（验证兜底，无需重启）：手动 spawn 子进程并故意不设 `PI_SUBAGENT_TEMPERATURE`——`env -i HOME=$HOME PATH=$PATH PI_SUBAGENT_CHILD_AGENT=explore pi --mode json -p "task"`，观察子进程日志中温度解析结果（临时在 sdk.js 加 `console.error('[TEMP] ' + temperature)` 可见）。子进程每次全新加载最新代码，不受主进程缓存影响。bundle 架构下改在 chunk-E5KXRMZK.js 的温度解析处加临时日志（sdk.js 散装文件不被加载）。

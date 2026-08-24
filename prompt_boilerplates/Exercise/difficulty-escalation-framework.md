@@ -199,6 +199,7 @@ tools: []
 | `ap_csa_generation` | CS 轨升级维度（边界/调试/算法选择/设计约束），禁代码堆料 |
 | `mistake-practice-generation` | 陷阱家族难度递进：同家族升级 = 换更深维度，非加计算/加长句 |
 | `error-checklist-creator` | 陷阱分类表可按维度设计"陷阱升级阶梯" |
+| `rudin-proof-writing` | 证明题难度 = 层级迁移（S0 定义翻译 → S4 完整证明 → S5 反例/批判），禁加计算量；难度档案 30/50/20 沿用本框架 |
 
 ## 13. 文档写作规范（ASD-STE100 轻量适配）
 
