@@ -1,6 +1,6 @@
 ---
 name: windows-scripting-and-ssh-debug
-version: 1.5.0
+version: 1.6.0
 description: Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/输出规范）与 OpenSSH 远程排障——KEXINIT reset 排除链、黑盒三测试、前台 vs 服务模式差异定位、ACL 拒绝访问判别、自愈看门狗、脚本化协作闭环；含 BOOKS 电子书双机备份日常运维指南（books-sync.py 四步同步/差异语义/排除规则/快照策略）
 triggers:
   - "Windows 脚本"
@@ -460,7 +460,24 @@ mtime 三分类取代旧 size-only：大小不同 + Windows 更新时，旧版 s
 
 23:47 体检：ping UP / 22 CLOSED / 445 OPEN → `win-check.sh -w` 等满 6 分钟未恢复（看门狗未装或失效，用户侧需确认 install-keepalive.bat 是否已双击）→ 需 Windows 侧人工拉起。结论：**断连先等 5 分钟看门狗；不恢复 = 人肉介入，勿反复重试制造噪音**。
 
+### 35. 内容哈希预检（2026-08-25 新增，v1.6.0）
+
+**问题**：books-sync.py 只按路径比对，无内容交叉匹配——两机并行下载同一本书（不同文件名）时，双向同步会把两份都合并到每侧 = 静默制造重复（实战：食人族 epub 短名版 vs Anna's Archive 长名版同 hash 226,487B）。
+
+**解法**：push/pull 候选跨侧 SHA256 交叉匹配，同内容不同路径 = 「重复合并」预警：
+- `scan`：只读报告 ⚠️ 预警对（L/W 路径 + 大小 + hash 前缀），不排除任何传输
+- `all`/`push`/`pull`：默认**从传输排除命中对**（双端各留自己那份，不制造新重复；下次 scan 仍可见，迫使用户显式决策）
+- `all --allow-dup-merge`：强制照常传输（有意镜像时用）
+- 预检失败（远端哈希跑不起来）fail-open 继续旧行为并打 [WARN]
+
+**实现**：本地直接流式 SHA256；远端复用 snapshot 模式（ps1 带 BOM 上传 → `powershell -File` 跑 `Get-FileHash` → 结果写 %TEMP% → sftp get 解析）。测试：`echo` 会带尾随换行、`printf '%s'` 不带——测试数据必须字节级一致，否则预检不命中是测试自己的坑。
+
 ## 变更日志
+
+### 1.6.0 (2026-08-25)
+- 新增：实战补充 5 #35 内容哈希预检——push/pull 候选跨侧 SHA256 交叉匹配防静默重复合并；scan 只读报告 / 传输模式默认排除 / `--allow-dup-merge` 强制；远端哈希走 ps1+Get-FileHash 模式
+- 更新：books-sync.py 新增 `--allow-dup-merge` flag；#28 四步流程说明不变（scan 现在会显示 ⚠️ 重复合并预警）
+- 同步：index.md 条目 16 描述更新（若 index 未变则无）
 
 ### 1.5.0 (2026-08-24)
 - 新增：实战补充 5（28-34 条）——BOOKS 电子书双机同步日常运维指南：日常四步流程（win-check → scan → all → 复扫）、差异分类语义表（push/lnx-newer/win-newer/pull/conflict）、排除规则语义、快照策略（推方向自动快照 Windows 旧版至 backup/linux-YYYYMMDD；拉方向无自动快照）、断连处理决策（看门狗等待/人肉介入）、已知坑速查、08-24 链路中断实测记录

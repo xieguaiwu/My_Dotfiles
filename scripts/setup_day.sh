@@ -406,24 +406,6 @@ else
     echo ">>> pipx 不可用，跳过 rdt-cli。手动安装: pip install --user pipx && pipx install rdt-cli"
 fi
 
-echo ">>> Installing beancount & fava (复式记账 CLI + 网页界面)..."
-# 依赖 pipx；没有则装（与 rdt-cli 共用一套 pipx）
-if ! command -v pipx &>/dev/null; then
-    pip3 install --user pipx 2>/dev/null || python3 -m pip install --user pipx
-    export PATH="$HOME/.local/bin:$PATH"
-fi
-# Debian/Kali 需 python3-venv 才能建 pipx venv（Fedora 自带）
-if [ "$DISTRO" != "fedora" ]; then
-    sudo apt install -y python3-venv
-fi
-if command -v pipx &>/dev/null; then
-    pipx install beancount 2>/dev/null || pipx upgrade beancount
-    pipx install fava 2>/dev/null || pipx upgrade fava
-    echo ">>> beancount & fava installed. 账本界面: fava ~/beancount/main.bean → http://localhost:5000"
-else
-    echo ">>> pipx 不可用，跳过 beancount/fava。手动: pip install --user pipx && pipx install beancount fava"
-fi
-
 echo ">>> Installing cyber-tui (cyberspace.online terminal client, Go)..."
 # cyber-tui: Go + Bubble Tea 写的 cyberspace.online 复古文字社交网络客户端
 # https://github.com/ArmadilloBrillo/cyber-tui （MIT，v0.8.x）——注意不是 digital-grease/cs-tui (Rust 版)
