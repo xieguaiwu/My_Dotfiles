@@ -291,7 +291,44 @@
         "thinkingFormat": "openrouter",
         "maxTokensField": "max_tokens"
       },
+      "modelOverrides": {
+        "stealth/ox-alpha": {
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": "low",
+            "medium": null,
+            "high": "high",
+            "xhigh": null,
+            "max": "max"
+          }
+        }
+      },
       "models": [
+        {
+          "id": "stealth/ox-alpha",
+          "name": "Ox Alpha (Stealth, free 1M)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 1048576,
+          "maxTokens": 131072,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": "low",
+            "medium": null,
+            "high": "high",
+            "xhigh": null,
+            "max": "max"
+          },
+          "compat": {
+            "supportsDeveloperRole": false,
+            "thinkingFormat": "openrouter"
+          }
+        },
         {
           "id": "openrouter/free",
           "name": "OpenRouter Free Router (auto-picks best free model)",
@@ -588,6 +625,56 @@
             "supportsReasoningEffort": false,
             "maxTokensField": "max_tokens"
           }
+        }
+      ]
+    },
+    "agibar": {
+      "baseUrl": "http://127.0.0.1:8010",
+      "api": "openai-completions",
+      "apiKey": "$AGIBAR_API_KEY",
+      "compat": {
+        "supportsDeveloperRole": true,
+        "supportsReasoningEffort": true,
+        "maxTokensField": "max_tokens"
+      },
+      "models": [
+        {
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash (AGI.bar)",
+          "reasoning": true,
+          "contextWindow": 100000,
+          "maxTokens": 100000,
+          "compat": {
+            "thinkingFormat": "deepseek"
+          },
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "medium",
+            "high": "max",
+            "xhigh": "max"
+          }
+        },
+        {
+          "id": "niulai",
+          "name": "Niulai (AGI.bar)",
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 131072,
+          "compat": {
+            "thinkingFormat": "deepseek"
+          },
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": "medium",
+            "high": "max",
+            "xhigh": "max"
+          },
+          "input": [
+            "text",
+            "image"
+          ]
         }
       ]
     }
