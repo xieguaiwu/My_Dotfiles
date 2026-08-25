@@ -1,7 +1,7 @@
 ---
 name: windows-scripting-and-ssh-debug
-version: 1.4.1
-description: Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/输出规范）与 OpenSSH 远程排障——KEXINIT reset 排除链、黑盒三测试、前台 vs 服务模式差异定位、ACL 拒绝访问判别、自愈看门狗、脚本化协作闭环
+version: 1.5.0
+description: Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/输出规范）与 OpenSSH 远程排障——KEXINIT reset 排除链、黑盒三测试、前台 vs 服务模式差异定位、ACL 拒绝访问判别、自愈看门狗、脚本化协作闭环；含 BOOKS 电子书双机备份日常运维指南（books-sync.py 四步同步/差异语义/排除规则/快照策略）
 triggers:
   - "Windows 脚本"
   - "bat 脚本"
@@ -14,6 +14,9 @@ triggers:
   - "OpenSSH 拒绝访问"
   - "sshd 无法运行"
   - "服务未安装"
+  - "同步电子书"
+  - "BOOKS 备份"
+  - "电子书同步"
 inputs:
   - name: target_host
     description: 目标 Windows 主机 IP
@@ -397,7 +400,72 @@ Windows 端旧目录 `Syntax and the brain...`（小写），本地新文件用�
 
 EXCLUDE_PATHS 是 8/17 逐条硬编码，`.pi-subagents`（旧）vs `.pi/subagents`（新）目录名漂移导致 96 个工件漏排除。修：rule_excluded() 规则匹配（`.pi-subagents`/`.pi/subagents` 任一命中、`/.git/`、`~$*`、`*.lnk`、Thumbs.db/desktop.ini、顶层 漫画/、摄影 zip、笔记.7z）。硬编码清单保留（用户确认删除语义），规则层兜底新变体。
 
+## 实战补充 5（2026-08-24：BOOKS 电子书双机同步日常运维指南）
+
+电子书备份 = ~/BOOKS（Linux，2026-08-24 实测 40G/7435 文件）⇄ D:\Epub\BOOKS（Windows 46.4GB/7790 文件）双向增量同步，工具 `~/Desktop/win-ssh-setup/books-sync.py`（纯 ssh+sftp，无 rsync）。本节为**日常运维手册**；断连故障排障用上文排除链（第 4 节）与看门狗章节（#19）。
+
+### 28. 日常同步四步（链路通时全流程）
+
+```bash
+cd ~/Desktop/win-ssh-setup
+./win-check.sh              # ① 链路体检：ping / 22 / 445 / 认证
+python3 books-sync.py scan  # ② 只读比对（不传文件），解读四类差异
+python3 books-sync.py all   # ③ snapshot → push → pull
+python3 books-sync.py scan  # ④ 复扫验证归零（差异只剩冲突与已知排除）
+```
+
+- 单方向需要时用 `push` / `pull` / `snapshot` 子命令（见 books-sync.py 头注释）
+- 首次全量或大改后，先 `scan` 看预估传输 GB 再决定
+- `all` 无独立 verify 步骤，以复扫归零为验证手段
+
+### 29. 差异分类语义（scan 输出解读）
+
+| 类别 | 含义 | all 动作 |
+|---|---|---|
+| push-only | Linux 独有 | 推 |
+| lnx-newer | Linux 更新（mtime 新于 Windows 超 300s） | 推覆盖 |
+| win-newer | Windows 更新 | 拉回 |
+| pull-only | Windows 独有 | 拉 |
+| conflict | 双端近改（mtime 差 ≤300s） | 跳过 + 告警，人工决定 |
+
+mtime 三分类取代旧 size-only：大小不同 + Windows 更新时，旧版 size 比对会反向覆盖损坏数据，此为大忌。
+
+### 30. 排除规则（rule_excluded 语义，双端各自维护）
+
+- 大体积不拉：顶层 `漫画/`（4.85GB）、`薇薇安·迈尔Vivian Maier 摄影集.zip`（1.4GB）、`笔记.7z`
+- 双端各自维护：任何 `- 链接` 目录（Linux symlink / Windows junction，互不同步）
+- 垃圾/临时：`.pi-subagents`、`.pi/subagents`、`/.git/`、`~$*`、`*.lnk`、Thumbs.db、desktop.ini
+- 快照目录 `backup/` 双端排除
+- 新排除项：改 `rule_excluded()` 规则优于逐条加 EXCLUDE_PATHS（版本目录漂移教训，见 #27）
+
+### 31. 快照策略（备份语义）
+
+`all`/`snapshot` 自动把**即将被推覆盖的 Windows 侧旧版**复制到 `D:\Epub\BOOKS\backup\linux-YYYYMMDD\`（同名相对路径）。撤销窗口 = 该快照目录。**拉方向不建本地快照**（拉回覆盖的本地旧版无自动备份）——大操作前手动 `python3 books-sync.py snapshot` 并自行备份本地侧。
+
+### 32. 断连处理（22 关闭时）
+
+1. `./win-check.sh -w` 等待看门狗自愈（最长 6 分钟 = 5 分钟周期 + 裕量）
+2. 超时未恢复：看门狗未装或失效 → Windows 侧双击 `install-keepalive.bat`（一次性安装）；应急 `restart-sshd.bat`
+3. 已装看门狗仍断：按上文排除链排查（先 `win-check.sh` 看卡在哪一环）
+
+### 33. 已知坑速查（详见实战补充 4 #23-27）
+
+- sftp `-mkdir` 已存在报 Failure 无害（忽略 mkdir 行，勿当传输失败）
+- 怎么推都差 N 个 → 先怀疑 NTFS 大小写别名（本地改名对齐 Windows 实际名）
+- 新文件命名禁半角冒号 `:`（NTFS 禁），直接全角 `：`，勿引 `%3A` 变体
+- Linux `mv` 目标已存在目录 = 移入内部（先 `ls -d` 判存在）
+- 清单用 .NET EnumerateFiles（Get-ChildItem -Recurse 通配符漏 `[ ]` 目录树）
+
+### 34. 2026-08-24 实测（链路中断处理记录）
+
+23:47 体检：ping UP / 22 CLOSED / 445 OPEN → `win-check.sh -w` 等满 6 分钟未恢复（看门狗未装或失效，用户侧需确认 install-keepalive.bat 是否已双击）→ 需 Windows 侧人工拉起。结论：**断连先等 5 分钟看门狗；不恢复 = 人肉介入，勿反复重试制造噪音**。
+
 ## 变更日志
+
+### 1.5.0 (2026-08-24)
+- 新增：实战补充 5（28-34 条）——BOOKS 电子书双机同步日常运维指南：日常四步流程（win-check → scan → all → 复扫）、差异分类语义表（push/lnx-newer/win-newer/pull/conflict）、排除规则语义、快照策略（推方向自动快照 Windows 旧版至 backup/linux-YYYYMMDD；拉方向无自动快照）、断连处理决策（看门狗等待/人肉介入）、已知坑速查、08-24 链路中断实测记录
+- 新增：triggers「同步电子书」「BOOKS 备份」「电子书同步」；description 补充运维指南说明
+- 同步：index.md 条目 16 描述更新
 
 ### 1.4.1 (2026-08-19, 四修)
 - 新增：实战补充 4（23-27 条）——sftp mkdir 已存在报 Failure 无害、NTFS 大小写别名（枚举实际名 vs 推送名）、mv 目标已存在目录=移入内部、冒号映射变体全角/%3A 共存、规则化排除 vs 逐条枚举——books-sync.py v2 双机同步实战

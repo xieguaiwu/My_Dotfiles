@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 2.8.1
+version: 2.9.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -223,6 +223,7 @@ journalctl -p err -b --no-pager | tail -20
 | 3.7 | [bluetooth-pairing-troubleshoot.md](bluetooth-pairing-troubleshoot.md) | 1.2.0 | 蓝牙设备连接排查：适配器判活、USB autosuspend（-16）修复、长扫描捕获配对窗口、非 tty 配对坑、默认输出切换、日常使用维护 | 蓝牙耳机连不上、扫描不到、配对失败、连上无声音 |
 | 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.2.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅） | 代理失效、无法上网、订阅失败 |
 | 4.5 | [public-wifi-security.md](public-wifi-security.md) | 1.0.0 | 公共 WiFi 三合一：验证页弹不出（Clash 代理劫持根因）、网络安全调查（加密/DNS/暴露面/证书/evil twin）、加固/恢复双脚本 [airport-harden.sh](airport-harden.sh) + [airport-restore.sh](airport-restore.sh)（入站 SSH/Samba/LLMNR） | 机场wifi、公共wifi、验证页弹不出、captive portal、公共网络加固 |
+| 4.6 | [intranet-api-proxy-coexist.md](intranet-api-proxy-coexist.md) | 1.0.0 | 店内/局域网 API 与本地代理共存：内网域名被代理劫持、no_proxy 小写坑、clash Merge dns.hosts+prepend-rules 成对修复、LiteLLM 400 UnsupportedParamsError 参数剥离网关（含 Python 网关脚本） | 店内 API 连不上、内网 API 走代理、token.agi.bar、reasoning_effort 不支持、UnsupportedParamsError、LiteLLM 400 |
 | 5 | [fcitx5_punctuation_fix.md](fcitx5_punctuation_fix.md) | 1.0.0 | fcitx5 中文标点问题（半角标点、顿号书名号打不出） | 输入法标点异常 |
 | 6 | [cleanup_shutdown_issue.sh](cleanup_shutdown_issue.sh) | — (脚本) | 关机/重启清理脚本（systemd 守卫、ABRT 处理） | 关机慢、关机报错 |
 
@@ -278,6 +279,9 @@ journalctl -p err -b --no-pager | tail -20
 
 「代理不工作 / 无法上网 / 订阅失败」
   └─ clash-verge-diagnose-and-fix.md
+
+「店内 API 连不上 / 内网 API 走代理 / token.agi.bar / UnsupportedParamsError / LiteLLM 400」
+  └─ intranet-api-proxy-coexist.md ← 先测直连 vs 代理（对比即知劫持）→ DNS 定位内网 IP → no_proxy 小写+大写同步设 → Merge dns.hosts+prepend-rules 成对加 → 401 查 key（sk- 前缀）→ 400 起本地剥离网关（SSE chunked 转发）
 
 「机场wifi / 公共wifi / 验证页弹不出 / captive portal / 公共网络加固」
   └─ public-wifi-security.md ← 先查 Clash 代理（7897）是否劫持浏览器流量；调查四步法；加固/恢复脚本 airport-harden.sh / airport-restore.sh（出站训练 SSH 不受影响）
@@ -353,6 +357,8 @@ journalctl -p err -b --no-pager | tail -20
 | `ghostwriter-math-check-and-fix.md` 第三层 | `dotfiles-sync-and-audit.md` | 配置修正后需同步 My_Dotfiles 备份副本 |
 | `clash-verge-diagnose-and-fix.md` | `system_diagnostics_and_repair.md` Phase 1.5 网络 | 网络层诊断先跑通用检查再深入 Clash |
 | `clash-verge-diagnose-and-fix.md` | `public-wifi-security.md` | 验证页弹不出/公共网络场景同源——代理劫持浏览器流量时先查 Clash 再查门户 |
+| `intranet-api-proxy-coexist.md` 前置 | `clash-verge-diagnose-and-fix.md` | 内网 API 被代理劫持属 Clash 规则/DNS 行为，代理整体故障时先修 Clash 再谈共存 |
+| `intranet-api-proxy-coexist.md` 公共场景 | `public-wifi-security.md` | 店内/机场公共 Wi-Fi 对 UDP QoS 会影响 Hysteria2 节点稳定性（症状：间歇性 context deadline exceeded） |
 | `system_diagnostics_and_repair.md` Phase 1.5 网络 | `public-wifi-security.md` | 公共网络场景安全调查深入（加密/DNS/暴露面/证书） |
 | `tor-browser-check-and-fix.md` 前置 | `clash-verge-diagnose-and-fix.md` | Tor 经本地代理引导，代理失效时先修 Clash 再修 Tor |
 | `video-playback-decode-fix.md` | `system_diagnostics_and_repair.md` | 播放类故障先查系统 ffmpeg 解码能力，再深入播放器自身；GPU 无硬件加速时驱动安装/VAAPI 能力对照收拢于 video skill |
@@ -384,7 +390,11 @@ journalctl -p err -b --no-pager | tail -20
 
 ## 变更日志
 
-### 2.8.1 (2026-08-24)
+### 2.9.0 (2026-08-25)
+- 新增：系统层 4.6 — `intranet-api-proxy-coexist.md` 1.0.0（2026-08-25 AGI Bar 店内实测沉淀：内网 API 与本地代理共存四层冲突——路由劫持/DNS 盲区（Merge dns.hosts+prepend-rules 成对修复）/no_proxy 小写优先坑/LiteLLM 400 参数剥离网关（含 Python 网关脚本，SSE chunked 转发））
+- 新增：决策树分支「店内 API 连不上 / 内网 API 走代理 / UnsupportedParamsError」+ triggers 7 个
+- 新增：交叉引用 2 条（intranet-api-proxy-coexist ↔ clash-verge-diagnose-and-fix、public-wifi-security）
+
 - 更新：windows-scripting-and-ssh-debug.md 1.4.1 → 1.5.0（新增实战补充 5「BOOKS 电子书双机同步日常运维指南」：四步同步流程/差异分类语义/排除规则/快照策略/断连处理；triggers 新增 同步电子书、BOOKS 备份、电子书同步）
 - 新增：决策树分支「同步电子书 / BOOKS 备份 / 电子书同步」+ triggers 3 个
 
@@ -502,4 +512,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-24（index 2.8.1：windows-scripting-and-ssh-debug 1.5.0——BOOKS 电子书双机同步日常运维指南入册）*
+*最后更新: 2026-08-25（index 2.9.0：intranet-api-proxy-coexist 1.0.0 入册——内网 API 与代理共存四层修复）*

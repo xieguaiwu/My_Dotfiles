@@ -163,6 +163,9 @@ set -gx HTTP_PROXY http://127.0.0.1:7897
 set -gx HTTPS_PROXY http://127.0.0.1:7897
 set -gx http_proxy http://127.0.0.1:7897
 set -gx https_proxy http://127.0.0.1:7897
+# AGI Bar 店内 API 直连（2026-08-25 实测：小写优先，必须两个都设）
+set -gx no_proxy "agi.bar,token.agi.bar,localhost,127.0.0.1,::1"
+set -gx NO_PROXY "agi.bar,token.agi.bar,localhost,127.0.0.1,::1"
 set -gx PUPPETEER_EXECUTABLE_PATH /home/xieguiawu/.cache/puppeteer/chrome/linux-149.0.7827.22/chrome-linux64/chrome
 set -gx GOTOOLCHAIN auto
 set -gx GOPATH $HOME/go
