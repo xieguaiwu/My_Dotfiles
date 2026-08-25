@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Microsoft Teams
+Name[zh_CN]=微软 Teams
+GenericName=Teams Web App
+Comment=Microsoft Teams meeting & chat (Chromium app mode)
+Comment[zh_CN]=微软 Teams 会议与聊天（Chromium 应用模式）
+Exec=/home/xieguiawu/.local/bin/chromium --app=https://teams.microsoft.com
+Terminal=false
+Icon=teams
+Categories=Network;InstantMessaging;Chat;Office;
+StartupNotify=true
+StartupWMClass=teams.microsoft.com
+X-GNOME-UsesNotifications=true
+Keywords=meeting;video;chat;call;

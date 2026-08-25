@@ -145,6 +145,9 @@ bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOU
 bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl set +1%
 bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 1%-
 
+# 一键恢复亮度（黑屏自救：盲按 Shift+F6 直达 60%——ThinkPad Fn 模式下 F6 本身即亮度键，无需按 Fn）
+bindsym Shift+XF86MonBrightnessUp exec --no-startup-id brightnessctl set 60%
+
 # screenshot
 bindsym Print exec grim -g "$(slurp)" ~/Pictures/screenshots/$(date +"%Y%m%d-%H%M%S").png
 bindsym $mod+o exec grim -g "$(slurp)" - | tesseract stdin stdout | wl-copy
