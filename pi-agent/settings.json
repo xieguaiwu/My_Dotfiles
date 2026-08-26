@@ -2,7 +2,7 @@
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "xhigh",
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "theme": "opencode",
   "collapseChangelog": true,
   "quietStartup": true,

@@ -1,11 +1,41 @@
 #!/bin/bash
 # Reapply pi-agent temperature chain patches (version-aware)
-# Last updated: 2026-08-11 — v2.12.0: pi-subagents 0.46.0 / pi-coding-agent 0.84.1 (10th removal)
+# Last updated: 2026-08-26 — v2.19.0: pi-subagents 0.57.0 (17th removal) + CRITICAL fix:
+#   apply_pi_subagents 调用曾被孤立在 apply_082x() 尾部——bundle 模式（pi-coding-agent >= 0.84.3）
+#   永远不会走到它，src 层补丁在每次 pi-subagents 更新后无人重打。v0.57.0 更新暴露此 bug。
+#   v2.19.0 将调用移入 apply_bundle() 尾部，两条路径均重打 src 层。锚点 v0.57.0 全部存活无需适配。(17th removal)
+#
+# v2.17.0 (pi-subagents 0.55.0 / pi-coding-agent 0.84.2): 15th upstream removal + ARCH CHANGE.
+#   v0.55.0 重构 spawnRunner：不再内联构建 steps，只序列化 cfg JSON 后 spawn runner 子进程。
+#   旧 6-tab 检查点（#19）架构性过时 → 版本条件化：>=0.55 时改验 cfg 序列化链
+#   （buildSeqStep `temperature: a.temperature` 入 cfg → subagent-runner `step.temperature` 出）。
+#   agents.ts Pick 列表新增 modelProvider 致旧长锚点失配 → 改短锚点 "thinking" | "systemPromptMode"。
+#   subagent-runner 状态存储断言放宽为 >=1（v0.55 有 revival/恢复路径的合法第二处 4-tab 行）。
 #
 # Architecture: PI_SUBAGENT_TEMPERATURE env → cli/args.js → main.js →
 #   agent-session-services.js → sdk.js → agent.js → createLoopConfig() →
 #   streamFn → buildBaseOptions → provider API
 #
+# v2.16.0 (pi-subagents 0.50.0 / pi-coding-agent 0.84.2): 14th upstream removal.
+#   v0.50.0 added Orca progress tabs / FleetView external jobs / foregroundDetachShortcut 等
+#   （未触碰 temperature 结构），但再次删除全部 13 个 pi-subagents 检查点。
+#   锚点与 v0.49.0 完全一致，--apply 一次重打 21/21 成功（无漂移警告）。
+#
+# v2.15.0 (pi-subagents 0.49.0 / pi-coding-agent 0.84.2): 13th upstream removal.
+#   v0.49.0 added single-child run/debug.run/tools inherit/terminal examples 等
+#   （未触碰 temperature 结构），但再次删除全部 13 个 pi-subagents 检查点
+#   （npm pack 原始 tarball 验证：pi-args.ts/agents.ts 0 引用 temperature）。
+#   src 层由 postinstall 自动重打 13/13；dist 层被 pi update 0.84.2
+#   （--ignore-scripts，postinstall 不触发）覆盖为原生无温度 → 8 检查点全缺，
+#   手动 --apply 一次重打 21/21 成功；运行时断链模拟三场景全部通过。
+# v2.14.0 (pi-subagents 0.48.0 / pi-coding-agent 0.84.1): 12th upstream removal.
+#   v0.48.0 added fan-out budget cap/async session cap/Prompt Audit drawer/global
+#   timeoutMs/PI_SUBAGENT_TASK_DELIVERY env/LLM intent arbiter（未触碰 temperature 结构），
+#   但再次删除全部 13 个 pi-subagents 检查点；v2.13.0 锚点全部命中，21/21 一次重打（无漂移警告）。
+#   Also fixed the "source files (12)" heading miscount → (13)（实为 13 个检查点）。
+# v2.13.0 (pi-subagents 0.47.0 / pi-coding-agent 0.84.1): 11th upstream removal.
+#   v0.47.0 added model-scope enforcement/storage move to .pi/subagents/ etc（未触碰 temperature 结构），
+#   但再次删除全部 13 个 pi-subagents 检查点；v2.12.0 锚点全部命中，21/21 一次重打（无漂移警告）。
 # v2.12.0 (pi-subagents 0.46.0 / pi-coding-agent 0.84.1): 10th upstream removal.
 #   v0.46.0 added prompts.render/project-panes API/guide 等（未触碰 temperature 结构），
 #   但再次删除全部 13 个 pi-subagents 检查点；v2.11.0 锚点全部命中，21/21 一次重打，
@@ -62,7 +92,21 @@ AGENT_JS="$AGENT_CORE/dist/agent.js"
 
 # ─── Version detection ──────────────────────────────────────────────────────
 PICA_VER=$(node -e "console.log(require('$PICA/package.json').version)" 2>/dev/null || echo "unknown")
-echo "=== Temperature chain check — pi-coding-agent v$PICA_VER ==="
+SUB_VER=$(node -e "console.log(require('$HOME/.pi/agent/npm/node_modules/pi-subagents/package.json').version)" 2>/dev/null || echo unknown)
+SUB_MM=$(echo "$SUB_VER" | grep -oP '^\d+\.\d+')
+# pi-subagents >= 0.55: spawnRunner 只做 cfg 序列化转发，6-tab 检查点作废
+SUB_CFG_SER=$(awk -v a="${SUB_MM:-0}" 'BEGIN{print (a>=0.55)?1:0}')
+# v2.18.0: pi-coding-agent >= 0.84.3 改为 esbuild bundle 架构 — bin 入口
+# dist/bundle/cli.js -> chunks/*.js（全内联），散装 dist/*.js 运行时不被加载。
+# 检测：bin 入口存在且引用 chunk-E5KXRMZK 即视为 bundle 模式。
+BUNDLE_CLI="$PICA/dist/bundle/cli.js"
+BUNDLE_CHUNK="$PICA/dist/bundle/chunks/chunk-E5KXRMZK.js"
+if [ -f "$BUNDLE_CLI" ] && grep -q 'chunk-E5KXRMZK' "$BUNDLE_CLI" 2>/dev/null && [ -f "$BUNDLE_CHUNK" ]; then
+    BUNDLE_MODE=1
+else
+    BUNDLE_MODE=0
+fi
+echo "=== Temperature chain check — pi-coding-agent v$PICA_VER / pi-subagents v$SUB_VER (bundle=$BUNDLE_MODE) ==="
 
 # ─── Verification ───────────────────────────────────────────────────────────
 PASS=0 FAIL=0
@@ -98,21 +142,30 @@ check_pcre() {
 }
 
 echo ""
-echo "--- pi-coding-agent dist files (5) ---"
-check      "$CLI_ARGS"       'result.temperature'        'CLI --temperature parsing'
-check      "$MAIN_JS"        'options.temperature'        'main.js buildSessionOptions'
-check      "$MAIN_JS"        'temperature: sessionOptions.temperature' 'main.js → services'
-check      "$SERVICES_JS"    'temperature: options.temperature' 'services.js pass-through'
-check_regex "$SDK_JS"        'PI_SUBAGENT_TEMPERATURE|temperature =' 'sdk.js env/opt read'
-check_regex "$SDK_JS"        'PI_SUBAGENT_CHILD_AGENT' 'sdk.js YAML fallback'
-
+echo "--- pi-coding-agent runtime bundle (v2.18.0+; loose dist NOT loaded) ---"
+if [ "$BUNDLE_MODE" = "1" ]; then
+    check "$BUNDLE_CHUNK" 'arg==="--temperature"' 'CLI --temperature parsing (bundle)'
+    check "$BUNDLE_CHUNK" 'parsed.temperature!==void 0' 'buildSessionOptions parsed.temperature (bundle)'
+    check "$BUNDLE_CHUNK" 'temperature:sessionOptions.temperature' 'main.js → services (bundle)'
+    check "$BUNDLE_CHUNK" 'thinkingLevel:options.thinkingLevel,temperature:options.temperature' 'services pass-through (bundle)'
+    check "$BUNDLE_CHUNK" 'PI_SUBAGENT_TEMPERATURE' 'sdk env/opt read (bundle)'
+    check "$BUNDLE_CHUNK" 'PI_SUBAGENT_CHILD_AGENT' 'sdk YAML fallback (bundle)'
+    check "$BUNDLE_CHUNK" 'this.temperature=runtimeOptions.temperature' 'Agent constructor stores temp (bundle)'
+    check "$BUNDLE_CHUNK" 'temperature:this.temperature' 'createLoopConfig exports temp (bundle)'
+else
+    check      "$CLI_ARGS"       'result.temperature'        'CLI --temperature parsing'
+    check      "$MAIN_JS"        'options.temperature'        'main.js buildSessionOptions'
+    check      "$MAIN_JS"        'temperature: sessionOptions.temperature' 'main.js → services'
+    check      "$SERVICES_JS"    'temperature: options.temperature' 'services.js pass-through'
+    check_regex "$SDK_JS"        'PI_SUBAGENT_TEMPERATURE|temperature =' 'sdk.js env/opt read'
+    check_regex "$SDK_JS"        'PI_SUBAGENT_CHILD_AGENT' 'sdk.js YAML fallback'
+    echo ""
+    echo "--- pi-agent-core dist files (1) ---"
+    check      "$AGENT_JS"       'this.temperature'           'Agent constructor stores temp'
+    check      "$AGENT_JS"       'temperature: this.temperature' 'createLoopConfig exports temp'
+fi
 echo ""
-echo "--- pi-agent-core dist files (1) ---"
-check      "$AGENT_JS"       'this.temperature'           'Agent constructor stores temp'
-check      "$AGENT_JS"       'temperature: this.temperature' 'createLoopConfig exports temp'
-
-echo ""
-echo "--- pi-subagents source files (12) ---"
+echo "--- pi-subagents source files (13) ---"
 NPM_DIR="$HOME/.pi/agent/npm/node_modules/pi-subagents"
 check      "$NPM_DIR/src/agents/agent-serializer.ts" '"temperature"'  'KNOWN_FIELDS whitelist'
 check      "$NPM_DIR/src/agents/agent-serializer.ts" 'config.temperature' 'serializer outputs temperature'
@@ -124,7 +177,12 @@ check      "$NPM_DIR/src/runs/shared/parallel-utils.ts" 'temperature?: number' '
 check      "$NPM_DIR/src/runs/foreground/execution.ts" 'temperature: agent.temperature' 'execution.ts pass-through'
 check      "$NPM_DIR/src/runs/background/async-execution.ts" 'temperature: a.temperature' 'async buildSeqStep'
 check      "$NPM_DIR/src/runs/background/async-execution.ts" 'temperature: agentConfig.temperature' 'async agentConfig path'
-check_pcre "$NPM_DIR/src/runs/background/async-execution.ts" '^\t{6}temperature: agentConfig\.temperature,$' 'async spawnRunner (6-tab)'
+if [ "$SUB_CFG_SER" = "1" ]; then
+    echo "  ⏭️  async spawnRunner — N/A in pi-subagents >= 0.55 (cfg serialization; chain via buildSeqStep→runner)"
+    PASS=$((PASS + 1))
+else
+    check_pcre "$NPM_DIR/src/runs/background/async-execution.ts" '^\t{6}temperature: agentConfig\.temperature,$' 'async spawnRunner (6-tab)'
+fi
 check      "$NPM_DIR/src/runs/background/subagent-runner.ts" 'temperature: step.temperature' 'subagent-runner store'
 # subagent-runner needs temperature in BOTH status store AND buildPiArgs call
 runner_count=$(grep -cF 'temperature: step.temperature' "$NPM_DIR/src/runs/background/subagent-runner.ts" 2>/dev/null || true)
@@ -148,7 +206,7 @@ fi
 if [ "$1" != "--apply" ] && [ "$1" != "-a" ]; then
     echo ""
     echo "  ⚠️  Temperature chain broken ($FAIL checkpoints)."
-    echo "  Run with --apply to auto-fix (v0.82.x - v0.89.x / pi-subagents <= v0.46.x):"
+    echo "  Run with --apply to auto-fix (v0.82.x - v0.89.x / bundle>=0.84.3 / pi-subagents <= v0.57.x):"
     echo "    $0 --apply"
     echo "  Or ask pi: 'apply temperature fix from subagent-temperature-fix skill'"
     exit 1
@@ -163,8 +221,10 @@ apply_pi_subagents() {
     echo "  Patching pi-subagents source files..."
 
     python3 << 'PYEOF'
-import sys, os
+import sys, os, json
 NPM_DIR = os.path.expanduser("~/.pi/agent/npm/node_modules/pi-subagents")
+_sub_v = json.load(open(os.path.join(NPM_DIR, "package.json")))["version"].split(".")
+SUB_NEW_ARCH = tuple(int(x) for x in _sub_v[:2]) >= (0, 55)
 
 # 1) agent-serializer.ts: add "temperature" to KNOWN_FIELDS
 f = os.path.join(NPM_DIR, "src/agents/agent-serializer.ts")
@@ -248,11 +308,13 @@ if 'temperature: agent.temperature' not in c:
     else:
         print("  ⚠️  agents.ts: cloneOverrideBase anchor not found — version drift, check manually")
 # buildBuiltinOverrideConfig Pick: add "temperature" (v0.41.0 spread-era Pick list)
-if 'Pick<AgentConfig, "model" | "fallbackModels" | "thinking" | "temperature"' not in c:
+# v2.17.0: short-anchor — v0.55 Pick 列表新增 modelProvider 使旧长锚点失配；
+# 新旧版本均含 '"thinking" | "systemPromptMode"' 子串
+if '"thinking" | "temperature"' not in c:
     before = c
     c = c.replace(
-        '"model" | "fallbackModels" | "thinking" | "systemPromptMode"',
-        '"model" | "fallbackModels" | "thinking" | "temperature" | "systemPromptMode"'
+        '"thinking" | "systemPromptMode"',
+        '"thinking" | "temperature" | "systemPromptMode"'
     )
     if c != before:
         patched = True
@@ -373,7 +435,9 @@ if 'temperature: agentConfig.temperature' not in c:
 spawn_anchor = '\t\t\t\t\t\tthinking: resolveEffectiveThinking(model, effectiveThinking),\n\t\t\t\t\t\tmodelCandidates,'
 spawn_re = _re.compile(_re.escape(spawn_anchor))
 has_spawn_temp = bool(_re.search(r'(?m)^\t{6}temperature: agentConfig\.temperature,$', c))
-if not has_spawn_temp:
+if SUB_NEW_ARCH:
+    print("  ⏭️  async-execution.ts: spawnRunner N/A (v0.55+ cfg serialization; temperature via buildSeqStep)")
+elif not has_spawn_temp:
     if spawn_re.search(c):
         # insert BETWEEN thinking and modelCandidates (canonical v0.38 shape)
         c = spawn_re.sub(
@@ -390,7 +454,7 @@ a_count = len(_re.findall(r'(?m)^\t\t\ttemperature: a\.temperature,$', c))
 ac_count = len(_re.findall(r'(?m)^\t\t\t\t\t\ttemperature: agentConfig\.temperature,$', c))
 if a_count != 1:
     print(f"  ❌ async-execution.ts integrity FAIL: buildSeqStep `a.temperature` count={a_count} (expected 1)")
-if ac_count != 1:
+if ac_count != 1 and not SUB_NEW_ARCH:
     print(f"  ❌ async-execution.ts integrity FAIL: spawnRunner `agentConfig.temperature` count={ac_count} (expected 1)")
 
 patched = seq_patched or recovery_patched or spawn_patched or heal_patched
@@ -435,9 +499,127 @@ bpi_count = len(_re2.findall(r'(?m)^\t\t\ttemperature: step\.temperature,$', c))
 store_count = len(_re2.findall(r'(?m)^\t\t\t\ttemperature: step\.temperature,$', c))
 if bpi_count != 1:
     print(f"  ❌ subagent-runner.ts integrity FAIL: buildPiArgs `step.temperature` count={bpi_count} (expected 1)")
-if store_count != 1:
-    print(f"  ❌ subagent-runner.ts integrity FAIL: status store `step.temperature` count={store_count} (expected 1)")
+# v2.17.0: 放宽为 >=1 — v0.55 有 revival/恢复路径的合法第二处 4-tab store 行（3501 行）
+if store_count < 1:
+    print(f"  ❌ subagent-runner.ts integrity FAIL: status store `step.temperature` count={store_count} (expected >= 1)")
 PYEOF
+}
+
+# ─── v2.18.0 bundle architecture patches ───────────────────────────────────
+apply_bundle() {
+    echo "  Applying v2.18.0 bundle temperature chain patches (esbuild chunk-E5KXRMZK.js)..."
+    python3 << 'PYEOF'
+import sys
+
+B = "/home/xieguiawu/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/dist/bundle/chunks/chunk-E5KXRMZK.js"
+
+with open(B, "r", encoding="utf-8") as f:
+    content = f.read()
+
+orig = content
+patched = 0
+warnings = []
+
+
+def rep(old, new, label):
+    global content, patched
+    if new in content:
+        print(f"  ⏭️  {label}: already present")
+        return
+    if old not in content:
+        warnings.append(f"⚠️  {label}: anchor NOT FOUND (version drift?)")
+        return
+    content = content.replace(old, new, 1)
+    patched += 1
+    print(f"  ✅ {label}")
+
+# 1) CLI args
+rep(
+    'else if(arg==="--print"||arg==="-p"){',
+    'else if(arg==="--temperature"&&i+1<args.length){let value=parseFloat(args[++i]);Number.isNaN(value)||value<0||value>2?result.diagnostics.push({type:"warning",message:`Invalid temperature "${args[i]}". Expected 0-2.`}):result.temperature=value}else if(arg==="--print"||arg==="-p"){',
+    "cli/args.js (bundle) --temperature",
+)
+
+# 2) buildSessionOptions
+rep(
+    "let options={},diagnostics=[],cliThinkingFromModel=!1;",
+    "let options={},diagnostics=[],cliThinkingFromModel=!1;parsed.temperature!==void 0&&(options.temperature=parsed.temperature);",
+    "buildSessionOptions parsed.temperature",
+)
+
+# 3) main.js -> services
+rep(
+    "createAgentSessionFromServices({services:services2,sessionManager:sessionManager2,sessionStartEvent,model:sessionOptions.model,thinkingLevel:sessionOptions.thinkingLevel,",
+    "createAgentSessionFromServices({services:services2,sessionManager:sessionManager2,sessionStartEvent,model:sessionOptions.model,thinkingLevel:sessionOptions.thinkingLevel,temperature:sessionOptions.temperature,",
+    "main.js -> services temperature",
+)
+
+# 4) services pass-through
+rep(
+    "function createAgentSessionFromServices(options){return createAgentSession({cwd:options.services.cwd,agentDir:options.services.agentDir,modelRuntime:options.services.modelRuntime,settingsManager:options.services.settingsManager,resourceLoader:options.services.resourceLoader,sessionManager:options.sessionManager,model:options.model,thinkingLevel:options.thinkingLevel,",
+    "function createAgentSessionFromServices(options){return createAgentSession({cwd:options.services.cwd,agentDir:options.services.agentDir,modelRuntime:options.services.modelRuntime,settingsManager:options.services.settingsManager,resourceLoader:options.services.resourceLoader,sessionManager:options.sessionManager,model:options.model,thinkingLevel:options.thinkingLevel,temperature:options.temperature,",
+    "createAgentSessionFromServices pass-through",
+)
+
+# 5) createAgentSession: env + YAML fallback (MUST insert AFTER `extensionRunnerRef={};`
+#    statement terminator — inserting inside the let-chain causes SyntaxError)
+rep(
+    "extensionRunnerRef={};agent=new Agent({initialState:{systemPrompt:\"\",model,thinkingLevel,tools:[]},",
+    'extensionRunnerRef={};let temperature=options.temperature;if(temperature===void 0){let envTemperature=Number(process.env.PI_SUBAGENT_TEMPERATURE);Number.isFinite(envTemperature)&&(temperature=envTemperature)}if(temperature===void 0){let agentName=process.env.PI_SUBAGENT_CHILD_AGENT;if(agentName){try{let yamlText=readFileSync(join29(getAgentDir(),"agents",agentName+".md"),"utf8"),tempMatch=yamlText.match(/^temperature:\\s*([0-9.]+)/m);tempMatch&&(temperature=Number(tempMatch[1]))}catch(e){}}}agent=new Agent({initialState:{systemPrompt:"",model,thinkingLevel,tools:[]},temperature,',
+    "createAgentSession env+YAML resolution",
+)
+
+# 6) Agent constructor
+rep(
+    'this.toolExecution=runtimeOptions.toolExecution??"parallel"',
+    'this.toolExecution=runtimeOptions.toolExecution??"parallel",this.temperature=runtimeOptions.temperature',
+    "Agent constructor this.temperature",
+)
+
+# 7) createLoopConfig
+rep(
+    "createLoopConfig(options={}){let skipInitialSteeringPoll=options.skipInitialSteeringPoll===!0,shouldStopAfterTurn=this.shouldStopAfterTurn;return{model:this._state.model,reasoning:this._state.thinkingLevel===\"off\"?void 0:this._state.thinkingLevel,",
+    "createLoopConfig(options={}){let skipInitialSteeringPoll=options.skipInitialSteeringPoll===!0,shouldStopAfterTurn=this.shouldStopAfterTurn;return{model:this._state.model,temperature:this.temperature,reasoning:this._state.thinkingLevel===\"off\"?void 0:this._state.thinkingLevel,",
+    "createLoopConfig exports temperature",
+)
+
+# Integrity assertions
+asserts = {
+    "args --temperature": 'arg==="--temperature"&&i+1<args.length' in content,
+    "parsed.temperature": "parsed.temperature!==void 0" in content,
+    "sessionOptions.temperature": "temperature:sessionOptions.temperature" in content,
+    "services pass-through": "thinkingLevel:options.thinkingLevel,temperature:options.temperature" in content,
+    "env resolution": "PI_SUBAGENT_TEMPERATURE" in content,
+    "yaml fallback": "PI_SUBAGENT_CHILD_AGENT" in content,
+    "this.temperature": "this.temperature=runtimeOptions.temperature" in content,
+    "createLoopConfig": "temperature:this.temperature" in content,
+}
+
+failed = [k for k, v in asserts.items() if not v]
+for k, v in asserts.items():
+    print(f"  {'✅' if v else '❌'} assert {k}")
+
+if failed:
+    print(f"❌ FAILED assertions: {failed}")
+    sys.exit(1)
+
+if content != orig:
+    with open(B, "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"🎉 bundle patched ({patched} insertion(s))")
+else:
+    print("  no changes (already patched)")
+
+for w in warnings:
+    print(w)
+if warnings:
+    sys.exit(2)
+PYEOF
+    # 6. pi-subagents source patches
+    # v2.19.0 FIX: this call was previously orphaned at the tail of apply_082x(),
+    # so bundle mode NEVER patched the src layer — every pi-subagents npm update
+    # silently wiped all 13 src checkpoints (exposed by v0.57.0, the 17th removal).
+    apply_pi_subagents
 }
 
 # ─── v0.82.x patterns ──────────────────────────────────────────────────────
@@ -682,13 +864,18 @@ MAJOR_MINOR=$(echo "$PICA_VER" | grep -oP '^\d+\.\d+')
 case "$MAJOR_MINOR" in
     0.82) apply_082x ;;
     0.83|0.84|0.85|0.86|0.87|0.88|0.89)
-        # v0.83.0 verified: uses same 0.82.x patterns with improved fallbacks
-        # v0.83.0 delta: agent-session-services.js has sessionStartEvent as last field
-        #               agent.js createLoopConfig reasoning line unchanged
-        echo "  Applying v0.83.x temperature chain patches (compatible with 0.82.x patterns)..."
-        apply_082x
-        ;;
-    *)
+        if [ "$BUNDLE_MODE" = "1" ]; then
+            # v2.18.0: pi-coding-agent >= 0.84.3 esbuild bundle 架构
+            # 运行时仅加载 dist/bundle/chunks/*.js，散装 dist/*.js 不加载
+            apply_bundle
+        else
+            # v0.83.0 verified: uses same 0.82.x patterns with improved fallbacks
+            # v0.83.0 delta: agent-session-services.js has sessionStartEvent as last field
+            #               agent.js createLoopConfig reasoning line unchanged
+            echo "  Applying v0.83.x temperature chain patches (compatible with 0.82.x patterns)..."
+            apply_082x
+        fi
+        ;;    *)
         echo "  ❌ Unknown pi-coding-agent version: v$PICA_VER"
         echo "  Cannot auto-apply. Please run:"
         echo "    pi"

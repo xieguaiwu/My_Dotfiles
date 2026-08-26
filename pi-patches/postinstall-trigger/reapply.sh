@@ -1,75 +1,75 @@
 #!/usr/bin/env bash
 # =============================================================================
-# pi postinstall-trigger patch — 扩展更新后自动触发 root postinstall
+# pi-agent patches — reapply after npm updates
 # =============================================================================
-# 问题（2026-08-11 确认根因）：`pi update --extensions` 使用
-#   npm install <specs> --prefix <root> --legacy-peer-deps
-# npm 在 install 参数含包 specs 时【不会运行 root 项目的 postinstall 脚本】
-# （实验验证：带参数 install 无 POSTINSTALL 输出，无参数 install 才触发）。
-# 因此 ~/.pi/agent/npm/package.json 的
-#   postinstall: bash ~/.pi/patches/reapply.sh && npx patch-package && bash fix-brace.sh
-# 从未被自动执行——每次 pi-subagents 升级删除 temperature 支持后，
-# 补丁都丢失，必须手动重打（已发生 10 次）。
+# This script is called by pi-agent's postinstall hook and can also be
+# run manually after any npm update (pi update, npm install, etc).
 #
-# 修复：在 package-manager.js 的 installNpmBatch() 末尾显式追加
-#   npm run postinstall --prefix <installRoot>（bun 用 --cwd）
-# 幂等：postinstall 中的 reapply.sh / patch-package / fix-brace.sh 全部幂等。
+# Patches managed here:
+#   1. Temperature chain — PI_SUBAGENT_TEMPERATURE → provider API
+#   2. Update timeouts — git fetch/clone + npm install network timeouts
+#      (pi update --extensions hanging for 28m+ when proxy stalls)
+#   3. pi-memory deep --no-rerank — reranker crashes on this machine (Vulkan/CPU)
 # =============================================================================
 
 set -e
 
-PM="$HOME/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/dist/core/package-manager.js"
+PATCHES_DIR="$(cd "$(dirname "$0")" && pwd)"
+FAIL=0
 
-if [ ! -f "$PM" ]; then
-    echo "[patch-postinstall-trigger] ⚠️  package-manager.js not found: $PM"
-    exit 1
+echo "[patch] Checking pi-agent patches..."
+
+# ─── Temperature chain ─────────────────────────────────────────────
+if [ -x "$PATCHES_DIR/temperature/reapply.sh" ]; then
+    echo ""
+    if "$PATCHES_DIR/temperature/reapply.sh" --apply; then
+        echo "[patch] Temperature chain OK"
+    else
+        echo "[patch] Temperature chain needs attention (see above)"
+        FAIL=1
+    fi
 fi
 
-python3 - << 'EOF'
-import sys
+# ─── Update timeouts ────────────────────────────────────────────────────
+if [ -x "$PATCHES_DIR/update-timeout/reapply.sh" ]; then
+    echo ""
+    if "$PATCHES_DIR/update-timeout/reapply.sh"; then
+        echo "[patch] Update timeouts OK"
+    else
+        echo "[patch] Update timeouts need attention (see above)"
+        FAIL=1
+    fi
+fi
 
-path = "/home/xieguiawu/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/dist/core/package-manager.js"
-s = open(path).read()
+# ─── pi-memory deep --no-rerank ──────────────────────────────────────
+if [ -x "$PATCHES_DIR/pi-memory-deep-norerank/reapply.sh" ]; then
+    echo ""
+    if "$PATCHES_DIR/pi-memory-deep-norerank/reapply.sh"; then
+        echo "[patch] pi-memory deep --no-rerank OK"
+    else
+        echo "[patch] pi-memory deep --no-rerank need attention (see above)"
+        FAIL=1
+    fi
+fi
 
-MARK = "POSTINSTALL_TRIGGER_PATCHED"
-if MARK in s:
-    print("[patch-postinstall-trigger] ✅ already patched")
-    sys.exit(0)
+# ─── postinstall trigger ─────────────────────────────────────────────
+# npm skips root lifecycle scripts when install args include specs, so
+# installNpmBatch() must explicitly run the root postinstall after every
+# managed install/update, otherwise reapply.sh never runs automatically.
+if [ -x "$PATCHES_DIR/postinstall-trigger/reapply.sh" ]; then
+    echo ""
+    if "$PATCHES_DIR/postinstall-trigger/reapply.sh"; then
+        echo "[patch] postinstall trigger OK"
+    else
+        echo "[patch] postinstall trigger needs attention (see above)"
+        FAIL=1
+    fi
+fi
 
-# ── installNpmBatch: npm install 后显式触发 root postinstall ──────────────
-old = """    async installNpmBatch(specs, scope) {
-        const installRoot = this.getNpmInstallRoot(scope, false);
-        this.ensureNpmProject(installRoot);
-        await this.runNpmCommand(this.getNpmInstallArgs(specs, installRoot));
-    }"""
+# ─── (future patches) ──────────────────────────────────────────────
 
-new = """    async installNpmBatch(specs, scope) {
-        const installRoot = this.getNpmInstallRoot(scope, false);
-        this.ensureNpmProject(installRoot);
-        await this.runNpmCommand(this.getNpmInstallArgs(specs, installRoot));
-        // POSTINSTALL_TRIGGER_PATCHED: npm skips the root project's lifecycle
-        // scripts when install args include package specs, so explicitly run
-        // the root postinstall (reapply.sh + patch-package + fix-brace.sh)
-        // after every managed install/update.
-        try {
-            const pmName = this.getPackageManagerName();
-            if (pmName === "bun") {
-                await this.runNpmCommand(["run", "postinstall", "--cwd", installRoot]);
-            } else {
-                await this.runNpmCommand(["run", "postinstall", "--prefix", installRoot]);
-            }
-        } catch (error) {
-            // A missing/failing root postinstall must not break extension installs.
-        }
-    }"""
-
-if old not in s:
-    print("⚠️  installNpmBatch anchor missing — version drift, manual check")
-    print("   Expected snippet:")
-    print(old)
-    sys.exit(2)
-
-s = s.replace(old, new, 1)
-open(path, "w").write(s)
-print("[patch-postinstall-trigger] ✅ patched: installNpmBatch now triggers root postinstall")
-EOF
+if [ $FAIL -eq 0 ]; then
+    echo "[patch] All patches applied"
+else
+    echo "[patch] Some patches could not be applied — review output above"
+fi
