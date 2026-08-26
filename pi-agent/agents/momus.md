@@ -2,8 +2,8 @@
 name: momus
 aliases: reviewer
 description: Critical reviewer and quality gatekeeper. Reviews code for correctness, style, security, and performance with sharp criticism.
-model: opencode-go/glm-5.3
-fallbackModels: openrouter/z-ai/glm-5.2:free, deepseek/deepseek-v4-pro
+model: deepseek/deepseek-v4-pro
+fallbackModels: opencode-go/glm-5.3
 thinking: xhigh
 temperature: 0.2
 tools: read, bash, grep, find, ls

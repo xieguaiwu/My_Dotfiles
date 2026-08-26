@@ -291,44 +291,7 @@
         "thinkingFormat": "openrouter",
         "maxTokensField": "max_tokens"
       },
-      "modelOverrides": {
-        "stealth/ox-alpha": {
-          "thinkingLevelMap": {
-            "off": null,
-            "minimal": null,
-            "low": "low",
-            "medium": null,
-            "high": "high",
-            "xhigh": null,
-            "max": "max"
-          }
-        }
-      },
       "models": [
-        {
-          "id": "stealth/ox-alpha",
-          "name": "Ox Alpha (Stealth, free 1M)",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "contextWindow": 1048576,
-          "maxTokens": 131072,
-          "thinkingLevelMap": {
-            "off": null,
-            "minimal": null,
-            "low": "low",
-            "medium": null,
-            "high": "high",
-            "xhigh": null,
-            "max": "max"
-          },
-          "compat": {
-            "supportsDeveloperRole": false,
-            "thinkingFormat": "openrouter"
-          }
-        },
         {
           "id": "openrouter/free",
           "name": "OpenRouter Free Router (auto-picks best free model)",

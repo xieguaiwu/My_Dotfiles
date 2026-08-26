@@ -2,11 +2,11 @@
 name: oracle
 aliases: oracle-builtin
 description: Verification and validation specialist. Checks correctness, catches errors, and ensures quality standards are met.
-model: opencode-go/glm-5.2
-fallbackModels: openrouter/z-ai/glm-5.2:free, deepseek/deepseek-v4-pro
+model: deepseek/deepseek-v4-pro
+fallbackModels: opencode-go/glm-5.3
 thinking: xhigh
 temperature: 0.2
-tools: read, bash, grep, find, ls, mcp:sequential-thinking
+tools: read, bash, grep, find, ls
 skills: graphify
 ---
 
