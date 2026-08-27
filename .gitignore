@@ -40,3 +40,6 @@ __pycache__/
 alpine.passfile
 pulse/cookie
 sunshine/credentials/cakey.pem
+
+# pi web-search 配置（tavily key 走环境变量 TAVILY_API_KEY，禁止明文入库）
+.pi/web-search.json
