@@ -117,6 +117,16 @@ else
     sudo apt install -y vim neovim
 fi
 
+echo ">>> Installing Chinese LaTeX support (ctex/xeCJK)..."
+if [ "$DISTRO" = "fedora" ]; then
+    # texlive-ctex/texlive-xecjk: ctex 宏包与 xeCJK（xelatex 中文排版）
+    # texlive-fandol: ctex 默认中文字体（宋体/黑体/楷体/仿宋）
+    sudo dnf install -y texlive-xetex texlive-ctex texlive-xecjk texlive-fandol
+else
+    # Debian/Kali: texlive-lang-chinese 包含 ctex、xeCJK、fandol 等
+    sudo apt install -y texlive-xetex texlive-lang-chinese
+fi
+
 if [ "$DISTRO" = "fedora" ]; then
     [ -f ~/My_Dotfiles/vimrc ] && mv -f ~/My_Dotfiles/vimrc ~/.vimrc
     [ -f ~/My_Dotfiles/nethackrc ] && mv -f ~/My_Dotfiles/nethackrc ~/.nethackrc

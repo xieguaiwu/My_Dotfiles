@@ -7,6 +7,11 @@ set -gx OPENCODE_API_KEY "<your-key>"
 #xieguaiwu: "<your-key>"
 #songjieshi: set -gx OPENCODE_API_KEY "<your-key>"
 set -gx DEEPSEEK_API_KEY "<your-key>"
+# QWEN Token Plan (订阅, token-plan.*.maas): 2026-08-29 实测 cn-beijing 200，key 按区域绑定只能用北京端点
+# pi 的 qwen provider 用这个 (baseUrl=token-plan.cn-beijing...)
+set -gx QWEN_API_KEY "<your-key>"
+# QWEN PAYG (按量, dashscope.aliyuncs.com/compatible-mode): bl 翻译走这条 (见 ~/.config/bl/config.json provider qwen)
+set -gx QWEN_PAYG_API_KEY "<your-key>"
 set -gx NVIDIA_API_KEY "<your-key>"
 set -gx MODELSCOPE_API_KEY "<your-key>"
 set -gx VOLCENGINE_API_KEY "<your-key>"
