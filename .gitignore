@@ -46,3 +46,9 @@ sunshine/credentials/cakey.pem
 
 # Secrets
 qweather/qw.env
+
+# 服务器清单（IP/端口/用户，不入公开仓）
+.pi/agent/resmon-remote/
+
+# 加密私钥备份（gpg 加密也禁入公开仓）
+qweather/ed25519-private.pem.gpg
