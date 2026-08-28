@@ -1,6 +1,6 @@
 {
-  "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-flash",
+  "defaultProvider": "qwen",
+  "defaultModel": "qwen3.8-flash",
   "defaultThinkingLevel": "xhigh",
   "hideThinkingBlock": true,
   "theme": "opencode",
@@ -92,6 +92,12 @@
         "turnBudget": {
           "maxTurns": 20,
           "graceTurns": 3
+        }
+      },
+      "sisyphus-junior": {
+        "turnBudget": {
+          "maxTurns": 25,
+          "graceTurns": 5
         }
       }
     }

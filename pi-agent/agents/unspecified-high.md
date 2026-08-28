@@ -2,7 +2,7 @@
 name: unspecified-high
 description: General-purpose high-capability agent. For complex tasks requiring deep reasoning and comprehensive solutions.
 model: deepseek/deepseek-v4-pro
-fallbackModels: openrouter/z-ai/glm-5.2:free, opencode-go/deepseek-v4-pro
+fallbackModels: opencode-go/deepseek-v4-pro
 thinking: xhigh
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls

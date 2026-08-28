@@ -7,10 +7,12 @@ set -gx OPENCODE_API_KEY "<your-key>"
 #xieguaiwu: "<your-key>"
 #songjieshi: set -gx OPENCODE_API_KEY "<your-key>"
 set -gx DEEPSEEK_API_KEY "<your-key>"
-# QWEN Token Plan (订阅, token-plan.*.maas): 2026-08-29 实测 cn-beijing 200，key 按区域绑定只能用北京端点
+# QWEN Token Plan (订阅, token-plan.*.maas): 已激活 ✅ 2026-08-29 02:0x 实测 cn-beijing 200（chat+models 双验）；
+# 同 key 在 ap-southeast-1 仍 401——key 按区域绑定，只能用北京端点；01:30 前 401 系订阅未生效（激活延迟）
 # pi 的 qwen provider 用这个 (baseUrl=token-plan.cn-beijing...)
 set -gx QWEN_API_KEY "<your-key>"
-# QWEN PAYG (按量, dashscope.aliyuncs.com/compatible-mode): bl 翻译走这条 (见 ~/.config/bl/config.json provider qwen)
+# QWEN PAYG (按量, dashscope.aliyuncs.com/compatible-mode): 实测 qwen3.8-flash / qwen3.8-max 可用
+# bl 翻译走这条 (见 ~/.config/bl/config.json provider qwen)
 set -gx QWEN_PAYG_API_KEY "<your-key>"
 set -gx NVIDIA_API_KEY "<your-key>"
 set -gx MODELSCOPE_API_KEY "<your-key>"
@@ -18,6 +20,7 @@ set -gx VOLCENGINE_API_KEY "<your-key>"
 set -gx OPENROUTER_API_KEY "<your-key>"
 set -gx ZHIPUAI_API_KEY "<your-key>"
 set -gx KIMI_API_KEY "<your-key>"
+set -gx AGIBAR_API_KEY "<your-key>"
 
 tirith init
 /usr/bin/starship init fish --print-full-init | source
@@ -169,8 +172,8 @@ set -gx HTTPS_PROXY http://127.0.0.1:7897
 set -gx http_proxy http://127.0.0.1:7897
 set -gx https_proxy http://127.0.0.1:7897
 # AGI Bar 店内 API 直连（2026-08-25 实测：小写优先，必须两个都设）
-set -gx no_proxy "agi.bar,token.agi.bar,localhost,127.0.0.1,::1"
-set -gx NO_PROXY "agi.bar,token.agi.bar,localhost,127.0.0.1,::1"
+set -gx no_proxy "agi.bar,token.agi.bar,api.deepseek.com,openrouter.ai,api.moonshot.cn,open.bigmodel.cn,api-inference.modelscope.cn,integrate.api.nvidia.com,opencode.ai,localhost,127.0.0.1,::1"
+set -gx NO_PROXY "agi.bar,token.agi.bar,api.deepseek.com,openrouter.ai,api.moonshot.cn,open.bigmodel.cn,api-inference.modelscope.cn,integrate.api.nvidia.com,opencode.ai,localhost,127.0.0.1,::1"
 set -gx PUPPETEER_EXECUTABLE_PATH /home/xieguiawu/.cache/puppeteer/chrome/linux-149.0.7827.22/chrome-linux64/chrome
 set -gx GOTOOLCHAIN auto
 set -gx GOPATH $HOME/go
