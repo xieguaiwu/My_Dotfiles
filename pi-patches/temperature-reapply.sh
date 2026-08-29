@@ -1,6 +1,15 @@
 #!/bin/bash
 # Reapply pi-agent temperature chain patches (version-aware)
-# Last updated: 2026-08-26 — v2.19.0: pi-subagents 0.57.0 (17th removal) + CRITICAL fix:
+# Last updated: 2026-08-29 — v2.20.0: pi-subagents 0.59.0 (18th removal) / pi-coding-agent 0.84.4 + CRITICAL fix:
+#   esbuild 入口 chunk 名**不得硬编码**。v2.18.0/2.19.0 把检测写成 grep 'chunk-E5KXRMZK'，
+#   而 0.84.4 构建产物改名为 chunk-OMWWHBTG.js → 检测退化成 bundle=0 → 去查运行时根本不
+#   加载的散装 dist/*.js（v2.18.0 刚修过的假阳性陷阱复发），报「20 缺失」但补丁落点错误。
+#   v2.20.0 改为从 bin 入口 dist/bundle/cli.js 解析 import 的 chunk 列表，取体积最大且含
+#   createAgentSessionFromServices 结构标记者为入口 chunk；apply_bundle 经 PI_BUNDLE_CHUNK
+#   环境变量取路径，路径未解析时拒绝打补丁。实测 0.84.4 七个 bundle 锚点全部存活（零改写）。
+#   运行时断链模拟四场景通过：YAML 兜底 explore.md=0.1 / env 0.7 优先 / CLI 0.3 最高 / 全未设=undefined。
+#
+# v2.19.0: pi-subagents 0.57.0 (17th removal) + CRITICAL fix:
 #   apply_pi_subagents 调用曾被孤立在 apply_082x() 尾部——bundle 模式（pi-coding-agent >= 0.84.3）
 #   永远不会走到它，src 层补丁在每次 pi-subagents 更新后无人重打。v0.57.0 更新暴露此 bug。
 #   v2.19.0 将调用移入 apply_bundle() 尾部，两条路径均重打 src 层。锚点 v0.57.0 全部存活无需适配。(17th removal)
@@ -98,15 +107,37 @@ SUB_MM=$(echo "$SUB_VER" | grep -oP '^\d+\.\d+')
 SUB_CFG_SER=$(awk -v a="${SUB_MM:-0}" 'BEGIN{print (a>=0.55)?1:0}')
 # v2.18.0: pi-coding-agent >= 0.84.3 改为 esbuild bundle 架构 — bin 入口
 # dist/bundle/cli.js -> chunks/*.js（全内联），散装 dist/*.js 运行时不被加载。
-# 检测：bin 入口存在且引用 chunk-E5KXRMZK 即视为 bundle 模式。
+# v2.20.0: 入口 chunk 名不再硬编码。esbuild 每次构建都可能改 hash
+#   （0.84.3=chunk-E5KXRMZK → 0.84.4=chunk-OMWWHBTG），硬编码会让 bundle 检测
+#   退化成 bundle=0，然后去查运行时根本不加载的散装 dist/*.js —— 即 v2.18.0
+#   修过的假阳性陷阱复发。改为从 bin 入口解析被 import 的 chunk 列表，
+#   取其中体积最大的那个（全内联主 chunk），并要求它含已知结构标记。
 BUNDLE_CLI="$PICA/dist/bundle/cli.js"
-BUNDLE_CHUNK="$PICA/dist/bundle/chunks/chunk-E5KXRMZK.js"
-if [ -f "$BUNDLE_CLI" ] && grep -q 'chunk-E5KXRMZK' "$BUNDLE_CLI" 2>/dev/null && [ -f "$BUNDLE_CHUNK" ]; then
+BUNDLE_CHUNK=""
+if [ -f "$BUNDLE_CLI" ]; then
+    BUNDLE_CHUNK=$(node -e '
+        const fs = require("fs"), path = require("path");
+        const cli = process.argv[1];
+        const src = fs.readFileSync(cli, "utf8");
+        const names = [...src.matchAll(/\.\/chunks\/(chunk-[A-Za-z0-9_]+)\.js/g)].map(m => m[1]);
+        const dir = path.join(path.dirname(cli), "chunks");
+        let best = "", bestSize = -1;
+        for (const n of [...new Set(names)]) {
+            const p = path.join(dir, n + ".js");
+            try { const s = fs.statSync(p).size; if (s > bestSize) { bestSize = s; best = p; } } catch {}
+        }
+        // 主 chunk 必须是内联了 agent-session 结构的那份，否则视为解析失败
+        if (best && !/createAgentSessionFromServices/.test(fs.readFileSync(best, "utf8"))) best = "";
+        if (best) console.log(best);
+    ' "$BUNDLE_CLI" 2>/dev/null)
+fi
+if [ -n "$BUNDLE_CHUNK" ]; then
     BUNDLE_MODE=1
 else
     BUNDLE_MODE=0
 fi
 echo "=== Temperature chain check — pi-coding-agent v$PICA_VER / pi-subagents v$SUB_VER (bundle=$BUNDLE_MODE) ==="
+[ "$BUNDLE_MODE" = "1" ] && echo "    entry chunk: $(basename "$BUNDLE_CHUNK") ($(wc -c < "$BUNDLE_CHUNK") bytes)"
 
 # ─── Verification ───────────────────────────────────────────────────────────
 PASS=0 FAIL=0
@@ -206,7 +237,7 @@ fi
 if [ "$1" != "--apply" ] && [ "$1" != "-a" ]; then
     echo ""
     echo "  ⚠️  Temperature chain broken ($FAIL checkpoints)."
-    echo "  Run with --apply to auto-fix (v0.82.x - v0.89.x / bundle>=0.84.3 / pi-subagents <= v0.57.x):"
+    echo "  Run with --apply to auto-fix (v0.82.x - v0.89.x / bundle>=0.84.3 入口 chunk 自动解析 / pi-subagents <= v0.59.x):"
     echo "    $0 --apply"
     echo "  Or ask pi: 'apply temperature fix from subagent-temperature-fix skill'"
     exit 1
@@ -507,11 +538,12 @@ PYEOF
 
 # ─── v2.18.0 bundle architecture patches ───────────────────────────────────
 apply_bundle() {
-    echo "  Applying v2.18.0 bundle temperature chain patches (esbuild chunk-E5KXRMZK.js)..."
-    python3 << 'PYEOF'
-import sys
+    echo "  Applying v2.20.0 bundle temperature chain patches (esbuild $(basename "${BUNDLE_CHUNK:-<unresolved>}"))..."
+    [ -f "${BUNDLE_CHUNK:-}" ] || { echo "  ❌ BUNDLE_CHUNK unresolved — refusing to patch"; return 1; }
+    PI_BUNDLE_CHUNK="$BUNDLE_CHUNK" python3 << 'PYEOF'
+import sys, os
 
-B = "/home/xieguiawu/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/dist/bundle/chunks/chunk-E5KXRMZK.js"
+B = os.environ["PI_BUNDLE_CHUNK"]
 
 with open(B, "r", encoding="utf-8") as f:
     content = f.read()
