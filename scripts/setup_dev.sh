@@ -151,6 +151,20 @@ else
     sudo apt install -y pkg-config ccache || true
 fi
 
+echo ">>> 安装 Wayland/sway 构建依赖（编译 sway fork 补丁版所需，见 System_Fix/sway-resume-ebusy-ime-crash.md）"
+if [ "$DISTRO" = "fedora" ]; then
+    # ⚠️ wlroots 版本硬绑定：sway v1.10↔wlroots0.18 / v1.11↔0.19 / v1.12↔0.20 / master↔0.21
+    # Fedora 42 仓库只有到 wlroots0.18-devel（包名是 wlroots0.18，不是 wlroots），故 sway fork 编译目标固定 upstream/v1.10
+    # scdoc 可选：缺省时 meson 用 -Dman-pages=disabled 跳过即可
+    sudo dnf install -y gcc ninja-build pkgconf-pkg-config git \
+        wayland-devel wayland-protocols-devel libxkbcommon-devel json-c-devel \
+        libevdev-devel libinput-devel mesa-libGLES-devel xcb-util-wm-devel \
+        wlroots0.18-devel pango-devel cairo-devel pixman-devel libdrm-devel \
+        systemd-devel libglvnd-devel
+else
+    echo ">>> 非 Fedora：Wayland 构建依赖请按发行版自行安装（关键：wlroots 版本必须匹配 sway 目标分支，Debian/Ubuntu 自带版本通常偏旧）"
+fi
+
 cd ~/Downloads
 wget "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.16.9/tectonic-0.16.9-x86_64-unknown-linux-gnu.tar.gz"
 gunzip ./tectonic-0.16.9-x86_64-unknown-linux-gnu.tar.gz
