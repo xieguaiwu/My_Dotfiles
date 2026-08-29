@@ -106,8 +106,8 @@ exec --no-startup-id blueman-applet
 # 自动挂载可移动媒体
 exec --no-startup-id udiskie -t
 
-exec --no-startup-id pkill -x wl-paste; wl-paste --type text --watch clipman store
-exec --no-startup-id pkill -x wl-paste; wl-paste --type image --watch clipman store
+exec --no-startup-id "pkill -x wl-paste; wl-paste --type text --watch clipman store"
+exec --no-startup-id "pkill -x wl-paste; wl-paste --type image --watch clipman store"
 bindsym $mod+V exec clipman pick --tool=wofi
 
 # --- 应用启动器 ---
