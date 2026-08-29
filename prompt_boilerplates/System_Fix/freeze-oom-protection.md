@@ -1,6 +1,6 @@
 ---
 name: freeze-oom-protection
-version: 1.3.0
+version: 1.4.0
 description: 死机/OOM thrash 冻结排查与一劳永逸防护——earlyoom 兜底 + systemd-oomd 加固 + 进程限流 + i915 PSR 显示管线风暴修复。基于三次死机实战（2026-08-10 20:09 chrome 泄漏引爆 + 2026-08-18 17:48 zram 盲区 thrash + 2026-08-24 22:17 OOM 重启）：Kaby Lake i915 + sway + zram，15GB RAM
 triggers:
   - "死机"
@@ -39,6 +39,17 @@ journalctl -b -1 --since "20分钟前" --no-pager | tail -50
 ```
 
 **铁律**：`Purging GPU memory` = i915 shrinker 被内存压力触发。看到它 = 内存告急。
+
+**shmem 尖峰 OOM（2026-08-26 实锤）**：全局 OOM 的另一条快车道 = 匿名共享内存（memfd/tmpfs）
+瞬时爆量。OOM 时 Mem-Info 特征：`shmem: 11.5GB` + `Free swap = 0kB`（zram 8G 全被
+shmem 页填满）+ 进程 rss_shmem 全 0（页都在 swap）。**这种模式进程常驻很小、OOM killer
+只能杀小进程（wezterm/wireplumber/portal），元凶进程可能已被杀或正常退出、事后无法归因**。
+判定法：`journalctl -b | grep oom-kill` 看 Mem-Info 的 shmem 字段 + zspages 是否异常。
+**earlyoom 盲区**：shmem 尖峰可在 <1 秒内把 MemFree 打到 0（earlyoom 1s 轮询可能错过），
+且 MemAvailable 对「可换出 shmem」的反映滞后（swap 满前都算可回收）。防护要点：
+- /tmp、/dev/shm 配额本身有上限（本机 7.8G），但 memfd 不受挂载配额限制
+- 高密度操作（多次 `pi -r` 叠加、大文件载入、daily_signal 类重试调试）前后 `free -h` + `grep Shmem /proc/meminfo`
+- 日常监控加 shmem 突增告警（Shmem > 4G 即警惕）
 
 **死机元凶排查**：本机死机常由 chrome 内存泄漏引爆（2026-08-10 20:09 死机 = reaper 误杀 bridge zygote 树 → worker 失败循环 → CPU 100% + 内存缓涨 → thrash 冻结）。排查内存压力源时先看 chrome：
 
@@ -176,6 +187,20 @@ systemctl show user@$(loginctl list-users --no-legend | awk '$1!=0{print $1;exit
   （--prefer 优先杀 Web Content，pi/bun 不在 avoid 列表）——设计权衡：宁杀进程不冻死整机
 
 ## 变更记录
+
+### 1.4.0 (2026-08-26)
+- 新增：shmem 尖峰 OOM 认知（全局 OOM 第二条快车道）——08-26 23:42 实战：shmem 11.5GB
+  瞬时尖峰 + zram 8G 填满（Free swap 0）→ 全局 OOM 连杀 wezterm-gui/wireplumber/portal/
+  vinput/tor(SIGABRT)/sd-pam；Purging GPU memory 全集中在事发 2 分钟（此前整天 0 次）=
+  突发非渐进；进程 rss_shmem 全 0（页全在 swap）导致元凶进程事后无法从 OOM 表归因；
+  OOM 前后唯一异常活动 = 用户 23:40 多次 `pi -r`（3 个 bun 实例，VIRT 77GB 为 JSC 虚拟
+  预留常态，VmRSS 仅 1.5MB，非元凶）+ daily_signal.py 三次崩溃调试；earlyoom 全程未出手
+  （8%/100% 阈值配置正确但被 <1s 尖峰绕过）；系统 23:44 自愈（shmem 138MB、swap 6.1G）
+- 新增：防护要点——shmem 突增告警（Shmem>4G）、大操作前后 grep Shmem、pi -r 防叠加
+- 新增：判定法（journalctl oom-kill 看 Mem-Info shmem/zspages 字段）
+- 验证：coredump.conf ExternalSizeMax=128M 已生效（08-17 遗留项完成），/proc/cmdline
+  i915.enable_psr=0 生效；Atomic commit failed 从 08-24 boot 日均 50 万降至日均 3.1 万
+  （PSR 修复部分生效，未归零）
 
 ### 1.3.0 (2026-08-24)
 - **修复：earlyoom -M/-S 单位坑**——1.8.2 的 -M/-S 是 KiB 且覆盖 -m/-s；08-18 配置

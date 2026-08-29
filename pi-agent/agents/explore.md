@@ -3,7 +3,7 @@ name: explore
 aliases: scout
 description: Fast codebase explorer. Searches code, traces dependencies, finds patterns, and maps project structure rapidly.
 model: qwen/qwen3.8-flash
-fallbackModels: deepseek/deepseek-v4-flash, opencode-go/deepseek-v4-flash
+fallbackModels: deepseek/deepseek-v4-flash
 thinking: medium
 temperature: 0.1
 tools: read, bash, grep, find, ls

@@ -1,6 +1,6 @@
 ---
 name: ml-training
-version: 1.7.0
+version: 1.8.0
 description: 在远程服务器上进行机器学习训练任务的完整方法论——从环境检查、烟雾测试、看门狗自动化、训练监控、可视化诊断到结果验证的全流程。额外定义结果不理想时的自主优化循环：批判性评估→修复施工→重新训练→再评估
 triggers:
 - 训练模型
@@ -62,11 +62,38 @@ tools:
 
 # ML 训练方法论
 
+## L0 快速决策卡（弱模型执行面 · 所有模型的任务入口）
+
+> **谁读本卡**：deepseek-v4-flash 等小模型**只常驻本卡**，其余章节按分支按需加载；强模型亦以本卡为任务入口，先走卡后进章节。本卡把训练全程压缩为**五闸口状态机**，每步都附机械命令或脚本——判断不靠模型，靠命令输出。
+> 依据：AgentRE-Bench V2（小非思考模型以「低幻觉校准」赢全场；V4 Flash Main 分超 V4 Pro）、MLS-Bench（弱模型擅长工程执行、发明≈模仿基线、更多自主权反而更差）。
+
+**状态机**：`ENTRY → SERVER → SMOKE → TRAIN → EVAL → FALSIFY → DOCUMENT → DONE`
+每个状态只做表中一件事，做完把状态写进 `scratchpad` / `watchdog_status.json`——**状态活在磁盘上，不活在模型脑内**（跨会话、跨模型、跨断链无缝）。
+
+| 闸口 | 必做（逐条打勾） | 通过判据 = 命令输出（禁止主观判断） |
+|:---|:---|:---|
+| 1 ENTRY 读文档 | ① CONTEXT_FOR_NEXT_AGENT.md 顶部快照 ② FILE_TIMELINESS_INDEX.md 时效标签（🟡🔴 文件先确认再碰）③ FALSIFICATION_SUMMARY.md（已证伪方向禁止重试）④ VISION.md（声明本任务在 S/M/L 哪一档） | 输出 §0.5 执行摘要 |
+| 2 SERVER 实测 | ssh 登录 + `nvidia-smi` + `ps aux | grep -E 'python.*train' | grep -v grep` + `df -h`（§0.2：文档说的 ≠ 服务器实际） | GPU 空闲、无他进程、磁盘 >10GB |
+| 3 SMOKE 10 步 | §Step 1 烟雾测试 + 三张核心图（§训练可视化） | 10/10 完成、无 NaN/overflow/ConstantInput、单步 <3× 预期 |
+| 4 TRAIN | §Step 2-6：GPU 隔离 + `PYTHONUNBUFFERED=1` + `-u` + checkpoint | 进程存活 + 日志持续输出（§Step 3 双通道） |
+| 5 EVAL 三图验收 | 拉三图 + training_metrics.json，对照 §七 量化验收阈表逐项打分 | 每条结论附数字（禁止「看起来不错」） |
+| 6 FALSIFY 证伪审计 | 跑机械审计（降级链第 1 条）：`formula_health_gate.py` / 判活门 / 项目 `falsification_audit.py`，读 verdict JSON（见 quant-ml-falsification §1.4/§1.5） | verdict PASS/FAIL + 证据路径；⚠️/🔥 → §十一自优化闭环 |
+| 7 DOCUMENT | §Step 7.1 文档表 + VISION 勾选 + FALSIFICATION 更新 + graphify | grep 确认新内容落盘（verification-before-completion Gate Function） |
+
+**弱模型红线（本卡优先于一切章节）**：
+1. **不自诊**——弱模型自诊 = 确认偏误复读机。诊断一律先跑脚本；脚本无覆盖才派强批判 subagent；两者都无才人工（降级链见 quant-ml-falsification §1.4）。
+2. **不发明**——弱模型职责 = 执行 + 兑现 + 判活。新方法来源 = 机制假设库 / prior 种子（机制先验注入，见 fusion 分支 `mechanism_prior.py` + `factory_prior.py`）/ 用户指令；禁止弱模型自由发明新方法（MLS-Bench：弱模型发明 ≈ 模仿基线）。
+3. **不跳闸口**——任何闸口失败即停，禁止「先跑起来再说」。
+4. **声称必附证据**——任何「完成/通过」必须带本次命令输出（verification-before-completion 铁律）。
+
+> 章节加载规则：闸口引用的 §0.2/§Step 1/§七/§十一 等按需加载对应章节，**勿整文件常驻**。可视化代码、罕见事故案例、κ 指标等属 L2 参考库，grep 按需取用。
+
 ## 任务目标
 
 在远程服务器上可靠地执行机器学习训练任务，避免资源竞争、静默失败、输出缓冲、NaN爆炸等常见陷阱。本 skill 总结了实际项目中反复遇到的训练事故及修复方法。
 
-> **📖 快速导航**：本文件 ~4700 行，建议先读以下核心章节了解全貌：
+> **📖 快速导航**：本文件 ~4800 行，建议先读以下核心章节了解全貌：
+> - **L0 快速决策卡**（§L0）— 五闸口状态机 + 弱模型红线；deepseek-v4-flash 等弱模型只常驻本卡，其余章节按需加载
 > - **第零步**：了解项目（§0）— 必读，避免盲目行动
 > - **执行流程**（§Step 1-7）— 训练标准操作流程
 > - **训练可视化 → “七、快速验收流程”**（含量化验收阈表）— 训练结果好坏的判定标准
@@ -1039,6 +1066,62 @@ PYTHONUNBUFFERED=1 nohup python3 watchdog.py > watchdog.log 2>&1 &
 ```
 （参考模式 H：Python 输出缓冲的三重陷阱）
 
+### 模式 W-E~W-I：三代自动化实测教训（2026-08，VERSION2.5 uv9all 三机链）
+
+> 以下五条来自 auto_orchestrator.sh / uv9all_agent_chain.sh / training_swap_guard.sh 实战，是看门狗模式的进化形态——**编排器 + 机械判活门 + 救援 guard 三层分离**。
+
+#### 模式 W-E：假完成标记两型——rc 吞没与空产物续行
+
+```bash
+# ❌ 型1: echo 吞退出码 → 假 rc=0 → 假完成标记 → 编排器永久卡死
+./train.sh; echo "rc=$?"     # $(date)/echo 紧跟在命令后吞掉 $?
+# ✅ 先存后输出
+./train.sh; rc=$?; echo "rc=$rc"
+```
+
+```bash
+# ❌ 型2: 等待循环超时后无条件继续, 产物缺失仍 echo COMPLETE
+for i in $(seq 1 240); do [ -f candidates.json ] && break; sleep 60; done
+screen.py candidates.json      # FileNotFoundError!
+echo "CHAIN_COMPLETE"          # 假完成标记 → 后续 agent 引用不实结论
+# ✅ 每步校验产物存在才继续, 缺失即 exit 1
+[ -f candidates.json ] || { echo "产物缺失"; exit 1; }
+```
+
+**检测**：自动化链声称完成前，校验产物文件存在 + 日志最后一行；**「完成」以产物内容为准，不以标记文件为准**。
+
+#### 模式 W-F：swap 僵死救援 guard（training_swap_guard.sh）
+
+- 判定：候选流 mtime 停滞 >30min 且（swap>2.5G 或 RSS>13.8G）→ 精确 PID kill + `/proc` cmdline 重建 + `--resume` 最新 checkpoint
+- **误杀循环根因**：新进程加载数据面板 ~10min 内候选流 mtime 不更新 → age>30min 误判再杀。加固：**同一 checkpoint 连续救援 ≥2 次 → 停手报警**
+- **先判配置超出机器能力，再决定救援**：15.9GB 机器跑全市场配置（RSS 峰值 ~15GB）永远无法完成，guard 只会循环杀——这是配置错误不是卡死
+- 实测战绩：一次救援救回 70min 进度零丢失
+
+#### 模式 W-G：pgrep/pkill 自匹配自杀（第 4 次踩坑）
+
+```bash
+# ❌ pkill -f '脚本名' 会匹配包含该字符串的当前 shell 命令自身（自杀/误杀编排器）
+pkill -f run_ashare
+# ✅ 存活判定用 ps + grep -v grep; 杀进程一律精确 PID
+ps aux | grep -E 'python.*train' | grep -v grep
+kill -9 <exact_pid>
+```
+
+#### 模式 W-H：幂等编排器四件套（auto_orchestrator / uv9all_agent_chain）
+
+| 组件 | 做法 |
+|:---|:---|
+| stamp 幂等 | 每阶段完成写 stamp 文件，重试先查 stamp（防重复烧 GPU/token） |
+| flock 互斥 | agent 阶段与 cron 每 15min 触发重叠并发 → `flock -n` 拿不到锁即退出 |
+| 白名单 + 主机灵活查找 | agent 只准碰白名单操作；结果按 preferred→all hosts 顺序查找（训练可能被救援迁移到别的机器） |
+| 退出码契约 | 机械判活门用退出码 0=PASS/1=FAIL/2=数据不齐 与编排器通信，不靠解析日志 |
+
+#### 模式 W-I：三机代码同步漂移
+
+- 训练脚本新参数（如 `--log-all`）只同步了一台 → 另两台 grep 版本对不上 → 行为分叉。**新参数落地后必须逐机 grep 验证**
+- sync `--delete` 会误删服务器独有目录（adaptive/evaluation/factor_pool/fusion）→ exclude 列表必须先于 --delete 确认
+- 服务器间直传需 sshpass（部分机无）→ 走本地中转
+
 ### 何时不用看门狗
 
 - **单个训练任务**：直接用 `run_*.py` 跑，不需要看门狗
@@ -1098,6 +1181,19 @@ def permutation_test(X, y, n_perm=2000):
 | binomial test | 同上，独立性假设不成立 |
 | block-bootstrap（单因子） | 测试因子稳定性，不是模型 OOS 性能 |
 | p=0.40 用于 Ridge 基线 | 该 p 值测的可能是另一个模型（RL 公式），不是 Ridge |
+
+### 4. 判活标准演进（2026-08，VERSION2.5 实弹口径）
+
+> 置换检验只是第一关。多候选/多次试验环境下必须叠加以下口径，全部机械可算（`core/multiple_testing.py` 等）：
+
+| 层级 | 口径 | 要点 |
+|:---|:---|:---|
+| 判死 | Harvey-Liu 剪发 t | `t_haircut = t − E[max\|t\|]`，E[max] ≈ √(2lnN)+0.5772/√(2lnN)；预注册 N44 阈值 \|t_nw\|≥4.96 / factory N376k 阈值 7.18 |
+| 主判据 | 42 日块 bootstrap | 取代 NW-t 作主判据（预注册推进中）；块 = 非重叠 42 日观测单元，CI 下界 >0 才算超额 |
+| 过拟合 | PBO / CSCV | PBO 只作排序键不设硬门；结论只在 N≥20 候选时使用 |
+| 机械判活门 | 确定性脚本 | H1 IC 线 / H2 逐窗 corr / H3 负窗数，退出码 0/1/2 与编排器通信（uv9all_auto_gate.py 范式，无 LLM） |
+| 环境稳健 | 双机逐位一致 | 同一因子双机独立重算逐位一致才算数；pandas 3.0 vs 2.1 rolling 语义、np.round 银行家舍入 vs HALF_UP（涨停价 51 样本差异）曾抓出贴线因子 |
+| 结构体检 | formula_health_gate | FRESH/DUP/DECOR/DEAD-DEP；DUP/DEAD-DEP 一票否决（F29-F33 机械化） |
 
 ---
 
@@ -4808,6 +4904,12 @@ subagent:
 ---
 
 ## 变更日志
+
+### 1.8.0 (2026-08-27)
+- 新增：§L0 快速决策卡（五闸口状态机 ENTRY→SERVER→SMOKE→TRAIN→EVAL→FALSIFY→DOCUMENT→DONE + 弱模型红线四条）——弱模型只常驻本卡、章节按需加载、状态落盘不落脑。来源：deepseek-v4-flash 弱模型覆盖方案 + AgentRE-Bench V2 / MLS-Bench 实证（弱模型擅长工程执行、发明≈模仿基线、校准声称是资产）
+- 新增：§看门狗 模式 W-E~W-I——假完成标记两型（rc 吞没/空产物续行）、swap 僵死救援 guard 与误杀循环、pgrep/pkill 自匹配自杀（第4次）、幂等编排器四件套（stamp/flock/白名单/退出码契约）、三机代码同步漂移。来源：VERSION2.5 uv9all 三机自动化链实战
+- 升级：§显著性检验规范 新增「判活标准演进」表——Harvey-Liu 剪发（N44 4.96/N376k 7.18）、42 日块 bootstrap 主判据、PBO 排序键、机械判活门退出码契约、双机逐位一致、formula_health_gate 结构体检
+- 注：1.7.0 变更日志条目缺失（版本曾跳过），本次一并恢复版本一致性
 
 ### 1.6.0 (2026-08-21)
 - 新增：VISION.md 挂接——§0.1 文档阅读清单（第 5 行）、§0.5 执行摘要「本任务在长期规划中的位置」字段、§7.1 必须更新表、§7.4 更新频率、陷阱 7 角色表

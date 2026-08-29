@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 2.9.0
+version: 2.12.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -27,6 +27,8 @@ triggers:
   - "记忆索引"
   - "关机慢"
   - "同步配置"
+  - "API key 恢复"
+  - "401 invalid_api_key"
   - "tor浏览器"
   - "tor连不上"
   - "VLC"
@@ -75,9 +77,27 @@ triggers:
   - "MEMORY_INDEX 过时"
   - "找不到历史上下文"
   - "ABRT"
+  - "sway 崩溃"
+  - "桌面回到登录界面"
+  - "被踢回登录"
+  - "合成器挂了"
+  - "终端全没了"
+  - "pi session 丢失"
+  - "Device or resource busy"
+  - "constrain_popup"
+  - "输入法崩溃"
+  - "fcitx5 崩溃"
+  - "唤醒后花屏"
+  - "合盖"
+  - "屏幕不刷新"
   - "备份 dotfiles"
   - "git 仓库审计"
   - "ghostwriter 公式"
+  - "Connection error"
+  - "连接错误"
+  - "pi 无法调用模型"
+  - "web-search.json"
+  - "pi 报错 Connection"
   - "数学显示源码"
   - "订阅失败"
   - "半角标点"
@@ -218,9 +238,10 @@ journalctl -p err -b --no-pager | tail -20
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
 | 3 | [enospc-tmpfs-check.md](enospc-tmpfs-check.md) | 1.1.0 | ENOSPC/tmpfs 满排查：磁盘 vs 内存盘区分、换出页占配额、孤儿进程清理；先判别 ENOSPC ≠ ENAMETOOLONG | 任何 "no space left"、写入失败、tmpfs 满、ENAMETOOLONG 判别 |
-| 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.3.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流）+ PSR 显示管线风暴修复（Atomic commit failed 日均过万 → i915.enable_psr=0），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足、显示管线报错 |
+| 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.4.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流）+ PSR 显示管线风暴修复（Atomic commit failed 日均过万 → i915.enable_psr=0），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足、显示管线报错 |
 | 3.6 | [chrome-leak-reaper.md](chrome-leak-reaper.md) | 1.1.0 | Chrome 内存泄漏排查与 chrome-reaper 维护：chromedp/桥实例/zygote 误杀（PPID 链）/restart 残留/profile 锁冲突 | chrome 吃内存、chrome 进程多、DidStartWorkerFail、bridge 反复重启 |
 | 3.7 | [bluetooth-pairing-troubleshoot.md](bluetooth-pairing-troubleshoot.md) | 1.2.0 | 蓝牙设备连接排查：适配器判活、USB autosuspend（-16）修复、长扫描捕获配对窗口、非 tty 配对坑、默认输出切换、日常使用维护 | 蓝牙耳机连不上、扫描不到、配对失败、连上无声音 |
+| 3.8 | [sway-resume-ebusy-ime-crash.md](sway-resume-ebusy-ime-crash.md) | 1.0.2 | sway 桌面两级故障链：①S3（合盖深睡）唤醒后 i915/KMS 卡死 → `Atomic commit failed: Device or resource busy` + Page-flip 风暴（重启 sway 无效，卡内核态；断根=改 HandleLidSwitch）②sway 1.10 IME 候选窗空指针 SIGSEGV（`constrain_popup`，上游 #8541 至今未修）→ 整会话连坐拆除；用本地 fork `~/sway` 补丁分支编译根治（PR #9206 仍 OPEN）；附桌面崩溃后的 pi 会话损失清点法。脚本 [sway-crash-diag.sh](sway-crash-diag.sh)（只读诊断）+ [sway-ime-fix-build.sh](sway-ime-fix-build.sh)（编译安装） | sway 崩溃、桌面回登录界面、终端全没了、合盖唤醒后屏幕不刷新、Device or resource busy、输入法候选窗崩溃 |
 | 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.2.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅） | 代理失效、无法上网、订阅失败 |
 | 4.5 | [public-wifi-security.md](public-wifi-security.md) | 1.0.0 | 公共 WiFi 三合一：验证页弹不出（Clash 代理劫持根因）、网络安全调查（加密/DNS/暴露面/证书/evil twin）、加固/恢复双脚本 [airport-harden.sh](airport-harden.sh) + [airport-restore.sh](airport-restore.sh)（入站 SSH/Samba/LLMNR） | 机场wifi、公共wifi、验证页弹不出、captive portal、公共网络加固 |
 | 4.6 | [intranet-api-proxy-coexist.md](intranet-api-proxy-coexist.md) | 1.0.0 | 店内/局域网 API 与本地代理共存：内网域名被代理劫持、no_proxy 小写坑、clash Merge dns.hosts+prepend-rules 成对修复、LiteLLM 400 UnsupportedParamsError 参数剥离网关（含 Python 网关脚本） | 店内 API 连不上、内网 API 走代理、token.agi.bar、reasoning_effort 不支持、UnsupportedParamsError、LiteLLM 400 |
@@ -236,12 +257,13 @@ journalctl -p err -b --no-pager | tail -20
 | 9 | [piagent-cmap-fix.md](piagent-cmap-fix.md) | 1.0.0 | 处理 PDF 时 CMap 字体警告（unpdf file:// 路径问题） | PDF 解析报 CMap 警告 |
 | 10 | [memory-index-condense.md](memory-index-condense.md) | 1.3.1 | 记忆索引调查与浓缩（并行 reader 合成 MEMORY_INDEX.md） | 记忆膨胀、索引过时 |
 | 10.5 | [pi-subagents-ENAMETOOLONG-fix.md](pi-subagents-ENAMETOOLONG-fix.md) | 3.1.0 | pi-subagents 结果索引 ENAMETOOLONG 独立修复 skill：判别路由、四层补丁 verify/apply（含完整重打代码）、死索引与空目录清扫、验证闭环 | subagent 报 ENAMETOOLONG、subagent_wait 挂起、async 结果丢失、中文路径 session、pi-subagents 升级后补丁重打 |
+| 10.6 | [piagent-connection-error-fix.md](piagent-connection-error-fix.md) | 1.0.0 | pi-agent 模型调用 Connection error：首查 ~/.pi/web-search.json 完整性（fetch 包装器坏文件致全量抛错），次查代理重启后连接池失效，附快速网络排除与验证闭环 | pi 报 Connection error、连接错误、模型调用秒失败、web-search.json 损坏、pi 无法调用模型 |
 
 ## 四、维护类
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 11 | [dotfiles-sync-and-audit.md](dotfiles-sync-and-audit.md) | 1.3.0 | 配置同步到 My_Dotfiles + Git 仓库审计（有上游不推送） | 定期备份、配置审计 |
+| 11 | [dotfiles-sync-and-audit.md](dotfiles-sync-and-audit.md) | 1.4.1 | 配置同步到 My_Dotfiles + Git 仓库审计（有上游不推送）；附录 B 专记 LLM API key 与 provider 配置实战（备份非真值源、key ↔ 端点配对矩阵含订阅 key 按区域绑定、配置文件安全编辑与取证） | 定期备份、配置审计、API key 空值恢复、401 判 key 死活、bl/pi/opencode provider 配置 |
 
 ## 五、应用层（桌面应用故障）
 
@@ -272,7 +294,21 @@ journalctl -p err -b --no-pager | tail -20
   └─ enospc-tmpfs-check.md ← 先看 df -h 全部挂载点，别只看根盘
 
 「死机 / 冻结 / 卡死 / 没响应 / 内存不足」
-  └─ freeze-oom-protection.md ← 先看 journalctl -b -1 尾部：Purging GPU memory = 内存 thrash；装 earlyoom + oomd 加固（⚠️ earlyoom 须 `-m 8 -s 100` 纯内存阈值消除 zram 盲区，**严禁加 -M/-S（单位是 KiB 且覆盖 -m/-s，曾致 0% 阈值哑火两次死机）**，改完必须 journalctl -u earlyoom 验证 8.00%）；泄漏源先查 chrome；Atomic commit failed 日均过万 → i915.enable_psr=0
+  └─ freeze-oom-protection.md ← 先看 journalctl -b -1 尾部：Purging GPU memory = 内存 thrash；装 earlyoom + oomd 加固（⚠️ earlyoom 须 `-m 8 -s 100` 纯内存阈值消除 zram 盲区，**严禁加 -M/-S（单位是 KiB 且覆盖 -m/-s，曾致 0% 阈值哑火两次死机）**，改完必须 journalctl -u earlyoom 验证 8.00%）；泄漏源先查 chrome；Atomic commit failed 日均过万 → i915.enable_psr=0；OOM Mem-Info 见 shmem 数 GB + Free swap 0 = shmem 尖峰（memfd/tmpfs 瞬时爆量，earlyoom 1s 轮询可被绕过，进程 rss_shmem 全 0 无法归因），日常监控 Shmem>4G 告警
+
+「sway 崩溃 / 桌面回到登录界面 / 终端和 GUI 应用全没了 / 合盖唤醒后屏幕不刷新」
+  └─ sway-resume-ebusy-ime-crash.md ← 先 `bash sway-crash-diag.sh` 一把出报告。判据顺序：
+     ①崩溃窗口内 oom/Purging 关键字 = 0（否则转 freeze-oom-protection.md）
+     ②coredumpctl 里 sway 与一批 GUI 客户端同秒 core = 合成器之死，客户端属连坐（勿计入各自 bug）
+     ③回溯帧 #0 = constrain_popup → 上游 #8541 IME 空指针，用 ~/sway fork 的 fix/constrain-popup-null-container
+       打补丁编译（`sway-ime-fix-build.sh --check` 已实测补丁在 upstream/v1.10 上干净应用；
+       ⚠️ wlroots 硬绑定：v1.10→0.18 / v1.11→0.19 / v1.12→0.20 / master→0.21，Fedora 42 只到 0.19，勿照抄 master）
+     ④「Atomic commit failed: Device or resource busy」与每次 Lid opened/suspend exit 1:1 对齐 = S3 唤醒后遗症，
+       与 freeze-oom-protection 里的老 PSR 风暴（`-16`/日均数十万、已由 i915.enable_psr=0 压到 3 万）是两种变体：
+       **先看 /proc/cmdline 是否已含 enable_psr=0，已含就不要再走 PSR 分支**
+     ⑤恢复三档：DPMS 循环 → 重绑 i915（stop gdm + unbind/bind）→ 重启；断根 = HandleLidSwitch=lock（合盖不睡）
+     ⑥事后必做：`sway-crash-diag.sh --sessions` 清点被砍的 pi 会话（pi jsonl 无正常退出标记，分「确证被杀/待回忆/已恢复」三档）；
+       长活 pi 会话改放 tmux + systemd-run --user，否则合成器一死全灭
 
 「chrome 内存泄漏 / chrome 吃内存 / chrome 进程多 / DidStartWorkerFail / bridge 反复重启」
   └─ chrome-leak-reaper.md ← 进程画像 + reaper 日志 + scope/PPID 链判定 + v3 修复；致死机/ENOSPC 时配合 freeze-oom-protection / enospc-tmpfs-check
@@ -304,11 +340,17 @@ journalctl -p err -b --no-pager | tail -20
 「subagent 报 ENAMETOOLONG / subagent_wait 挂起 / async 结果丢失 / 中文路径 session」
   └─ pi-subagents-ENAMETOOLONG-fix.md ← 独立 skill：判别→核查补丁→清扫→验证；补丁在 ~/.pi/agent/npm，升级覆盖后需重打；修复后须重启 pi 主进程
 
+「pi 报 Connection error / 连接错误 / 模型调用秒失败 / web-search.json 损坏」
+  └─ piagent-connection-error-fix.md ← 先验 web-search.json（python3 json.load），勿先重启代理；坏文件修好即时生效，无需重启 pi；代理刚重启过且 JSON 正常则重启 pi；errorMessage 含 "undici dispatcher" 系版本不匹配亦重启 pi
+
 「关机慢 / 关机报错 / ABRT」
   └─ cleanup_shutdown_issue.sh
 
 「同步配置 / 备份 dotfiles / git 仓库审计」
   └─ dotfiles-sync-and-audit.md
+
+「key 不见了 / API key 空值 / 401 invalid_api_key / 给工具配 LLM provider」
+  └─ dotfiles-sync-and-audit.md 附录 B ← 先查真值源（auth.json/secrets，备份是占位符）→ curl 实测 key ↔ 端点矩阵（401 勿判死）→ 改配置用整行锚点 + 回读；取证罪命令用 ~/.pi/agent/sessions
 
 「ghostwriter 公式不渲染 / 数学显示源码 / markdown 公式不显示」
   └─ ghostwriter-math-check-and-fix.md
@@ -351,6 +393,11 @@ journalctl -p err -b --no-pager | tail -20
 | `freeze-oom-protection.md` 死机元凶排查 | `chrome-leak-reaper.md` | chrome 泄漏是死机/OOM 头号元凶，先修泄漏再谈防护 |
 | `enospc-tmpfs-check.md` 预防/注意事项 | `chrome-leak-reaper.md` | headless 浏览器泄漏同源（chromedp/桥/scope 误杀），实例归属判定看 PPID 链 |
 | `chrome-leak-reaper.md` | `freeze-oom-protection.md` / `enospc-tmpfs-check.md` | chrome 泄漏引爆死机或 tmpfs/swap 压力时互相配合 |
+| `sway-resume-ebusy-ime-crash.md` | `freeze-oom-protection.md` | 「Atomic commit failed」有两种病因：PSR 变体走该文档，`Device or resource busy` 变体走 sway 文档；先查 `/proc/cmdline` 是否已含 `i915.enable_psr=0` 分流 |
+| `freeze-oom-protection.md` | `sway-resume-ebusy-ime-crash.md` | 死机/掉登录先分流：崩溃窗口 0 条 oom 关键字且 coredumpctl 里 sway 与 GUI 客户端同秒 core = 合成器崩溃而非 OOM |
+| `sway-resume-ebusy-ime-crash.md` Phase 5 | `pi-subagents-ENAMETOOLONG-fix.md` | 桌面崩溃后 async 子代理 run 会被腰斩（run-0/session.jsonl 末条非 final）；结果索引与丢失判定参见该文档 |
+| `sway-resume-ebusy-ime-crash.md` 坑#7 | `enospc-tmpfs-check.md` | 合成器崩后旧 session scope 变 abandoned 挂孤儿 daemon，占内存/可能撑爆 tmpfs 配额 |
+| `sway-resume-ebusy-ime-crash.md` Phase 4 | `dotfiles-sync-and-audit.md` | sway 配置（kill 绑定加 `fcitx5-remote -c`、`exec` 行的 `;` 需引号）改完需同步 My_Dotfiles 副本 |
 | `enospc-tmpfs-check.md` Phase 4.2 | `cleanup_shutdown_issue.sh` | 清理任务可复用其 systemd 守卫模式 |
 | `enospc-tmpfs-check.md` 预防 | `piagent-search-pipeline-fix.md` | opencli/chromedp 泄漏是搜索管道与 tmpfs 满的共同隐患 |
 | `enospc-tmpfs-check.md` 先判别 | `pi-subagents-ENAMETOOLONG-fix.md` | /tmp 下 `name too long`（路径组件 >255B）不是 ENOSPC，路由到该文档 |
@@ -359,10 +406,15 @@ journalctl -p err -b --no-pager | tail -20
 | `clash-verge-diagnose-and-fix.md` | `public-wifi-security.md` | 验证页弹不出/公共网络场景同源——代理劫持浏览器流量时先查 Clash 再查门户 |
 | `intranet-api-proxy-coexist.md` 前置 | `clash-verge-diagnose-and-fix.md` | 内网 API 被代理劫持属 Clash 规则/DNS 行为，代理整体故障时先修 Clash 再谈共存 |
 | `intranet-api-proxy-coexist.md` 公共场景 | `public-wifi-security.md` | 店内/机场公共 Wi-Fi 对 UDP QoS 会影响 Hysteria2 节点稳定性（症状：间歇性 context deadline exceeded） |
+| `piagent-connection-error-fix.md` 网络排除 | `clash-verge-diagnose-and-fix.md` | Connection error 排查中代理整体失效/Profile 漂移时先修 Clash 再谈 pi |
+| `piagent-connection-error-fix.md` NO_PROXY 加固 | `intranet-api-proxy-coexist.md` | no_proxy 大小写双设、LLM 域名直连与内网 API 共存同源 |
 | `system_diagnostics_and_repair.md` Phase 1.5 网络 | `public-wifi-security.md` | 公共网络场景安全调查深入（加密/DNS/暴露面/证书） |
 | `tor-browser-check-and-fix.md` 前置 | `clash-verge-diagnose-and-fix.md` | Tor 经本地代理引导，代理失效时先修 Clash 再修 Tor |
 | `video-playback-decode-fix.md` | `system_diagnostics_and_repair.md` | 播放类故障先查系统 ffmpeg 解码能力，再深入播放器自身；GPU 无硬件加速时驱动安装/VAAPI 能力对照收拢于 video skill |
 | `dotfiles-sync-and-audit.md` | `memory-index-condense.md` | 两者都涉及 pi-agent 配置文件的备份/维护 |
+| `dotfiles-sync-and-audit.md` 附录 B.6 | `intranet-api-proxy-coexist.md` | 同属 LLM API 链路：附录 B 管 key/端点/provider 配置与恢复，该 skill 管代理劫持与 no_proxy 大小写 |
+| `dotfiles-sync-and-audit.md` 附录 B.2 | `piagent-connection-error-fix.md` | 两者根因皆为「配置文件被并发改坏且无报错」，前者防于写时（整行锚点 + 回读），后者防于读时（JSON 完整性先验） |
+| `dotfiles-sync-and-audit.md` 附录 B.1 | `sparrow-wallet-backup-test.md` | 同为「备份不等于可恢复」主题：备份需验证、真值需另库 |
 | `bluetooth-pairing-troubleshoot.md` | `system_diagnostics_and_repair.md` 1.8 节 | 适配器判活失败时回到全面诊断的蓝牙节；HCI -16 修复命令两处一致 |
 | 任何 pi-agent 层文档修复后 | `memory-index-condense.md` | 修复后如记忆/索引涉及，需重新浓缩 |
 | `windows-scripting-and-ssh-debug.md` 排障产出 | `win-ssh-setup` 工具包（~/Downloads/win-ssh-setup） | Windows 端脚本均按该 skill 规范编写：fix-sshd-service.bat（阶梯修复）/ diag-sshd3.bat（前台调试）/ install-rsync.bat（MSYS2+rsync） |
@@ -389,6 +441,41 @@ journalctl -p err -b --no-pager | tail -20
 ---
 
 ## 变更日志
+
+### 2.12.0 (2026-08-29)
+- 更新：sway-resume-ebusy-ime-crash.md **1.0.0 → 1.0.2**（1.0.1：坑 #11 meson 双版本；1.0.2：新增附录「配套脚本编程问题自审」——A 诊断脚本 7 条 / B 构建脚本 5 条（含用户实测踩中的 sudo $HOME、meson 版本不匹配）/ C 流程 3 条，全部已修复；`sway-ime-fix-build.sh` 同步升级为 sudo 安全版：REAL_HOME 解析 + root 自动降权 + PYTHONPATH 注入重放同一 meson + EUID==0 直装）
+- 新增：系统层 3.8 — `sway-resume-ebusy-ime-crash.md` 1.0.0（2026-08-29 13:15:49 实战：sway `constrain_popup` SIGSEGV + 12:26 唤醒后 EBUSY 风暴）：
+  - 一级「S3 合盖唤醒后 i915/KMS 卡死」：`Atomic commit failed: Device or resource busy` 与每次 Lid opened/suspend exit **1:1 对齐**（近 7 天 15.3 万条全同变体）；重启 sway 无效（实测新 sway 首帧即继续风暴）→ 三档恢复（DPMS 循环 / 重绑 i915 / 重启）+ 断根 `HandleLidSwitch=lock`（本机 /etc/systemd/logind.conf 不存在全默认，合盖即深睡）
+  - 二级「IME 候选窗空指针」：帧 `#0 constrain_popup`（sway/input/text_input.c:139，`view->container` 未判 NULL），上游 [swaywm/sway#8541](https://github.com/swaywm/sway/issues/8541) 仍 OPEN、v1.10/1.11/1.12/master 全部未修；**本地 fork `~/sway` 补丁分支 `fix/constrain-popup-null-container`（3024142f，+3/−0）在 upstream/v1.10 上实测干净应用**，已提 PR [swaywm/sway#9206](https://github.com/swaywm/sway/pull/9206)（仍 OPEN）；wlroots 硬绑定 v1.10→0.18 / v1.11→0.19 / v1.12→0.20 / master→0.21，Fedora 42 无 0.20/0.21 包 → 目标选 v1.10；编译安装脚本 `sway-ime-fix-build.sh`（check/deps/build/install/verify/revert）
+  - 级联清点：崩溃后 pi session 损失判定法（jsonl 无正常退出标记 → 分「确证被杀=崩前 6s 内写盘 / 待回忆=崩前停笔且 cwd 无活进程 / 已恢复=崩后仍在写」三档）+ 子代理 run 腰斩判定（末条非 final 即丢）；本次确证 1 个（LLM-api-check 01a04bf0）、腰斩 4 个（属 01a04bdc，ultrabrain×3+hephaestus×1，已重放）
+  - 脚本 `sway-crash-diag.sh`：只读六段诊断（崩溃定位/排除 OOM/回溯签名分类/风暴-唤醒对齐/遗物/会话清点），已实测全流程跑通
+- 新增：决策树分支「sway 崩溃 / 桌面回到登录界面 / 终端和 GUI 应用全没了 / 合盖唤醒后屏幕不刷新」+ 与 freeze-oom-protection 的「Atomic commit failed」两病因分流注释（PSR 变体 vs EBUSY 变体，先查 /proc/cmdline）
+- 新增：交叉引用 5 条（sway↔freeze-oom 双向分流、Phase 5↔pi-subagents-ENAMETOOLONG、坑#7↔enospc-tmpfs、Phase 4↔dotfiles-sync）
+- 新增：triggers 13 个（sway 崩溃、桌面回到登录界面、被踢回登录、合成器挂了、终端全没了、pi session 丢失、Device or resource busy、constrain_popup、输入法崩溃、fcitx5 崩溃、唤醒后花屏、合盖、屏幕不刷新）
+
+### 2.11.1 (2026-08-29)
+- 更新：dotfiles-sync-and-audit.md 1.4.0 → **1.4.1**（修正 B.4：`sk-sp-` Token Plan key 实测已激活，北京端点 200（chat+models 双验）、同 key 新加坡端点仍 401 → 钉死「订阅 key 按区域绑定」；01:13/01:30 两轮全 401 系订阅激活延迟，非 key 错误；新增铁律二「凭据结论带时间戳、与用户对表」+ pi 认证源链 env→auth.json + B.8 第 5 条）
+- 背景：2026-08-29 02:0x 用户纠正「Token Plan 一直在用、key 绝对无误」，复测证实同一 key 同端点由 401 转 200——激活延迟与区域绑定两种 401 良性质因同时现身
+
+### 2.11.0 (2026-08-29)
+- 更新：dotfiles-sync-and-audit.md 1.3.0 → **1.4.0**（新增附录 B「LLM API key 与 provider 配置实战」8 节：备份非真值源与真值库四序、前缀锚点插入吞行致 key 静默丢失、会话日志取证法、阿里云 `sk-sp-`/`sk-ws-` key ↔ 端点配对矩阵、`fish -c` 非交互守卫假阴性、bl `--llm-provider` 空壳 flag、最小改动纪律与 diff 自证、四条思想经验）
+- 新增：决策树分支「key 不见了 / API key 空值 / 401 invalid_api_key / 给工具配 LLM provider」→ 附录 B
+- 新增：交叉引用 3 条（附录 B.6 ↔ intranet-api-proxy-coexist、B.2 ↔ piagent-connection-error-fix、B.1 ↔ sparrow-wallet-backup-test）
+- 新增：triggers「API key 恢复」「401 invalid_api_key」
+- 背景：2026-08-29 为 bl 接 qwen3.8-flash 时发现本机 DEEPSEEK_API_KEY 已被另一会话的 python 前锚点插入静默清空，全程取证 + 恢复，兼得 key/端点矩阵与 bl provider 配置语义
+
+### 2.10.0 (2026-08-27)
+- 新增：pi-agent 层「Connection error」修复 skill — [piagent-connection-error-fix.md](piagent-connection-error-fix.md)（web-search.json 并发写坏根因 + fetch 包装器机制 + 快速网络排除 + 连接池排查 + 验证闭环）
+- 新增：决策树分支「pi 报 Connection error / 连接错误 / 模型调用秒失败」+ 交叉引用「Connection error → clash-verge 诊断 / intranet-api-proxy NO_PROXY 加固」
+- 新增：triggers「Connection error」「连接错误」「pi 无法调用模型」「web-search.json」「pi 报错 Connection」
+
+### 2.9.1 (2026-08-26)
+- 更新：freeze-oom-protection.md 1.3.0 → **1.4.0**（08-26 23:42 全局 OOM 实战：shmem 11.5GB
+  瞬时尖峰 + zram 8G 填满（Free swap 0）→ 连杀 wezterm/wireplumber/portal/tor；earlyoom
+  8%/100% 配置正确但被 <1s 尖峰绕过全程未出手；元凶进程 rss_shmem 全 0 事后无法归因；
+  新增 shmem 尖峰判定法 + 防护要点（Shmem>4G 告警、pi -r 防叠加、大操作前后查 Shmem））
+- 验证：coredump.conf 128M 上限已生效（08-17 遗留完成）；i915.enable_psr=0 持久化生效
+  （Atomic commit failed 日均 50 万 → 3.1 万，部分生效未归零）；earlyoom 阈值 8.00% ✓
 
 ### 2.9.0 (2026-08-25)
 - 新增：系统层 4.6 — `intranet-api-proxy-coexist.md` 1.0.0（2026-08-25 AGI Bar 店内实测沉淀：内网 API 与本地代理共存四层冲突——路由劫持/DNS 盲区（Merge dns.hosts+prepend-rules 成对修复）/no_proxy 小写优先坑/LiteLLM 400 参数剥离网关（含 Python 网关脚本，SSE chunked 转发））
@@ -512,4 +599,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-25（index 2.9.0：intranet-api-proxy-coexist 1.0.0 入册——内网 API 与代理共存四层修复）*
+*最后更新: 2026-08-29（index 2.12.0：新增系统层 3.8 sway-resume-ebusy-ime-crash 1.0.0——S3 唤醒 EBUSY 风暴 + IME constrain_popup 空指针两级故障链，fork 补丁编译根治，pi 会话损失清点法）*

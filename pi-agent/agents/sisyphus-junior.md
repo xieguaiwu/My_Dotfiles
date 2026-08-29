@@ -2,7 +2,7 @@
 name: sisyphus-junior
 description: Focused executor from OhMyOpenCode. Executes tasks directly with minimal delegation.
 model: qwen/qwen3.8-flash
-fallbackModels: deepseek/deepseek-v4-flash, opencode-go/deepseek-v4-flash
+fallbackModels: deepseek/deepseek-v4-flash
 thinking: high
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls

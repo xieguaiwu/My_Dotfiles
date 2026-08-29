@@ -2,7 +2,7 @@
 name: quick
 description: Fast, lightweight agent for simple tasks. Minimal context, rapid execution.
 model: qwen/qwen3.8-flash
-fallbackModels: deepseek/deepseek-v4-flash, opencode-go/deepseek-v4-flash
+fallbackModels: deepseek/deepseek-v4-flash
 thinking: medium
 temperature: 0.2
 tools: read, bash, edit, write, grep, find, ls

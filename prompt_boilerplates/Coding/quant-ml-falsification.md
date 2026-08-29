@@ -1,6 +1,6 @@
 ---
 name: quant-ml-falsification
-version: 1.4.0
+version: 1.5.0
 description: 量化投资模型训练的防幻觉方法论——辨别假 alpha、诚实训练、方向饱和后找新方向、实盘阶段预测记账与结算校准闭环、公式结构伪装检测（RL/StackVM
   公式发现专属）
 triggers:
@@ -159,6 +159,52 @@ subagent({
 ```
 
 诊断 agent **只读不写**，唯一产出是诊断报告 + 施工清单。
+
+**诊断责任降级链（弱模型环境强制）**——按顺序取第一条可用者，禁止跳级：
+
+| 优先级 | 诊断执行者 | 适用条件 | 说明 |
+|:---:|:---|:---|:---|
+| 1 | **机械审计脚本** | 任何环境 | formula_health_gate.py / uv9all_auto_gate.py / 项目 falsification_audit.py——跑命令读 verdict JSON，零模型判断 |
+| 2 | **强批判性 subagent**（deep/momus/oracle） | 有强模型可用 | 只读诊断 + P0-P3 报告 + 施工清单 |
+| 3 | **人工** | 脚本与强模型均无 | 输出原始证据包，等人工裁决 |
+
+> **红线：弱模型（如 deepseek-v4-flash）自诊自修 = 禁止**。用 Flash 派 Flash 审查 = 确认偏误复读机；MLS-Bench 实测「给弱模型更多自主权反而更差」。脚本能覆盖的诊断绝不交给模型。
+
+**脚本覆盖现状（2026-08-27，VERSION2.5/fusion 双项目定位）**：
+- ✅ 已机械化：F29-F33（formula_health_gate.py）、前向泄露（audit_forward_leak_multi.py）、判活三线 H1-H3（uv9all_auto_gate.py）、DSR/剪发/块 bootstrap（core/multiple_testing.py）
+- ⚠️ 散落一次性脚本（每因子一脚本，未统一）：verify_a30_deflation / verify_a33_a32_deflation / verify_pc_combination / verify_physics_batch_up1 等 ~12 个
+- ❌ 缺口：F1-F28 中可计算但未脚本化的项（F1 种子对照 / F2 止损对照 / F6 特征复制 / F9 种子数 / F16-F23 泄露项 L1-L12）尚无统一 `falsification_audit.py`——**新因子批判活前，先把本次需要的检查写成脚本再跑，禁止模型裸审**
+
+#### 1.5 机械审计闸口——弱模型执行面
+
+弱模型训练完成后不必「理解」33 种模式——按闸口序列跑脚本、把 verdict 填进报告即可：
+
+```bash
+# 闸口序列（有哪个跑哪个；统一审计脚本 falsification_audit.py 属项目侧待办）
+python3 scripts/formula_health_gate.py results/<run>/results.json \
+    --registry <参照 runs> --production '<生产公式>'
+python3 scripts/uv9all_auto_gate.py          # 判活三线（若适用）
+python3 scripts/audit_forward_leak_multi.py  # 前向泄露 / F24
+python3 -c "from core import multiple_testing"  # 剪发 t / 块 bootstrap / PBO
+```
+
+**输出契约（JSON，禁止自由叙述）**：
+
+```json
+{
+  "run": "uv9all_h42_s42",
+  "gates": [
+    {"id": "F29-F33", "tool": "formula_health_gate", "verdict": "FRESH",
+     "evidence": "results/formula_health_uv9all_h42_s42.json"},
+    {"id": "H1-H3", "tool": "uv9all_auto_gate", "verdict": "PASS",
+     "evidence": "results/uv9all_gate_verdict.json"}
+  ],
+  "manual_residue": ["F15 生存偏差: 需退市股清单人工注入后重算"],
+  "conclusion": "由 verdict 字段机械汇总; 禁止添加脚本未输出的数字"
+}
+```
+
+每项 verdict 必须来自脚本输出文件；`manual_residue` 只列脚本无法覆盖项并注明所需人工输入。这条闸口把「校准的声称」（弱模型实测强项）从美德变成格式约束。
 
 ---
 
@@ -762,6 +808,50 @@ slot1:
 
 ---
 
+### 第七支柱：LLM 物理因子发掘（方程→离散化→判活全链）
+
+> 来源: VERSION2.5 P_C 输运漂移因子实战（2026-08-26/27），完整版见 `docs/2026-08-27_llm_physics_factor_methodology.md`。
+> **核心铁律：LLM 的物理类比必须落到「可检验的数学形式 + 日线可实现 + 双机逐位复现」才算数**——文学类比（「涨停像势阱」）不产生 alpha，方程离散化才产生。
+
+#### 7.1 八步全链
+
+| 步 | 内容 | 关键要求 |
+|:--|:--|:--|
+| 1 | 物理方程选择（机制优先） | 用已有数学描述的系统（Fokker-Planck/Kramers/逾渗/SIR），禁止自造比喻；选择标准：日线有明确代理 + 机制反推「谁被迫交易」 + 与现有因子正交 |
+| 2 | 离散化（方程→可计算形式） | 每个量写明「度量什么物理量」；区分水平量与涨落量；明确方向预测符号。**Step 2 是最大幻觉风险点**（人工审查离散化是否忠实于方程） |
+| 3 | 数据基底验证（先于一切） | `features[:,:,3]` 可能是日收益而非价格！用独立源（aligned_panels.hfq）对比 corr=1.0 才算通过。用错基底→全部假阴性 |
+| 4 | 冒烟 IC（只筛选不判活） | 强因子 \|IC\|≥0.05，正交弱因子 0.02-0.05；无信号（<0.01）→ 关闭或精化 |
+| 5 | 机制内精化（正交性修复） | 截面残差化 `rank_resid(F, base)` 剥离共变：P_C raw ρ(rsi)=0.74 → 残差版 0.04，IC 反而更强 |
+| 6 | 预注册 + 双门判活 | UP-1（\|IC\|≥0.02+\|NW-t\|≥2+两半同号+年度≥9/12+max\|ρ\|<0.5）+ deflation（预注册假设用累计 N 阈值，factory 产物用 N376k）；**双机逐位一致铁律** |
+| 7 | 环境无关实现 | pandas 3.0 vs 2.1 rolling、numpy 2.4 vs 1.26 tie-breaking、np.round 银行家舍入——**离散计数因子（大量 tie）固有不可复现 → FAIL**；贴线因子跨环境不稳定 → HOLD |
+| 8 | 正交+后验+组合+融合 | 面板 \|ρ\|<0.5、top-N 超额 bootstrap、组合 IC > max(单腿)（42d 块 CI 下界>0）、vocab 变体→生产 slot→管线重建 |
+
+#### 7.2 实战档案（P_C 输运漂移）
+
+```
+物理: Fokker-Planck ∂ρ/∂t = −∂(vρ)/∂x + ∂²(Dρ)/∂x²
+离散化: chip_drift = EMA21(vol×ret)/EMA21(vol)   # 换手加权收益 = 持筹者盈亏流
+精化:   P_C = rank_resid(chip_drift, rsi_14)
+判活:   IC −0.0993 / NW-t −11.35 / 12-12 年度 / ρmax 0.304 / 双机逐位一致
+组合:   equal(P_C, slot1) IC +0.1271 > 单腿 0.1175 (Δ+0.0096, 块bootstrap下界>0)
+融合:   uv_v11 vocab + 生产 slot2 = NEG(pc_resid_rsi)
+```
+
+#### 7.3 失败档案（同样有价值）
+
+| 因子 | 物理 | 失败点 | 教训 |
+|:--|:--|:--|:--|
+| P_A 边缘驻留 | Kramers | 双机不一致（tie-breaking） | 离散计数因子跨 numpy 版本不可复现 → FAIL |
+| P_B 临界慢化 | 逾渗 | ρmax 0.983 = zhaban 冗余 | 物理量若被现有因子覆盖 → 正交门拒绝 |
+| P_D 杠杆二阶 | 沙堆 | IC≈0（短样本 874 天） | 数据量不足诚实报告负结果 |
+
+#### 7.4 与既有支柱的关系
+
+- 第七支柱是新因子的**生产路线**（第 1-6 支柱是验证纪律）；预注册/证伪/防泄露全部沿用
+- 冒烟数字不构成判活（§7.1 Step 4 明确）；物理推导仍需人工审查离散化
+
+---
+
 ## 输出格式
 
 本 skill 不生成独立文件，而是**指导 agent 在训练过程中遵循的思考框架**。最终产出为：
@@ -832,6 +922,11 @@ slot1:
 ---
 
 ## 变更日志
+
+### 1.5.0 (2026-08-27)
+- 升级：§1.4 新增「诊断责任降级链」——机械审计脚本 > 强批判 subagent > 人工；红线：弱模型自诊自修禁止（MLS-Bench：弱模型自主权增加→表现更差）；脚本覆盖现状表（已机械化/散落一次性/统一审计缺口）
+- 新增：§1.5 机械审计闸口——弱模型执行面：闸口命令序列 + JSON 输出契约（verdict 必须来自脚本输出文件，禁止模型自由叙述）；来源：deepseek-v4-flash 弱模型覆盖方案 + VERSION2.5/fusion 双项目定位
+- 注：1.4.0 变更日志条目缺失（版本曾跳过，索引表亦停留 1.3.0），本次一并恢复版本一致性
 
 ### 1.3.0 (2026-08-19)
 - **新增第六支柱「公式结构伪装检测」**（来自 VERSION2.5 uv9/lh/pcorr 12-run 全审，`results/uv9_effectiveness_review_20260819.md`）：

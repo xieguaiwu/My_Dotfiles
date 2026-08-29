@@ -1,7 +1,7 @@
 ---
 name: android-development
-version: 1.1.0
-description: 安卓 Kotlin/Compose 应用开发全流程——脚手架、Activity 入口测试、Compose 触摸交互测试、安全存储、构建发布与血泪踩坑库
+version: 1.2.0
+description: 安卓 Kotlin/Compose 应用开发全流程——脚手架、Activity 入口测试、Compose 触摸交互测试、后置下载链路、方案注册表、安全存储、构建发布与血泪踩坑库
 triggers:
   - "安卓开发"
   - "Android 项目"
@@ -181,6 +181,56 @@ composeRule.onNodeWithText("Select currency").assertIsDisplayed()
 - **Robolectric 亦可能 flaky**：Compose 测试虚拟时钟 + 全主线程与真机行为有差异（如 `clearFocus` 触发 `onFocusChanged` 两次）；flaky 防护 = 自定义 Test Rule 固定线程与隔离状态，`waitForIdle` 不满足时排查 effect 向主线程 post 的工作。
 - 升级顺序纪律：Kotlin → AGP → compose BOM → 第三方插件，一次只动一个维度，每步全量测试。
 
+### 12. 后置下载/初始化链路（🔴 2026-08-28 Roar 实战：模型始终未就绪）
+
+**症状**：手机装上 APK 后功能永远不可用——模型一直显示「未就绪」，点录音永远报错。
+
+**根因**："首次运行下载"功能的实现存在但**零调用点**——`downloadModels()` 写了完整实现（断点续传、SHA-256 校验），但设置页没有下载按钮、首次运行没有自动触发，238 MB 模型不打包进 APK → 模型文件永远不存在 → 就绪判断恒 false。
+
+**定位手法**：`grep -rn "downloadModels" app/src/main app/src/test | grep -v 定义处`——实现函数只有定义与自引用，无任何业务调用。
+
+**修复五要素**（「后置下载三件套」，缺一不可）：
+1. **入口**：UI 触发点（设置页「下载模型」按钮；未下载/失败时显示，下载中禁用防重复）；
+2. **进度**：状态机驱动（见下方 sealed interface 模式），进度条 MB 计数 + 完成自动刷新「就绪」；
+3. **错误**：失败原因 + 重试按钮；
+4. **续传**：`.part` 临时文件 + 体积/SHA-256 校验通过后改名落位，失败不落地；
+5. **镜像 fallback**：官方源直连失败自动回退镜像（如 HuggingFace → hf-mirror.com），逐文件回退，连接超时缩短至 15 s 加速快速失败切换。
+
+**状态机模式**（Compose 响应式，后台线程回写安全）：
+
+```kotlin
+sealed interface ModelState {
+    data object NotDownloaded : ModelState
+    data class Downloading(val done: Long, val total: Long) : ModelState
+    data object Ready : ModelState
+    data class Failed(val message: String) : ModelState
+}
+// 后台线程：modelState = ModelState.Downloading(done, total)
+// mutableStateOf 跨线程安全（snapshot state），主线程 Compose 自动重组
+```
+
+**防复发**：上线前检查清单加一项——**grep 异步初始化链路的调用点**（下载/初始化/解包函数必须有 UI 或启动触发；实现存在 ≠ 链路可用）。此坑与 §2「Activity 占位代码」同级：测试全绿、实现真实，但用户路径永远到不了。
+
+### 13. 方案注册表模式（多方言/多主题/多模型）
+
+当产品需要支持多个"方案"（方言、主题、模型、预设），用注册表模式消除单方案硬编码（2026-08-28 Roar 多方言架构实战）：
+
+1. **Spec 数据类**：方案 = 数据资产三件套（数据文件路径 + 规则/配置 + 模型 spec：仓库/文件清单/体积/SHA-256）；
+2. **Registry**：内置方案列表 + 按 id 解析；**未知 id 回退默认**（防御 SharedPreferences 等持久化配置损坏——旧版本配置、手工改值不得导致崩溃）；
+3. **全链路参数化**：引擎（纯函数注入规则集，默认参数保兼容）、下载（按方案 id 组织目录）、服务（IME/Activity 读持久化 id 解析方案）、UI（下拉选择 + 持久化）；
+4. **数据资产先行**：词典/规则不依赖模型可先积累——方案市场（S3 服务端下发注册表）的本地雏形。
+
+**坑（Kotlin object 初始化顺序）**：`object Registry { val list = listOf(ITEM); val ITEM = ... }` 编译报 `Variable 'ITEM' must be initialized`——object 内声明按书写顺序初始化，前置属性引用后置声明非法。修复：
+
+```kotlin
+object Registry {
+    val list: List<Spec> get() = listOf(ITEM)  // 计算属性，惰性求值
+    val ITEM: Spec = Spec(...)
+}
+```
+
+**UI 测试坑**：按钮文案追加装饰后缀（如 `"粵語（廣州話） ▾"`）后，`onNodeWithText("粵語（廣州話）")` 精确匹配失败——断言用完整新文案，或改用 `substring`/`contains` 匹配。
+
 ## 输出格式
 
 - **APK**：`app/build/outputs/apk/debug/app-debug.apk`（或 release 签名包）。
@@ -196,9 +246,17 @@ composeRule.onNodeWithText("Select currency").assertIsDisplayed()
 - 解析第三方页面结构脆弱：加锚点注释 + 单测 fixture，网页改版即失效需更新。
 - `tools` 只列 pi-agent 真实工具；subagent 调用必须带 `timeoutMs`（轻 300000 / 中 600000 / 重 900000）。
 - 单位换算（microcents、percent、resetsAt ISO8601）先实测再固化，避免「看着对」的假实现。
+- **实现存在 ≠ 链路可用**：异步初始化（模型下载/资源解包）函数写完必须 grep 调用点，UI 必须有触发入口（§12 铁律）。
+- **大文件体积校验测试**：用稀疏文件瞬间创建大逻辑体积（`RandomAccessFile(file, "rw").use { it.setLength(size) }`），勿真写几百 MB 磁盘。
 - §9-§11 为 2025-2026 公开社区与官方文档泛化经验（Reddit r/androiddev、Stack Overflow、掘金、developer.android.com），非本机实测——引用前按项目实际版本复核生效条件。
+- §12-§13 为 2026-08-28 Roar（方言正字语音输入法）实战经验：模型下载链路 P0 修复 + 多方言注册表架构，均经质量门验证（56 测试 0 失败）。
 
 ## 变更日志
+
+### 1.2.0 (2026-08-28)
+- 新增：§12 后置下载/初始化链路——🔴 三号坑「实现存在但零调用点」（Roar 实战：模型始终未就绪），五要素修复（入口/进度/错误/续传/镜像 fallback）+ sealed interface 状态机模式 + 上线前 grep 调用点检查项
+- 新增：§13 方案注册表模式（多方言/多主题/多模型）——Spec 数据类 + Registry 未知 id 回退 + 全链路参数化 + 数据资产先行；Kotlin object 初始化顺序坑（前置引用后置声明 → 计算 getter）；UI 文案后缀破坏精确文本断言
+- 修改：注意事项补 2 条（实现存在≠链路可用；稀疏文件测大体积校验）；§12-§13 标注实战来源
 
 ### 1.1.0 (2026-08-24)
 - 新增：§9 平台强制项——edge-to-edge（targetSdk 35+）、predictive back（targetSdk 36+）、16KB page size（2025-11 起 Play 要求）、Play targetSdk 政策（2026-08-31）

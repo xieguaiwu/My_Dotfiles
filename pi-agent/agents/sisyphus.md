@@ -2,7 +2,7 @@
 name: sisyphus
 description: Senior orchestrator agent. Detects user intent, delegates to specialist subagents, synthesizes results, and drives work to completion.
 model: qwen/qwen3.8-flash
-fallbackModels: deepseek/deepseek-v4-flash, opencode-go/deepseek-v4-flash
+fallbackModels: deepseek/deepseek-v4-flash
 thinking: high
 temperature: 0.4
 completionGuard: false

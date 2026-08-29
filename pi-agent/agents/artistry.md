@@ -2,7 +2,7 @@
 name: artistry
 description: Creative specialist. Generates creative content, design concepts, and artistic outputs with expressive flair.
 model: qwen/qwen3.8-flash
-fallbackModels: deepseek/deepseek-v4-flash, opencode-go/deepseek-v4-flash
+fallbackModels: deepseek/deepseek-v4-flash
 thinking: high
 temperature: 0.7
 tools: read, bash, edit, write, grep, find, ls

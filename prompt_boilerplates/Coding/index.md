@@ -1,6 +1,6 @@
 ---
 name: coding-skills-index
-version: 2.0.1
+version: 2.0.3
 description: Coding 技能集入口——进入项目时自动加载项目文档协议、检测项目特征并引导加载对应领域技能
 triggers:
   - "进入项目"
@@ -153,13 +153,13 @@ tools:
 
 | # | Skill | 版本 | 适用领域 | 何时加载 |
 |:--|:---|:---:|:---|---|
-| 10 | [ml-training.md](ml-training.md) | 1.6.0 | ML 深度学习/RL 训练 | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
-| 11 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.3.0 | 量化投资 ML（含实盘校准闭环） | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据，或实盘/纸面交易偏差排查 |
+| 10 | [ml-training.md](ml-training.md) | 1.8.0 | ML 深度学习/RL 训练（含 L0 快速决策卡 + 三代自动化教训 W-E~W-I + 判活标准演进） | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
+| 11 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.5.0 | 量化投资 ML（含实盘校准闭环、诊断责任降级链、机械审计闸口） | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据，或实盘/纸面交易偏差排查 |
 | 12 | [vps-operations.md](vps-operations.md) | 2.2.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
 | 13 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
 | 14 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
 | 15 | [fdroid-publishing.md](fdroid-publishing.md) | 1.0.0 | 安卓应用 F-Droid 上线——合规审查、fastlane 元数据、可复现构建、fdroiddata 提交、发版纪律 | 需要安卓应用上架 F-Droid / fdroid 收录 / 发布类工作 |
-| 16 | [android-development.md](android-development.md) | 1.1.0 | 安卓 Kotlin/Compose 开发全流程——脚手架、Activity 入口测试、触摸交互测试、安全存储、平台强制项与踩坑库 | 安卓项目开发/回归、Compose 交互问题、Robolectric 测试、APK 构建 |
+| 16 | [android-development.md](android-development.md) | 1.2.0 | 安卓 Kotlin/Compose 开发全流程——脚手架、Activity 入口测试、触摸交互测试、后置下载链路（模型/资源）、方案注册表（多方言）、安全存储、平台强制项与踩坑库 | 安卓项目开发/回归、Compose 交互问题、Robolectric 测试、APK 构建、首次运行下载不可用 |
 
 ### 领域 skill 加载决策树
 
@@ -218,6 +218,7 @@ tools:
 | `fdroid-publishing.md` §3.3 | `verification-before-completion.md` | 可复现性验证须附双构建哈希证据，禁止裸声称「可复现」 |
 | `android-development.md` §2/§3 | `verification-before-completion.md` | Activity 入口与触摸交互测试的完成声明须附测试运行输出 |
 | `android-development.md` §8 | `fdroid-publishing.md` | 安卓构建发布流程中 F-Droid 上架细节走专用 skill |
+| `android-development.md` §12 | `verification-before-completion.md` | 后置下载链路上线前 grep 调用点（实现存在 ≠ 链路可用），验证声明须附 grep 证据 |
 | `verification-before-completion.md` | `improvement-loop.md` | §5.9 Chain 输出门控是平台层验证，本 skill 是方法论层验证——两层都要 |
 | `verification-before-completion.md` | `ml-training.md` | 训练验收前先用 Gate Function 验证产物（results JSON）真实存在 |
 | `project-documentation-protocol.md` + `writing-plans.md` | [technical-writing-standard.md](../technical-writing-standard.md) | 文档写作规范（ASD-STE100 国际标准）——文档与实施计划写作参照 |
@@ -246,6 +247,16 @@ tools:
 | `llm-api-check`（~/Desktop/go-projects/LLM-api-check） | 必须像 `~/Desktop/android-projects/api-checkers/` 那样**直接显示限流 API 的限流时限** | 对照 Android `DetailScreen.kt` WindowRow：CountdownText 恒显 + 已限流徽章并存；Go 侧 `internal/render/render.go` RenderAccountDetail——rate-limited 行必须同时输出「已限流」与重置倒计时（如 `已限流 · 4小时20分后重置`），禁止用「已限流」替代倒计时 |
 
 ## 变更日志
+
+### 2.0.3 (2026-08-28)
+- 升级：android-development 1.1.0→1.2.0（新增 §12 后置下载/初始化链路——🔴 零调用点根因 + 五要素修复 + 状态机模式；§13 方案注册表模式——多方言 Spec/Registry + object 初始化顺序坑；实战来源：Roar 方言输入法 P0 修复 + 多方言架构）
+- 同步：领域专用表 #16 用途与触发场景更新（后置下载链路、方案注册表）
+- 新增：交叉引用表 1 条（§12 ↔ verification-before-completion）
+
+### 2.0.2 (2026-08-27)
+- 升级：ml-training 1.7.0→1.8.0（新增 L0 快速决策卡、看门狗模式 W-E~W-I、判活标准演进表）；quant-ml-falsification 1.4.0→1.5.0（新增诊断责任降级链 §1.4 扩展 + 机械审计闸口 §1.5）
+- 修复：领域专用表两行版本号长期滞后（ml-training 表记 1.6.0 实为 1.7.0、quant-ml-falsification 表记 1.3.0 实为 1.4.0），本次一并校正
+- 来源：deepseek-v4-flash 弱模型覆盖方案 + VERSION2.5/fusion 双项目定位
 
 ### 2.0.1 (2026-08-24)
 - 同步：android-development 1.0.0→1.1.0（新增 §9 平台强制项 / §10 Compose 重组纪律 / §11 工具链版本纪律，泛化自 2025-2026 社区与官方文档调查）
@@ -319,4 +330,4 @@ tools:
 - 新增：步骤 1-4 的明确执行指令
 - 保留原有目录内容供浏览参考
 
-*最后更新: 2026-08-24*
+*最后更新: 2026-08-28*

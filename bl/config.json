@@ -17,6 +17,12 @@
         "api_key": "env:DEEPSEEK_API_KEY"
       },
       {
+        "name": "qwen",
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "model": "qwen3.8-flash",
+        "api_key": "env:QWEN_PAYG_API_KEY"
+      },
+      {
         "name": "opencode-zen",
         "base_url": "https://opencode.ai/zen/v1",
         "model": "deepseek-v4-flash-free",
@@ -27,12 +33,6 @@
         "base_url": "https://integrate.api.nvidia.com/v1",
         "model": "nvidia/nemotron-3-ultra-550b-a55b",
         "api_key": "env:NVIDIA_API_KEY"
-      },
-      {
-        "name": "qwen",
-        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "model": "qwen3.8-flash",
-        "api_key": "env:QWEN_PAYG_API_KEY"
       },
       {
         "name": "custom",
