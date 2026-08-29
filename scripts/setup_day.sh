@@ -357,12 +357,12 @@ fi
 echo ">>> Installing sway stuff..."
 if [ "$DISTRO" = "fedora" ]; then
     sudo dnf install -y sway waybar NetworkManager-tui network-manager-applet
-    sudo dnf install -y dunst wofi pulse brightnessctl pactl libinput tesseract
+    sudo dnf install -y mako wofi pulse brightnessctl pactl libinput tesseract   # dunst→mako: 通知 daemon 统一用 mako (wayland)
     sudo dnf install -y arandr nm-applet blueman-applet lxappearance swaylock
 else
     # Kali 和 Debian 使用相同的包名
     sudo apt install -y sway waybar network-manager network-manager-gnome swaylock tesseract
-    sudo apt install -y dunst wofi pulseaudio-utils brightnessctl pipewire-audio-client-libraries libinput-bin
+    sudo apt install -y mako wofi pulseaudio-utils brightnessctl pipewire-audio-client-libraries libinput-bin   # dunst→mako 同 fedora
     sudo apt install -y arandr blueman lxappearance
 fi
 
