@@ -1,5 +1,135 @@
 {
  "providers": {
+  "bai": {
+   "_comment": "B.AI (白B.AI) https://api.b.ai/v1 — 免费 0-Credits 通道，2026-08-30 实测：6 模型均回 reasoning_content；burst 会 429 'Too many pending requests'（隔 12s 即恢复），并发 8 路实测 OK。deepseek-v4-flash 上游快照会在 -0731/-202605/裸名之间轮转（版本非恒定）。本机需代理（直连超时）。",
+   "baseUrl": "https://api.b.ai/v1",
+   "api": "openai-completions",
+   "apiKey": "$BAI_API_KEY",
+   "compat": {
+    "supportsDeveloperRole": false,
+    "supportsReasoningEffort": true
+   },
+   "models": [
+    {
+     "id": "deepseek-v4-flash",
+     "name": "DeepSeek V4 Flash (B.AI free)",
+     "reasoning": true,
+     "contextWindow": 1000000,
+     "maxTokens": 65536,
+     "compat": {
+      "thinkingFormat": "deepseek"
+     },
+     "thinkingLevelMap": {
+      "minimal": null,
+      "low": null,
+      "medium": "medium",
+      "high": "max",
+      "xhigh": "max"
+     }
+    },
+    {
+     "id": "deepseek-v4-flash-vision-exp",
+     "name": "DeepSeek V4 Flash Vision Exp (B.AI free)",
+     "reasoning": true,
+     "input": [
+      "text",
+      "image"
+     ],
+     "contextWindow": 1000000,
+     "maxTokens": 65536,
+     "compat": {
+      "thinkingFormat": "deepseek"
+     },
+     "thinkingLevelMap": {
+      "minimal": null,
+      "low": null,
+      "medium": "medium",
+      "high": "max",
+      "xhigh": "max"
+     }
+    },
+    {
+     "id": "qwen3.8-flash",
+     "name": "Qwen3.8 Flash (B.AI free)",
+     "reasoning": true,
+     "input": [
+      "text",
+      "image"
+     ],
+     "contextWindow": 1000000,
+     "maxTokens": 131072,
+     "compat": {
+      "thinkingFormat": "deepseek"
+     },
+     "thinkingLevelMap": {
+      "minimal": null,
+      "low": null,
+      "medium": "medium",
+      "high": "max",
+      "xhigh": "max"
+     }
+    },
+    {
+     "id": "glm-5.3-flash",
+     "name": "GLM 5.3 Flash (B.AI free)",
+     "reasoning": true,
+     "input": [
+      "text",
+      "image"
+     ],
+     "contextWindow": 1000000,
+     "maxTokens": 131072,
+     "compat": {
+      "thinkingFormat": "deepseek"
+     },
+     "thinkingLevelMap": {
+      "minimal": "low",
+      "low": "low",
+      "medium": "medium",
+      "high": "max",
+      "xhigh": "max"
+     }
+    },
+    {
+     "id": "hy3",
+     "name": "Hunyuan Hy3 (B.AI free)",
+     "reasoning": true,
+     "contextWindow": 256000,
+     "maxTokens": 32768,
+     "compat": {
+      "thinkingFormat": "deepseek"
+     },
+     "thinkingLevelMap": {
+      "minimal": null,
+      "low": null,
+      "medium": "medium",
+      "high": "max",
+      "xhigh": "max"
+     }
+    },
+    {
+     "id": "mimo-v2.5",
+     "name": "MiMo V2.5 (B.AI free)",
+     "reasoning": true,
+     "input": [
+      "text",
+      "image"
+     ],
+     "contextWindow": 1000000,
+     "maxTokens": 32768,
+     "compat": {
+      "thinkingFormat": "deepseek"
+     },
+     "thinkingLevelMap": {
+      "minimal": null,
+      "low": null,
+      "medium": "medium",
+      "high": "max",
+      "xhigh": "max"
+     }
+    }
+   ]
+  },
   "opencode-go": {
    "modelOverrides": {
     "glm-5.3": {

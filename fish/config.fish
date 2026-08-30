@@ -263,3 +263,11 @@ function k
     end
     rbw get $argv
 end
+
+# lichess personal token（明文；config.fish 非 dotfiles 链接，不进 git）
+set -gx LICHESS_TOKEN "<your-lichess-token>"
+
+# B.AI (白B.AI) api.b.ai —— 免费 0-Credits flash 通道（deepseek-v4-flash / vision-exp / qwen3.8-flash / glm-5.3-flash）
+# key 取自 chat.b.ai 侧栏 API → Create API Key；明文存此文件，不入 git（My_Dotfiles 备份恒为占位符）
+# ⚠️ api.b.ai / chat.b.ai 本机直连超时，必须走代理（NO_PROXY 不含 b.ai，默认即走代理）
+set -gx BAI_API_KEY "<your-key>"

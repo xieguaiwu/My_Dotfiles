@@ -1,8 +1,8 @@
 ---
 name: verified-search
 description: "Reliable web search agent. Uses only confirmed real-search-capable sources (public API search + opencli verified browser search). Never uses AI chat (grok/doubao/gemini ask) as a search engine — they lack verifiable web-search confirmation."
-model: deepseek/deepseek-v4-flash
-fallbackModels: opencode-go/deepseek-v4-flash, qwen/deepseek-v4-flash-0731
+model: bai/deepseek-v4-flash
+fallbackModels: deepseek/deepseek-v4-flash, opencode-go/deepseek-v4-flash, qwen/deepseek-v4-flash-0731
 thinking: medium
 temperature: 0.2
 tools: read, bash, fetch_content

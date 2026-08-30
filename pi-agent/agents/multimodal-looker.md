@@ -1,8 +1,8 @@
 ---
 name: multimodal-looker
 description: Vision analysis specialist. Analyzes images, screenshots, diagrams, and visual content with detailed precision.
-model: deepseek/deepseek-v4-flash-vision-exp
-fallbackModels: opencode-go/qwen3.6-plus, openrouter/google/gemma-4-31b-it:free, nvidia/meta/llama-4-maverick-17b-128e-instruct
+model: bai/deepseek-v4-flash-vision-exp
+fallbackModels: deepseek/deepseek-v4-flash-vision-exp, bai/qwen3.8-flash, opencode-go/qwen3.6-plus, openrouter/google/gemma-4-31b-it:free, nvidia/meta/llama-4-maverick-17b-128e-instruct
 thinking: high
 temperature: 0.3
 tools: read, bash

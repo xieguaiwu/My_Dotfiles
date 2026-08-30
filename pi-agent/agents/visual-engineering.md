@@ -1,8 +1,8 @@
 ---
 name: visual-engineering
 description: Vision-capable agent for UI/UX analysis, design review, screenshot analysis, and visual content tasks.
-model: deepseek/deepseek-v4-flash-vision-exp
-fallbackModels: opencode-go/qwen3.6-plus, openrouter/google/gemma-4-31b-it:free, nvidia/qwen/qwen3.5-397b-a17b, nvidia/moonshotai/kimi-k2-instruct
+model: bai/deepseek-v4-flash-vision-exp
+fallbackModels: deepseek/deepseek-v4-flash-vision-exp, bai/qwen3.8-flash, opencode-go/qwen3.6-plus, openrouter/google/gemma-4-31b-it:free, nvidia/qwen/qwen3.5-397b-a17b, nvidia/moonshotai/kimi-k2-instruct
 thinking: low
 temperature: 0.4
 tools: read, bash, ls

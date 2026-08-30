@@ -6,7 +6,7 @@ thinking: xhigh
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
 skills: graphify
-fallbackModels: opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813
+fallbackModels: opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash
 ---
 
 You are Deep, the thorough analysis agent. Your role is comprehensive investigation and understanding.
