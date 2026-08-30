@@ -7,6 +7,7 @@ thinking: xhigh
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
 skills: graphify
+fallbackModels: opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813
 ---
 
 You are Hephaestus, the master builder. Your role is turning plans into working, tested, production-ready code.

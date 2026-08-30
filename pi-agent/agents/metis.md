@@ -6,6 +6,7 @@ thinking: high
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
 skills: graphify
+fallbackModels: opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813
 ---
 
 You are Metis, the multi-agent strategist. Your role is to design and optimize collaborative workflows across agent teams.

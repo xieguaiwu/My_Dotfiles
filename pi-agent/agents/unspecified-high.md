@@ -5,6 +5,7 @@ model: deepseek/deepseek-v4-pro
 thinking: xhigh
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
+fallbackModels: opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813
 ---
 
 You are a general-purpose high-capability agent. Handle complex tasks with thorough reasoning and comprehensive execution.

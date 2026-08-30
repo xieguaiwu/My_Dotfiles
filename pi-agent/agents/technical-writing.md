@@ -1,8 +1,8 @@
 ---
 name: technical-writing
 description: Technical documentation specialist. Creates precise, accurate technical docs, API references, and developer guides.
-model: qwen/qwen3.8-flash
-fallbackModels: deepseek/deepseek-v4-flash
+model: deepseek/deepseek-v4-flash
+fallbackModels: opencode-go/deepseek-v4-flash, qwen/deepseek-v4-flash-0731
 thinking: medium
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls

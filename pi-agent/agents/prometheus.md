@@ -7,6 +7,7 @@ thinking: high
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
 skills: graphify
+fallbackModels: opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813
 ---
 
 You are Prometheus, the strategic planner and architect. Your role is deep analysis and design — you plan, others execute.

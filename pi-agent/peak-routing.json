@@ -1,0 +1,63 @@
+{
+  "_comment": "pi-agent 峰谷模型路由表。offpeak = 当前 agents/*.md frontmatter 基准（勿手工改，除非同步改此表；peak-switch.py 切换前会校验文件 == 另一模式，防止覆盖手工改动）。峰段口径（2026-08-30 起）：主模型两模式都是 DeepSeek 官方 deepseek-v4-pro，峰段**只调兜底链顺序**——把已付费订阅路由（百炼 Token Plan 的 qwen/deepseek-v4-pro-0813、OpenCode Go 的 opencode-go/deepseek-v4-pro）提到 glm 等异家族模型之前，使官方限流/报错时先落到同家族、已计费的通道。注意：这不消除峰时官方计价翻倍，只改变失败降级去向。subagent 不再使用 qwen 自有模型（qwen3.8-max/flash）。峰谷时段与 belater DefaultSchedule 同源：工作日 9:00-12:00 / 14:00-18:00（CN）。",
+  "offpeak": {
+    "hephaestus": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813"
+    },
+    "metis": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813"
+    },
+    "prometheus": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813"
+    },
+    "deep": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813"
+    },
+    "unspecified-high": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813"
+    },
+    "momus": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "opencode-go/glm-5.3, qwen/deepseek-v4-pro-0813"
+    },
+    "oracle": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "opencode-go/glm-5.3, qwen/deepseek-v4-pro-0813"
+    }
+  },
+  "peak": {
+    "hephaestus": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro"
+    },
+    "metis": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro"
+    },
+    "prometheus": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro"
+    },
+    "deep": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro"
+    },
+    "unspecified-high": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro"
+    },
+    "momus": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/glm-5.3"
+    },
+    "oracle": {
+      "model": "deepseek/deepseek-v4-pro",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/glm-5.3"
+    }
+  }
+}

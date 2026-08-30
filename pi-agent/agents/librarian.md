@@ -1,8 +1,8 @@
 ---
 name: librarian
 description: Knowledge curator and documentation specialist. Finds, organizes, and explains information from the codebase and external sources.
-model: qwen/qwen3.8-flash
-fallbackModels: deepseek/deepseek-v4-flash
+model: deepseek/deepseek-v4-flash
+fallbackModels: opencode-go/deepseek-v4-flash, qwen/deepseek-v4-flash-0731
 thinking: medium
 temperature: 0.1
 tools: read, bash, grep, find, ls
