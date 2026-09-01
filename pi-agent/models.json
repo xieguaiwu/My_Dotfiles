@@ -2,6 +2,7 @@
  "providers": {
   "bai": {
    "_comment": "B.AI (白B.AI) https://api.b.ai/v1 — 免费 0-Credits 通道，2026-08-30 实测：6 模型均回 reasoning_content；burst 会 429 'Too many pending requests'（隔 12s 即恢复），并发 8 路实测 OK。deepseek-v4-flash 上游快照会在 -0731/-202605/裸名之间轮转（版本非恒定）。本机需代理（直连超时）。",
+   "_byte_limit_note": "⚠️ 网关按【字节】限流，不是按 token：硬上限 6,291,456 B (6 MiB)，超限返回 400 invalid_request_error 'Exceeded limit on max bytes to request body'；接近上限（实测 5.4 MB 上下文）时还会因代理链路读体超时而间歇返回 400 gateway_error code 400001 'read body failed'（同尺寸有时成功有时失败，pi 不重试 400 → 直接中断回合）。坑在于 pi 把一张 base64 截图按 ESTIMATED_IMAGE_CHARS=4800≈1200 token 计价，实际线上约 720 KB，且工具图片每回合重复上传，所以 contextWindow=1000000 会让压缩判定以为还有 87% 余量而字节已顶到 91% 上限。contextWindow 本身是真实的（实测 768k prompt tokens 可过），不要为此调小它——字节防线由 extensions/image-byte-guard 负责（PI_MAX_REQUEST_BYTES 默认 4 MiB）。",
    "baseUrl": "https://api.b.ai/v1",
    "api": "openai-completions",
    "apiKey": "$BAI_API_KEY",
@@ -24,7 +25,8 @@
       "low": null,
       "medium": "medium",
       "high": "max",
-      "xhigh": "max"
+      "xhigh": "max",
+      "off": null
      }
     },
     {
@@ -45,7 +47,8 @@
       "low": null,
       "medium": "medium",
       "high": "max",
-      "xhigh": "max"
+      "xhigh": "max",
+      "off": null
      }
     },
     {
@@ -66,7 +69,8 @@
       "low": null,
       "medium": "medium",
       "high": "max",
-      "xhigh": "max"
+      "xhigh": "max",
+      "off": null
      }
     },
     {
@@ -85,9 +89,10 @@
      "thinkingLevelMap": {
       "minimal": "low",
       "low": "low",
-      "medium": "medium",
+      "medium": "low",
       "high": "max",
-      "xhigh": "max"
+      "xhigh": "max",
+      "off": null
      }
     },
     {
@@ -104,7 +109,8 @@
       "low": null,
       "medium": "medium",
       "high": "max",
-      "xhigh": "max"
+      "xhigh": "max",
+      "off": null
      }
     },
     {
@@ -125,7 +131,8 @@
       "low": null,
       "medium": "medium",
       "high": "max",
-      "xhigh": "max"
+      "xhigh": "max",
+      "off": null
      }
     }
    ]

@@ -1,11 +1,8 @@
 ---
 name: windows-scripting-and-ssh-debug
-version: 1.6.0
-description: Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/输出规范）与 OpenSSH 远程排障——KEXINIT reset 排除链、黑盒三测试、前台 vs 服务模式差异定位、ACL 拒绝访问判别、自愈看门狗、脚本化协作闭环；含 BOOKS 电子书双机备份日常运维指南（books-sync.py 四步同步/差异语义/排除规则/快照策略）
+version: 1.7.0
+description: OpenSSH 远程排障（KEXINIT reset 排除链、黑盒三测试、前台 vs 服务模式差异定位、ACL 拒绝访问判别、TEMP 隔离判别器、身份鉴定三件套、自愈看门狗、脚本化协作闭环）；含 BOOKS 电子书双机备份日常运维指南（books-sync.py 四步同步/差异语义/排除规则/快照策略/内容哈希预检）；Windows 脚本编写规范已拆至 Coding/windows-powershell-scripting.md
 triggers:
-  - "Windows 脚本"
-  - "bat 脚本"
-  - "PowerShell 脚本"
   - "SSH 连不上 Windows"
   - "KEXINIT"
   - "Connection reset"
@@ -37,86 +34,27 @@ tools:
 
 # Windows 脚本编写与 OpenSSH 远程排障 Skill
 
-Windows 端工具（.bat/.ps1）之编写、审查与远程排障，皆本 skill 范围。Linux 主机不能直接执行 Windows 脚本——一切操作经「用户双击脚本 + 回传输出」闭环完成。2026-08-16 win-ssh-setup 实战（KEXINIT reset 五日排障、rsync 解压失败、语法检查器误报）沉淀于此。
+Windows 端 **OpenSSH 远程排障**。Linux 主机不能直接执行 Windows 脚本——一切操作经「用户双击脚本 + 回传输出」闭环完成。2026-08-16 win-ssh-setup 实战（KEXINIT reset 五日排障、rsync 解压失败、语法检查器误报）沉淀于此。
+
+> **脚本编写规范（.bat/.ps1 编码、提权、PS5.1 语法、单文件交付、退出码、Transcript、内容门禁、输出规范、测试函数、上下文切换、看门狗、远端 PS 引号坑等）已拆至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md)（Windows 专精独立 skill）。** 写/改 .bat/.ps1 前加载该 skill 自查，本文仅保留 SSH 排障链路直接依赖的条目。
 
 ## 任务目标
 
-1. 编写/审查 Windows 端脚本时，规避编码、语法、权限、上下文四类陷阱
-2. Windows OpenSSH "Connection reset after KEXINIT" 类故障，按排除链由外至内定位
-3. 每个排查步骤脚本化，用户双击即跑，输出回传，逐步收敛
+1. Windows OpenSSH "Connection reset after KEXINIT" 类故障，按排除链由外至内定位
+2. 每个排查步骤脚本化，用户双击即跑，输出回传，逐步收敛
+3. 编写/审查 SSH 排障脚本时，遵循 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) 的 Windows 脚本编写规范
 
 ## 执行流程
 
 ### 1. 脚本编写规范自查（写/改 .bat/.ps1 前必过）
 
-**A. .bat 编码**：批处理文件必须纯 ASCII（cmd 用 OEM 代码页解析，非 ASCII 字节变乱码）。自查：`LC_ALL=C grep -qP '[\x80-\xFF]' file.bat`。
+**Windows 脚本编写规范（编码/提权/PS5.1 语法/错误处理/退出码/自包含门禁/Transcript/单文件交付/输出规范/测试函数/上下文切换/看门狗/远端 PS 引号坑等，原 A-Q 共 17 条）已拆至独立 skill：[Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md)（v1.0.0，Windows 端 .bat/.ps1 专精）。** 写/改 .bat/.ps1 前加载该 skill 自查。
 
-**B. 提权三件套**（双击自动弹 UAC）：
+SSH 排障链路中直接依赖的三条，保留摘要（详见新 skill 对应节）：
 
-```bat
-net session >nul 2>&1
-if %errorlevel% neq 0 (
-    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
-    exit /b 0
-)
-```
-
-`%~f0` 绝对路径保证目录含空格也安全；RunAs 后工作目录变化不影响后续 `%~dp0` 调用。
-
-**C. PowerShell 5.1 语法陷阱**（朴素括号/引号检查器会误报，须用 PS 感知检查器）：
-
-| 构造 | 说明 | 误报场景 |
-|---|---|---|
-| `${...}` | 变量界定符（如 `${env:TEMP}`），**不是**花括号块 | 朴素检查器报「花括号不匹配」 |
-| `''` | 单引号串内转义单引号 | 检查器误判字符串提前结束 |
-| `@'...'@` / `@"..."@` | here-string | 检查器漏处理 |
-| `` ` `` | 反引号转义（`` `" ``、`` `n ``） | 双引号串内误判 |
-| `-f "…{0}…{1}…"` | 格式串内 `{}` 非块 | 同上 |
-
-验证法：Python 写 PS 感知检查器（处理注释 `#`、三种字符串、here-string、`${}` 跳过），跑通再交付。
-
-**D. 编码**：PS 5.1 `-Encoding UTF8` 写文件**带 BOM**——pacman mirrorlist 等解析类文件首行会告警，内容 ASCII 时用 `-Encoding ASCII`。
-
-**E. 权限**：`Get-Acl`/`icacls` 读 `C:\ProgramData\ssh` 等受保护目录，非管理员直接 `UnauthorizedAccessException`——诊断脚本须提示管理员运行或自动提权。
-
-**F. 原生命令 stderr 陷阱**：`$ErrorActionPreference='Stop'` + ssh.exe 写 stderr（如 `Warning: Permanently added...`）→ `NativeCommandError` **中止整个脚本**（服务恢复等后续步骤丢失）。诊断类脚本用 `'Continue'`，命令加 `2>&1 | Out-String`。
-
-**G. 测试命令防挂起**：ssh 测试一律 `-o BatchMode=yes -o ConnectTimeout=5`。注意 `Permission denied (publickey)` **不是故障**——KEX 已通、仅未配公钥；`Connection reset`/`timeout` 才是故障。
-
-**H. tar 盘符陷阱**：Windows bsdtar 归档绝对路径保留盘符（`D:\ebooks` → 条目 `D:/ebooks/...`），Linux 端解压出 `D:` 子目录。修复：`pushd "%SRC%" && tar cf - . | ssh ... && popd`。
-
-**I. bsdtar 解压 .tar.xz 需外部 xz**：Windows 10 自带 bsdtar 不内置 xz 解压器，报 `Can't initialize filter; unable to run program "xz -d -qq"`。修复：下载官方 `xz-5.8.3-windows.zip`（tukaani.org / GitHub 双源）→ `Expand-Archive` → 复制 `xz.exe` 到 `System32`。
-
-**J. 脚本自包含**：补丁/修复脚本的常量、变量、函数、import 必须完整（「apply 模式」才有意义），交付前 grep 核对关键标识符都在文档内。
-
-**K. 外部资源预检**：脚本引用的下载 URL 先 `curl -sIL` 验证 200，版本号硬编码需确认当前有效。
-
-**L. 输出消息规范（ASD-STE100）**
-
-脚本与用户的自动化文字交互（echo / Write-Host / 错误提示 / 交互询问）遵守 ASD-STE100（简化技术英语，国际标准）：
-
-- **短句**：一条消息 ≤ 20 词（中文 ≤ 40 字），一句一个信息
-- **指令祈使**：提示操作直接说"要做什么"（"Press Enter to continue."）
-- **术语一致**：同一脚本内同一概念同一措辞，不换同义词
-- **状态消息**：用固定前缀模板（[OK] / [FAIL] / [WARN]），与测试函数的 PASS/FAIL 输出风格统一
-- **错误消息**：先说原因再说动作，附可执行建议（本条与本文件「测试函数必须输出原始错误」经验协同）
-- **中文脚本**：避免混用中英文标点，全角/半角统一
-
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md) 第 7 节。
-
-**M. 外部 exe 试运行必须取退出码，勿信「无输出」**：`& $exe -t 2>&1` 在 exe 根本无法启动时（拒绝访问）抛 `NativeCommandFailed`，且 `$out` 保持 null → 后续 `.Trim()` 连环崩（v5 实况：57/60 行双报错）。无输出 ≠ 成功。**修**：`Start-Process -Wait -PassThru -RedirectStandardError <tmpfile>` 取 `$p.ExitCode`（负数格式化 `0x{0:X8}` 便于认 NTSTATUS，-1=0xFFFFFFFF）。
-
-**N. 修复脚本必须 Start-Transcript**：v4 五轮修复不落盘日志，全部证据丢失、只能重跑诊断。`Start-Transcript -Path <桌面>\xxx-log.txt` + 退出前 `Stop-Transcript`，原生命令输出也捕获；用户关窗/闪退仍有全量日志可回传。
-
-**O. 依赖文件搜索路径 = 给用户的指令路径 ∪ 脚本目录 ∪ Downloads**：v5 让用户把 zip 放 `D:\Downloads\`，脚本却只搜 `$PSScriptRoot` → 白跑一轮。发布前把用户指令里每个路径对着脚本搜索清单核一遍；且依赖要内容寻址：zip 解压后先试运行 + SHA256 对官方指纹，装完再比一次哈希（当场抓 AV 篡改）。
-
-**P. bat 必须纯 ASCII + CRLF**（restart-sshd.bat 首版翻车根因）：中文 Windows cmd 默认 GBK 代码页，UTF-8 中文直接解析失败；LF-only 在多行括号块下解析不稳。判据：`file x.bat` 输出 `ASCII text, with CRLF line terminators`。能跑的历史文件（diag-svc / fix-sshd-v7 / push-backup）全是纯 ASCII——用户提示信息用英文（配合 ASD-STE100）。UAC 提权失败分支必须停留（goto :eof 前 echo + pause），不能闪退，否则表现为「双击没反应」。
-
-**Q. 单文件自包含交付（bat 内嵌 ps1）**：需要用户在 Windows 侧双击一个文件搞定一切时，把 ps1 逐行 echo 进 `%TEMP%\x.ps1` 再执行（`>>"%PS%" echo <line>`，空行用 `echo.`）：
-- **重定向前置**：`>>"%PS%" echo xxx`——内容以数字结尾（如 `exit 1`）时后置写法会把尾数当句柄（`1>>`）；
-- **内嵌内容禁用 cmd 元字符** `| & % < > ^ !`（含注释）——`grep -nE '[|&%<>^!`]'` 验证；
-- **生成后必须回验**：awk/sed 从 bat 提取内嵌段 diff 源 ps1，`ROUND-TRIP OK` 才算数；
-- 单文件 = 用户只传一次，杜绝多文件散落/编码被改的二次故障源。
+- **G. 测试命令防挂起**：ssh 测试一律 `-o BatchMode=yes -o ConnectTimeout=5`。注意 `Permission denied (publickey)` **不是故障**——KEX 已通、仅未配公钥；`Connection reset`/`timeout` 才是故障。（新 skill §4）
+- **H. tar 盘符陷阱**：Windows bsdtar 归档绝对路径保留盘符（`D:\ebooks` → 条目 `D:/ebooks/...`），Linux 端解压出 `D:` 子目录。修复：`pushd "%SRC%" && tar cf - . | ssh ... && popd`。（新 skill §14）
+- **I. bsdtar 解压 .tar.xz 需外部 xz**：Windows 10 自带 bsdtar 不内置 xz 解压器，报 `Can't initialize filter; unable to run program "xz -d -qq"`。修复：下载官方 `xz-5.8.3-windows.zip`（tukaani.org / GitHub 双源）→ `Expand-Archive` → 复制 `xz.exe` 到 `System32`。（新 skill §14）
 
 ### 2. 环境预检（远程黑盒画像）
 
@@ -174,15 +112,7 @@ Python socket 直连 22 端口，三种 payload：
 
 ### 5. 脚本化协作闭环
 
-每个排查步骤产出一个可双击脚本（.bat 启动器 + .ps1 逻辑），模式：
-
-```text
-.bat: 提权检查 → powershell -ExecutionPolicy Bypass -File "%~dp0xxx.ps1" → pause
-.ps1: 分阶段输出 [N/M] → 每步 try/catch 容错 → 结果多位置写入
-      （桌面 + $PSScriptRoot + %TEMP%，防 OneDrive 桌面重定向）
-```
-
-用户跑完 → 输出贴回（文件放 ~/Downloads/agony.md 或直接贴文本）→ 分析 → 下一步脚本。版本演进：diag-sshd → diag-sshd2（补日志源/ACL）→ diag-sshd3（前台调试）——每版修复上一版盲区，保留演进链可追溯。
+**交付模式（bat 启动器 + ps1 逻辑、多位置写入、每轮一脚本等）已移至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §15。** 本文保留版本演进链：diag-sshd → diag-sshd2（补日志源/ACL）→ diag-sshd3（前台调试）——每版修复上一版盲区，保留演进链可追溯。
 
 ## 输出格式
 
@@ -204,22 +134,25 @@ Python socket 直连 22 端口，三种 payload：
 
 ### 1. 测试函数必须输出原始错误，PASS/FAIL 是诊断盲区
 
-修复脚本的验证函数若只返回 PASS/FAIL 而不显示原始输出，Linux 侧无法区分
+修复脚本的验证函数若只返回 PASS/FAIL 而不显示原始输出，无法区分
 `Connection refused`（服务没监听）vs `Connection reset`（服务在监听但握手崩）vs
 `timeout`（防火墙丢包）——三者修复方向完全不同。**验证函数 FAIL 时打印 $out 前 300 字符**。
+（完整测试函数规范见 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §10）
 
 ### 2. 测试客户端必须用绝对路径，勿依赖 PATH
 
 `& ssh` 依赖 PATH 解析：提权后当前目录是 System32，PATH 可能指向被移动/损坏/被拦的
 ssh.exe → `ApplicationFailedException 拒绝访问` → 所有阶段假 FAIL。
-**修**：`Get-SshClient` 优先 `C:\Windows\System32\OpenSSH\ssh.exe`（内置客户端，微软签名），
+**修**：优先 `C:\Windows\System32\OpenSSH\ssh.exe`（内置客户端，微软签名），
 再 `C:\Program Files\OpenSSH\ssh.exe`，用绝对路径调用。
+（完整规范见 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §10）
 
 ### 3. MOTW 理论陷阱：Expand-Archive 不传播 Mark-of-the-Web
 
 下载 zip 带 MOTW（Zone.Identifier ADS），但 **Expand-Archive 解压出的文件不带 ADS**——
 「解压 exe 被 SmartScreen 拦」是错误假设。若解压后 exe 执行拒绝访问，另找原因
 （ACL/Defender 实时保护锁文件/占用），勿在 Unblock-File 上浪费轮次。
+（移至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) 注意事项）
 
 ### 4. 杀软接力：第三方 AV 卸载后 Windows Defender 自动启用
 
@@ -234,22 +167,25 @@ ssh.exe → `ApplicationFailedException 拒绝访问` → 所有阶段假 FAIL�
 
 服务管理器与用户上下文启动同一 exe 结果不同：
 1. **服务进程是否真的监听**（`netstat -ano | findstr :22` + 进程名）——服务可能
-   Running 但 sshd 内部初始化失败（配置/绑定），测试显示 refused
+   Running 但内部初始化失败，测试显示 refused
 2. **文件是否被占用**（服务持有 exe 句柄时二次启动可能拒绝）
 3. **ACL 是否允许当前用户执行**（icacls 查具体文件，勿只看目录）
 4. **杀软实时保护锁文件**（Defender 扫描中新下载 exe）
 5. 测试前 `taskkill /F /IM sshd.exe` 杀干净旧实例，避免端口占用假象
+（完整排查方向见 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §11）
 
 ### 6. 修复脚本切换运行上下文（服务→任务→Run 键）前必须杀旧进程
 
-兜底链（服务→schtasks→Startup）切换时，旧实例若仍占 22 端口，新实例绑定失败、
-测试连到旧实例 → 假 FAIL。每阶段切换前 `taskkill /F /IM sshd.exe`。
+兜底链（服务→schtasks→Startup）切换时，旧实例若仍占端口，新实例绑定失败、
+测试连到旧实例 → 假 FAIL。每阶段切换前 `taskkill /F /IM` 杀干净旧实例。
+（移至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §11）
 
 ### 7. HKCU Run 键写入「拒绝访问」用 Startup 文件夹快捷方式绕过
 
 注册表 Run 键可能被第三方防护 ACL 锁（Owner 异常为 SYSTEM）；自启动改用
 `[Environment]::GetFolderPath('Startup')` + WScript.Shell 快捷方式，不依赖注册表。
 schtasks /sc onlogon 需密码会在提权窗口卡住——勿用。
+（移至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §11）
 
 ### 8. 排障协作的收敛节奏
 
@@ -266,7 +202,7 @@ schtasks /sc onlogon 需密码会在提权窗口卡住——勿用。
 
 diag v1 的 Start-Service 用了这对组合，把最需要的真实报错吞得干干净净（只看到
 StartType 不动）。要真实报错：`try { Start-Service x -ErrorAction Stop } catch {
-$_.Exception.Message }`。与上文 F 条（'Stop' + stderr 陷阱）合参：诊断路径
+$_.Exception.Message }`。与 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §4（'Stop' + stderr 陷阱）合参：诊断路径
 'Continue' + 显式 catch，修复路径按需。
 
 ### 10. 空 FileVersion 是症状不是证据（v5 误诊教训）
@@ -280,10 +216,9 @@ $_.Exception.Message }`。与上文 F 条（'Stop' + stderr 陷阱）合参：�
 
 ### 11. 全盘 A/B 试运行：昨天的可用工件就是救援源
 
-把 `C:\Program Files\OpenSSH*` 全部目录（含 5 个 .bak）逐一 `-t` 试运行：唯一
-exit 0 的是第一个 .bak（v10）= 08-16 16:44 前台验证过的同一份。已知可用工件
-往往还躺在磁盘上——**下载/重装前先枚举试跑全部现存工件**，rescue-before-download。
-（代价为零，还能白得 A/B 对照组。）
+已知可用工件往往还躺在磁盘上——**下载/重装前先枚举试跑全部现存工件**（含 .bak 目录），
+rescue-before-download。代价为零，还能白得 A/B 对照组。
+（移至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) 注意事项）
 
 ### 12. 「拒绝访问」与 `/inheritance:r` 强相关：剥继承只用于密钥类
 
@@ -301,7 +236,7 @@ administrators_authorized_keys（sshd 强制严格权限）；二进制安装目
 ### 14. 版本门禁 fail-closed
 
 v4 的防 v10 检查 `$ver -match '^10\.'` 在 FileVersion 为空时静默放行。门禁逻辑
-必须拒绝空/未知（fail-closed）；更稳的做法是直接拿哈希当门禁（见 O 条）。
+必须拒绝空/未知（fail-closed）；更稳的做法是直接拿哈希当门禁（见 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §6 内容门禁）。
 
 ### 15. Windows 10 自带 ssh.exe/scp = 现成双向传输通道
 
@@ -319,8 +254,8 @@ reset 应首先怀疑用户名/账户有效性。**正确用户名 = Windows 登
 
 ### 16. 用户回传的日志同时审计我自己的脚本 bug
 
-v5 日志暴露两处我的 bug：zip 搜索路径与用户指令不符（O 条）、Test-Sshd 的
-null 连环崩（M 条）。发下一版前先 diff「预期输出 vs 实际输出」，把「上一版
+v5 日志暴露两处我的 bug：zip 搜索路径与用户指令不符（见 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §6 依赖搜索路径）、Test-Sshd 的
+null 连环崩（见 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §5 exe 退出码）。发下一版前先 diff「预期输出 vs 实际输出」，把「上一版
 脚本的 bug」列为排障对象——脚本的 bug 会伪装成系统的故障。
 
 ### 17. 修复脚本的清理代码只在确认失败后执行（v7 误杀教训）
@@ -330,7 +265,7 @@ v7 成功拉起 sshd（22 LISTENING + KEX 通），但成功判据函数被 stde
 （a）kill/Stop-Process 类清理只在判据**明确失败**分支执行；（b）成功判据用
 Start-Process + RedirectStandardOutput/Error 双文件，勿用 `& exe 2>&1`——
 Windows ssh.exe 的 `Warning: Permanently added` 走 stderr 会产生错误记录对象
-污染 `$out`，match 失败（M 条的再验证）。
+污染 `$out`，match 失败（[Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §5 的再验证）。
 
 ### 17b. Windows sftp-server 路径语法 = /盘符:/，无 cygdrive；scp 下载拒带空格用户名
 
@@ -345,6 +280,7 @@ Win32-OpenSSH sftp-server：绝对路径写 `/D:/Epub/...`（正斜杠盘符冒�
 命中 WriteLine(String, params Object[]) 重载 → String.Format 参数越界运行时异常
 （且藏在 catch 里表现为「全部跳过」）。**修**：`$line = ('{0}|{1}' -f $a,$b); $sw.WriteLine($line)`。
 同场加映：foreach 内 FileInfo 对超长路径抛异常会中断整个循环——每文件级 try/catch。
+（移至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) 注意事项）
 
 ### 18b. NTFS 非法字符与跨平台同步
 
@@ -364,11 +300,13 @@ LongPathsEnabled=1（Win32-OpenSSH sftp-server 清单已声明 longPathAware）�
 
 ### 19. onstart 开机任务不可靠 → 周期看门狗兜底
 
-`/sc onstart` 开机任务重启后**未可靠拉起 sshd**（15:46 实测 22 关闭，而 14:10 手动 /run 成功）——开机任务在系统/网络/Defender 就绪前运行，失败后**无重试**。一劳永逸解法（install-keepalive.bat）：SYSTEM 计划任务 = AtStartup 触发 + Once/RepetitionInterval 5 分钟 + RepetitionDuration 3650 天（`[TimeSpan]::MaxValue` 在部分 PS 版本报错，用 10 年等效）+ `StartWhenAvailable`（睡眠唤醒后补跑）+ 电池策略 + `ExecutionTimeLimit 2 分钟`（防卡死挡住下次触发）；看门狗脚本逻辑 = netstat 查端口 → 没监听则杀残留进程 + 清 sshd.pid + `Start-Process` 重启 + 记 keepalive.log。**任何断连（重启/睡眠/崩溃）5 分钟内自愈，Linux 侧 `ssh -w` 等待即可**。
+`/sc onstart` 开机任务重启后**未可靠拉起 sshd**——开机任务在系统/网络/Defender 就绪前运行，失败后**无重试**。一劳永逸解法（install-keepalive.bat）：SYSTEM 计划任务 = AtStartup 触发 + 5 分钟周期重复（10 年等效时长）+ `StartWhenAvailable` + `ExecutionTimeLimit 2 分钟`；看门狗逻辑 = netstat 查端口 → 没监听则杀残留 + 清 pid + `Start-Process` 重启 + 记 keepalive.log。**任何断连 5 分钟内自愈，Linux 侧 `ssh -w` 等待即可**。
+（完整编写规范见 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §12）
 
 ### 20. 远端 PowerShell 输出噪音与引号坑
 
 `-EncodedCommand`（UTF-16LE base64）是绕三层引号地狱的基线，但还有两坑：①输出带 CLIXML 噪音（「正在准备首次使用模块」进度对象）→ 脚本首行加 `$ProgressPreference='SilentlyContinue'`；②`Get-CimInstance Win32_LogicalDisk -Filter "DeviceID=\"C:\""` 经 bash heredoc 引号被吞 → FreeSpace=null 显示 0.00GB——**绕开过滤器内引号**，用 `-Filter "DriveType=3"` 或直接查对象属性。
+（移至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) §13）
 
 ### 21. ssh_config 空格用户名必须引号
 
@@ -473,6 +411,12 @@ mtime 三分类取代旧 size-only：大小不同 + Windows 更新时，旧版 s
 **实现**：本地直接流式 SHA256；远端复用 snapshot 模式（ps1 带 BOM 上传 → `powershell -File` 跑 `Get-FileHash` → 结果写 %TEMP% → sftp get 解析）。测试：`echo` 会带尾随换行、`printf '%s'` 不带——测试数据必须字节级一致，否则预检不命中是测试自己的坑。
 
 ## 变更日志
+
+### 1.7.0 (2026-08-31)
+- 拆分：脚本编写规范（原第 1 节 A-Q 共 17 条 + 第 5 节协作闭环）移至新 skill `Coding/windows-powershell-scripting.md`（v1.0.0，Windows 端 .bat/.ps1 专精）
+- 压缩：实战补充 #1/#2/#3/#5/#6/#7/#9/#11/#14/#16/#17/#18/#19/#20 保留要点 + 指向新 skill 对应节；原 F 条/M 条/O 条内部引用同步更新为指向新 skill
+- 保留：SSH 排障本体（黑盒三测试/排除链/ACL/身份鉴定/杀软/兜底任务/sftp/books-sync 运维）以及实战补充 #4/#8/#10/#12/#13/#15/#15b/#17b/#18b/#21/#22/#23-35 不动
+- 同步：front matter 描述与 triggers 精简（脚本编写触发词移至新 skill）；System_Fix/index.md 条目同步更新
 
 ### 1.6.0 (2026-08-25)
 - 新增：实战补充 5 #35 内容哈希预检——push/pull 候选跨侧 SHA256 交叉匹配防静默重复合并；scan 只读报告 / 传输模式默认排除 / `--allow-dup-merge` 强制；远端哈希走 ps1+Get-FileHash 模式

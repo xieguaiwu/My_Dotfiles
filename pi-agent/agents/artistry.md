@@ -1,8 +1,8 @@
 ---
 name: artistry
 description: Creative specialist. Generates creative content, design concepts, and artistic outputs with expressive flair.
-model: bai/deepseek-v4-flash
-fallbackModels: deepseek/deepseek-v4-flash, opencode-go/deepseek-v4-flash, qwen/deepseek-v4-flash-0731
+model: bai/glm-5.3-flash
+fallbackModels: bai/deepseek-v4-flash, deepseek/deepseek-v4-flash, opencode-go/deepseek-v4-flash, qwen/deepseek-v4-flash-0731
 thinking: high
 temperature: 0.7
 tools: read, bash, edit, write, grep, find, ls

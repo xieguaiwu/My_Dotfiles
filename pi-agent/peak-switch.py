@@ -7,16 +7,18 @@ Why: DeepSeek API prices double during peak; pi has no time-based routing
 re-read from disk on every subagent launch, so rewriting files takes effect
 immediately without restarting pi.
 
-Peak semantics since 2026-08-30 (read peak-routing.json _comment too):
-  * The primary model is DeepSeek official (deepseek/deepseek-v4-pro) in BOTH
-    modes. Subagents no longer run qwen-authored models.
+Peak semantics since 2026-08-30 evening (read peak-routing.json _comment too):
+  * Routed heavy agents run bai/glm-5.3-flash (B.AI free channel, 0-Credits) as
+    the primary model in BOTH modes. Paid DeepSeek routes moved down into
+    fallbackModels. Light agents are not routed by this table.
   * Peak mode only reorders fallbackModels: subscription-billed DeepSeek routes
-    (qwen/deepseek-v4-pro-0813 on the Bailian Token Plan, opencode-go/deepseek-v4-pro)
-    move ahead of off-family models such as opencode-go/glm-5.3. So when the
-    official route fails or is limited at peak, the child degrades to a
-    same-family route that is already paid for.
-  * This does NOT avoid peak double pricing for the primary route — it only
-    changes where degradations land. Do not "optimise" it by swapping models:
+    (qwen/deepseek-v4-pro-0813 on the Bailian Token Plan, then
+    opencode-go/deepseek-v4-pro) move ahead of the pay-as-you-go official route
+    (deepseek/deepseek-v4-pro), then off-family routes (opencode-go/glm-5.3),
+    then free-channel routes (bai/*) last. So when the free primary fails at
+    peak, the child degrades to a same-family route that is already paid for.
+  * The free primary sidesteps official peak double-pricing; paid cost only
+    occurs on degradation. Do not "optimise" it by swapping models:
     keep the routing table and this docstring in sync with peak-routing.json.
 
 Usage:

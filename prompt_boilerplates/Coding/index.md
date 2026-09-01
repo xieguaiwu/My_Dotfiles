@@ -1,6 +1,6 @@
 ---
 name: coding-skills-index
-version: 2.0.3
+version: 2.0.7
 description: Coding 技能集入口——进入项目时自动加载项目文档协议、检测项目特征并引导加载对应领域技能
 triggers:
   - "进入项目"
@@ -153,13 +153,14 @@ tools:
 
 | # | Skill | 版本 | 适用领域 | 何时加载 |
 |:--|:---|:---:|:---|---|
-| 10 | [ml-training.md](ml-training.md) | 1.8.0 | ML 深度学习/RL 训练（含 L0 快速决策卡 + 三代自动化教训 W-E~W-I + 判活标准演进） | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
-| 11 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.5.0 | 量化投资 ML（含实盘校准闭环、诊断责任降级链、机械审计闸口） | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据，或实盘/纸面交易偏差排查 |
+| 10 | [ml-training.md](ml-training.md) | 1.9.0 | ML 深度学习/RL 训练（含 L0 快速决策卡 + 三代自动化教训 W-E~W-J + 判活标准演进） | 项目含 `.py` + `train` 脚本 + 远程 GPU 服务器 |
+| 11 | [quant-ml-falsification.md](quant-ml-falsification.md) | 1.7.0 | 量化投资 ML（含实盘校准闭环、诊断责任降级链、机械审计闸口、机制假设踩坑清单 H1-H13） | 项目含 `Sharpe` / `IC` / `alpha` / 金融数据，或实盘/纸面交易偏差排查 |
 | 12 | [vps-operations.md](vps-operations.md) | 2.2.0 | VPS 部署运维 | 需要配置/管理远程 Linux 服务器 |
 | 13 | [copr_packaging.md](copr_packaging.md) | 1.1.0 | RPM/COPR 打包 | 项目含 `.spec` 文件或需要发布 RPM 包 |
 | 14 | [cp-review-fix.md](cp-review-fix.md) | 1.0.0 | 竞技编程题解 | 审查算法竞赛（Codeforces/AtCoder/洛谷）代码 |
 | 15 | [fdroid-publishing.md](fdroid-publishing.md) | 1.0.0 | 安卓应用 F-Droid 上线——合规审查、fastlane 元数据、可复现构建、fdroiddata 提交、发版纪律 | 需要安卓应用上架 F-Droid / fdroid 收录 / 发布类工作 |
 | 16 | [android-development.md](android-development.md) | 1.2.0 | 安卓 Kotlin/Compose 开发全流程——脚手架、Activity 入口测试、触摸交互测试、后置下载链路（模型/资源）、方案注册表（多方言）、安全存储、平台强制项与踩坑库 | 安卓项目开发/回归、Compose 交互问题、Robolectric 测试、APK 构建、首次运行下载不可用 |
+| 17 | [windows-powershell-scripting.md](windows-powershell-scripting.md) | 1.0.0 | Windows 端 .bat/.ps1 脚本编写规范自查——ASCII+CRLF 编码、提权三件套、PS 5.1 语法陷阱、内嵌 ps1 单文件交付、外部 exe 退出码、Transcript 落盘、依赖内容门禁、输出规范、测试函数与上下文切换、看门狗自愈、远端 PS 引号坑（自 windows-scripting-and-ssh-debug 拆分，Windows 专精） | 编写/审查 Windows 脚本（.bat/.ps1）、提权脚本、内嵌 ps1 交付、看门狗、远端 PowerShell 调用 |
 
 ### 领域 skill 加载决策树
 
@@ -185,6 +186,11 @@ tools:
 
 审查算法竞赛代码？
   └─ 是 → 加载 cp-review-fix.md
+
+编写/审查 Windows 脚本（.bat/.ps1）？
+  ├─ 是 → 加载 windows-powershell-scripting.md（编码 → 提权 → PS5.1 语法 → 单文件交付 → 退出码 → 输出规范 → 看门狗）
+  │    └─ 涉及 SSH 远程排障？ → 同时参考 System_Fix/windows-scripting-and-ssh-debug.md
+  └─ 否 → 继续
 
 项目含交互式 CLI/TUI 组件（REPL、菜单、表单、浏览器）？
   ├─ 是 → 加载 interactive-cli-design.md（§1-5 对照）
@@ -218,6 +224,7 @@ tools:
 | `fdroid-publishing.md` §3.3 | `verification-before-completion.md` | 可复现性验证须附双构建哈希证据，禁止裸声称「可复现」 |
 | `android-development.md` §2/§3 | `verification-before-completion.md` | Activity 入口与触摸交互测试的完成声明须附测试运行输出 |
 | `android-development.md` §8 | `fdroid-publishing.md` | 安卓构建发布流程中 F-Droid 上架细节走专用 skill |
+| `windows-powershell-scripting.md` | `System_Fix/windows-scripting-and-ssh-debug.md` | Windows 脚本编写规范拆自该 SSH 排障 skill（v1.7.0 拆分）；SSH 排障链路脚本按新 skill 规范编写 |
 | `android-development.md` §12 | `verification-before-completion.md` | 后置下载链路上线前 grep 调用点（实现存在 ≠ 链路可用），验证声明须附 grep 证据 |
 | `verification-before-completion.md` | `improvement-loop.md` | §5.9 Chain 输出门控是平台层验证，本 skill 是方法论层验证——两层都要 |
 | `verification-before-completion.md` | `ml-training.md` | 训练验收前先用 Gate Function 验证产物（results JSON）真实存在 |
@@ -247,6 +254,23 @@ tools:
 | `llm-api-check`（~/Desktop/go-projects/LLM-api-check） | 必须像 `~/Desktop/android-projects/api-checkers/` 那样**直接显示限流 API 的限流时限** | 对照 Android `DetailScreen.kt` WindowRow：CountdownText 恒显 + 已限流徽章并存；Go 侧 `internal/render/render.go` RenderAccountDetail——rate-limited 行必须同时输出「已限流」与重置倒计时（如 `已限流 · 4小时20分后重置`），禁止用「已限流」替代倒计时 |
 
 ## 变更日志
+
+### 2.0.7 (2026-08-31 晚)
+- 升级：quant-ml-falsification 1.6.0→1.7.0（第八支柱扩充 H1-H10→H1-H13：H11 并发裁剪=未声明策略自由度 / H12 期块等权与事件等权可反号 / H13 特征列时间语义与 NaN 语义必核；来源 VERSION2.5 R 批 HRHR 会话，KB F103/F104，踩坑指南 v1.1.0 双位置同步）
+- 同步：领域专用表 #11 版本与描述
+
+### 2.0.6 (2026-08-31)
+- 新增：领域专用 #17 `windows-powershell-scripting.md`（Windows 端 .bat/.ps1 脚本编写规范自查，1.0.0）——编码/提权/PS5.1 语法/单文件交付/退出码/Transcript/内容门禁/输出规范/测试函数/上下文切换/看门狗/远端 PS 引号坑，拆自 System_Fix/windows-scripting-and-ssh-debug 1.7.0（原第 1 节 A-Q + 协作闭环）
+- 新增：决策树 Windows 脚本分支（windows-powershell-scripting 为主、SSH 排障为补充）
+- 新增：交叉引用表 1 条（windows-powershell-scripting ↔ windows-scripting-and-ssh-debug）
+
+### 2.0.5 (2026-08-31)
+- 升级：quant-ml-falsification 1.5.0→1.6.0（新增第八支柱「机制假设工程师踩坑清单 H1-H10」——条件共线/事件数口径/覆盖率实测/负向因子组合取反/双向预注册/方向反转登记等；核心边界：约束方法论缺陷不约束信号方向幅度；来源 VERSION2.5 Q 批全批验证）
+- 同步：领域专用表 #11 版本与描述；交叉引用表新增 1 条（第八支柱 ↔ mechanism_hypotheses.json 登记）
+
+### 2.0.4 (2026-08-30)
+- 升级：ml-training 1.8.0→1.9.0（新增模式 W-J：systemd-run 秒挂三连环——裸 PATH/环境不继承/探活被包装进程骗过 + 一次性排队器内存门竞态；来源 VERSION2.5 uv_v11 s123 首射事故实战）
+- 同步：领域专用表 #10 版本与描述（W-E~W-I → W-E~W-J）
 
 ### 2.0.3 (2026-08-28)
 - 升级：android-development 1.1.0→1.2.0（新增 §12 后置下载/初始化链路——🔴 零调用点根因 + 五要素修复 + 状态机模式；§13 方案注册表模式——多方言 Spec/Registry + object 初始化顺序坑；实战来源：Roar 方言输入法 P0 修复 + 多方言架构）
@@ -330,4 +354,4 @@ tools:
 - 新增：步骤 1-4 的明确执行指令
 - 保留原有目录内容供浏览参考
 
-*最后更新: 2026-08-28*
+*最后更新: 2026-08-31（晚）*

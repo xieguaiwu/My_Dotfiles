@@ -1,7 +1,7 @@
 ---
 name: clash-verge-diagnose-and-fix
-version: 2.2.0
-description: 诊断并修复 Clash Verge Rev 代理不工作问题（模式错误、Profile 增强格式错误、远程订阅失败、Hysteria2 DNS 死锁、导入 Profile 编辑不生效、AuthServer 拒绝连接等）
+version: 2.4.0
+description: 诊断并修复 Clash Verge Rev 代理不工作问题（模式错误、Profile 增强格式错误、远程订阅失败、Hysteria2 DNS 死锁、导入 Profile 编辑不生效、AuthServer 拒绝连接、DoT fallback 被墙导致全代理 DNS 解析失败等）
 triggers:
   - "clash verge 不工作"
   - "代理用不了"
@@ -20,6 +20,10 @@ triggers:
   - "免费代理失效"
   - "免费池更新"
   - "代理测试"
+  - "dns resolve failed"
+  - "侧车日志解析失败"
+  - "全代理超时"
+  - "DoT fallback"
 inputs:
   - name: data_dir
     description: Clash Verge 数据目录路径
@@ -51,6 +55,7 @@ tools:
 5. **导入 Profile 编辑不生效**：拖入导入后 Verge 创建内部副本，原始文件修改无效
 6. **profiles.yaml 编辑被覆盖**：Verge 启动时从内部状态重写，运行时编辑在下次启动丢失
 7. **AuthServer 拒绝连接**：用户禁用/到期/超流量/密码不匹配导致 Hysteria2 认证失败
+8. **DoT fallback 被墙**：DNS fallback 使用 `tls://8.8.8.8` 等 DoT（853 端口）在大陆被墙，导致所有非 CN 域名 DNS 解析失败、全代理瘫痪
 
 ---
 
@@ -456,6 +461,41 @@ PYEOF
 3. 如果某个付费机场服务可用，**优先用付费服务**——稳定性不在一个量级。
 4. `comprehensive-pool.yaml` 和 `l3Wief5Rt1cY.yaml` 实质上是同一个池的两个副本，修改时要同步更新。
 
+#### 场景 J：DoT fallback 被墙 — 全代理 DNS 解析失败（新增）
+
+**症状**：所有走代理的站点全部超时（Google/YouTube/github.com/B.AI 等），但国内站点（dashscope、百度）直连正常。mihomo 侧显示 GLOBAL/PROXY 选择正确，节点测速却 Timeout。
+
+**根因**：clash-verge.yaml 的 `dns.fallback` 配置了 DoT（`tls://8.8.8.8` / `tls://1.1.1.1`，853 端口）。在大陆 853 端口被墙 → fake-ip 模式下非 CN 域名（nameserver 返回非 CN IP 触发 fallback-filter）全部 `dns resolve failed: couldn't find ip` → 代理链路 DNS 死锁。
+
+**诊断**（sidecar 日志是关键）：
+```bash
+# 1. sidecar 日志——大量 "couldn't find ip" 而非连接错误
+grep "dns resolve failed" {data_dir}/logs/sidecar/sidecar_latest.log | tail -10
+# 2. 确认 DoT 被墙
+timeout 5 bash -c "echo > /dev/tcp/8.8.8.8/853" && echo 通 || echo 不通
+timeout 5 bash -c "echo > /dev/tcp/1.1.1.1/853" && echo 通 || echo 不通
+# 3. UDP 53 通常可达
+timeout 5 bash -c "echo -n x | nc -u -w 3 8.8.8.8 53" && echo 通 || echo 不通
+```
+
+**修复**（fallback 从 DoT 改为 UDP 53）：
+```yaml
+dns:
+  ...
+  fallback:
+    - 8.8.8.8
+    - 1.1.1.1
+```
+
+1. 紧急：改 `clash-verge.yaml`（生成文件，仅当前会话）+ API 强制重载
+2. 持久化：同步修改 profile 源文件（`profiles/hy2-standalone.yaml`、导入的副本 `{uid}.yaml`），否则 Verge 重启后回退
+3. 验证：`/proxies/{node}/delay` 测速 + curl Google
+
+**注意**：
+- **Hysteria2 是 UDP 协议**——用 `echo > /dev/tcp/host/443` 测 TCP 443 不通是正常的（预期），别误判服务器挂了。检查服务器监听用 `ss -ulnp`（UDP 监听），不是 `ss -tlnp`。
+- 服务器侧诊断：`sshpass -p '<pwd>' ssh root@<vps> 'ss -ulnp | grep hysteria'`（vpscap config.json 里有密码），hysteria-server systemd 服务 active 且 UDP 监听 = 服务器正常，问题在本机 DNS。
+- 现象迷惑性：国内域名直连正常（走 223.5.5.5），易误判为"国内没事、只是国外/代理的问题"。
+
 ### Phase 3：紧急修复 — 直接构建 clash-verge.yaml
 
 当 profile 合并失败且不能重启 Verge 时：
@@ -551,8 +591,17 @@ curl -s --unix-socket /tmp/verge/verge-mihomo.sock -X PUT \
 8. **备份文件可能过时**——始终以服务器端实际配置和权威文档为准。
 9. **BoltDB `cache.db` 不是 profile 数据源**——搜索 profile 定义时应直接看 `profiles.yaml`。
 10. **备份仓库及时 commit + push**——包含 profiles.yaml、profile 副本、enhancement 文件。
+11. **Hysteria2 是 UDP 协议**——检查服务器监听用 `ss -ulnp`，测端口用 UDP 工具；TCP 443 不通不代表服务器挂了。
+12. **DNS fallback 不要用 DoT（`tls://8.8.8.8` / `tls://1.1.1.1`，853 端口）**——大陆被墙，会导致所有非 CN 域名解析失败、全代理瘫痪。改用 UDP 53（`8.8.8.8` / `1.1.1.1` 或 `223.5.5.5` / `119.29.29.29`）。
 
 ## 变更日志
+
+### 2.4.0 (2026-09-01)
+- 新增：场景 J — DoT fallback 被墙导致全代理 DNS 解析失败（sidecar 日志 `dns resolve failed` 判别、DoT/UDP 53 测试、fallback 改 UDP 修复、持久化到 profile 源文件）
+- 新增：Hysteria2 UDP 协议说明（`ss -ulnp` 而非 `ss -tlnp`）
+- 新增：注意事项 #11/#12 — Hysteria2 是 UDP 协议；DNS fallback 禁用 DoT
+- 新增：triggers `dns resolve failed`、`侧车日志解析失败`、`全代理超时`、`DoT fallback`
+- 修改：描述更新，覆盖场景 J
 
 ### 2.3.0 (2026-07-28)
 - 重构：场景 H — 首推 `vpscap users` 自检（取代 raw SSH）

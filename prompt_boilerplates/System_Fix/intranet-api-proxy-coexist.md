@@ -157,7 +157,7 @@ chat_template_kwargs.thinking=false 关闭深度思考，避免思考吃光 max_
 
 环境变量：
     AGI_BAR_HOST  上游主机（默认 token.agi.bar）
-    AGI_BAR_KEY   上游 key（默认 <REDACTED-AGIBAR_API_KEY>）
+    AGI_BAR_KEY   上游 key（默认 sk-agi_bar-static）
     AGI_BAR_PORT  本地端口（默认 8010）
     AGI_NO_THINK  0 保留深度思考（默认 1 关闭）
 """
@@ -168,7 +168,7 @@ import http.server
 
 UPSTREAM_HOST = os.environ.get("AGI_BAR_HOST", "token.agi.bar")
 UPSTREAM_PORT = 443
-UPSTREAM_KEY = os.environ.get("AGI_BAR_KEY", "<REDACTED-AGIBAR_API_KEY>")
+UPSTREAM_KEY = os.environ.get("AGI_BAR_KEY", "sk-agi_bar-static")
 LISTEN_HOST = "127.0.0.1"
 LISTEN_PORT = int(os.environ.get("AGI_BAR_PORT", "8010"))
 NO_THINK = os.environ.get("AGI_NO_THINK", "1") != "0"

@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 2.12.0
+version: 2.14.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -128,6 +128,13 @@ triggers:
   - "验证页弹不出"
   - "captive portal"
   - "公共网络加固"
+  - "read body failed"
+  - "Exceeded limit on max bytes"
+  - "400001"
+  - "请求体超限"
+  - "字节上限"
+  - "图片请求 400"
+  - "模型请求 400"
 inputs:
   - name: symptom
     description: 用户描述的症状/报错信息
@@ -241,7 +248,7 @@ journalctl -p err -b --no-pager | tail -20
 | 3.5 | [freeze-oom-protection.md](freeze-oom-protection.md) | 1.4.0 | 死机/冻结/OOM thrash 排查（Purging GPU memory=内存压力信号）+ 泄漏源排查（chrome 元凶）+ 一键防护（earlyoom + oomd 加固 + 进程限流）+ PSR 显示管线风暴修复（Atomic commit failed 日均过万 → i915.enable_psr=0），脚本 [freeze-oom-protect.sh](freeze-oom-protect.sh) | 死机、冻结、卡死、没响应、内存不足、显示管线报错 |
 | 3.6 | [chrome-leak-reaper.md](chrome-leak-reaper.md) | 1.1.0 | Chrome 内存泄漏排查与 chrome-reaper 维护：chromedp/桥实例/zygote 误杀（PPID 链）/restart 残留/profile 锁冲突 | chrome 吃内存、chrome 进程多、DidStartWorkerFail、bridge 反复重启 |
 | 3.7 | [bluetooth-pairing-troubleshoot.md](bluetooth-pairing-troubleshoot.md) | 1.2.0 | 蓝牙设备连接排查：适配器判活、USB autosuspend（-16）修复、长扫描捕获配对窗口、非 tty 配对坑、默认输出切换、日常使用维护 | 蓝牙耳机连不上、扫描不到、配对失败、连上无声音 |
-| 3.8 | [sway-resume-ebusy-ime-crash.md](sway-resume-ebusy-ime-crash.md) | 1.0.2 | sway 桌面两级故障链：①S3（合盖深睡）唤醒后 i915/KMS 卡死 → `Atomic commit failed: Device or resource busy` + Page-flip 风暴（重启 sway 无效，卡内核态；断根=改 HandleLidSwitch）②sway 1.10 IME 候选窗空指针 SIGSEGV（`constrain_popup`，上游 #8541 至今未修）→ 整会话连坐拆除；用本地 fork `~/sway` 补丁分支编译根治（PR #9206 仍 OPEN）；附桌面崩溃后的 pi 会话损失清点法。脚本 [sway-crash-diag.sh](sway-crash-diag.sh)（只读诊断）+ [sway-ime-fix-build.sh](sway-ime-fix-build.sh)（编译安装） | sway 崩溃、桌面回登录界面、终端全没了、合盖唤醒后屏幕不刷新、Device or resource busy、输入法候选窗崩溃 |
+| 3.8 | [sway-resume-ebusy-ime-crash.md](sway-resume-ebusy-ime-crash.md) | 1.0.3 | sway 桌面两级故障链：①S3（合盖深睡）唤醒后 i915/KMS 卡死 → `Atomic commit failed: Device or resource busy` + Page-flip 风暴（重启 sway 无效，卡内核态；断根=改 HandleLidSwitch）②sway 1.10 IME 候选窗空指针 SIGSEGV（`constrain_popup`，上游 #8541 至今未修）→ 整会话连坐拆除；用本地 fork `~/sway` 补丁分支编译根治（PR #9206 仍 OPEN）；附桌面崩溃后的 pi 会话损失清点法。脚本 [sway-crash-diag.sh](sway-crash-diag.sh)（只读诊断）+ [sway-ime-fix-build.sh](sway-ime-fix-build.sh)（编译安装） | sway 崩溃、桌面回登录界面、终端全没了、合盖唤醒后屏幕不刷新、Device or resource busy、输入法候选窗崩溃 |
 | 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.2.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅） | 代理失效、无法上网、订阅失败 |
 | 4.5 | [public-wifi-security.md](public-wifi-security.md) | 1.0.0 | 公共 WiFi 三合一：验证页弹不出（Clash 代理劫持根因）、网络安全调查（加密/DNS/暴露面/证书/evil twin）、加固/恢复双脚本 [airport-harden.sh](airport-harden.sh) + [airport-restore.sh](airport-restore.sh)（入站 SSH/Samba/LLMNR） | 机场wifi、公共wifi、验证页弹不出、captive portal、公共网络加固 |
 | 4.6 | [intranet-api-proxy-coexist.md](intranet-api-proxy-coexist.md) | 1.0.0 | 店内/局域网 API 与本地代理共存：内网域名被代理劫持、no_proxy 小写坑、clash Merge dns.hosts+prepend-rules 成对修复、LiteLLM 400 UnsupportedParamsError 参数剥离网关（含 Python 网关脚本） | 店内 API 连不上、内网 API 走代理、token.agi.bar、reasoning_effort 不支持、UnsupportedParamsError、LiteLLM 400 |
@@ -258,6 +265,7 @@ journalctl -p err -b --no-pager | tail -20
 | 10 | [memory-index-condense.md](memory-index-condense.md) | 1.3.1 | 记忆索引调查与浓缩（并行 reader 合成 MEMORY_INDEX.md） | 记忆膨胀、索引过时 |
 | 10.5 | [pi-subagents-ENAMETOOLONG-fix.md](pi-subagents-ENAMETOOLONG-fix.md) | 3.1.0 | pi-subagents 结果索引 ENAMETOOLONG 独立修复 skill：判别路由、四层补丁 verify/apply（含完整重打代码）、死索引与空目录清扫、验证闭环 | subagent 报 ENAMETOOLONG、subagent_wait 挂起、async 结果丢失、中文路径 session、pi-subagents 升级后补丁重打 |
 | 10.6 | [piagent-connection-error-fix.md](piagent-connection-error-fix.md) | 1.0.0 | pi-agent 模型调用 Connection error：首查 ~/.pi/web-search.json 完整性（fetch 包装器坏文件致全量抛错），次查代理重启后连接池失效，附快速网络排除与验证闭环 | pi 报 Connection error、连接错误、模型调用秒失败、web-search.json 损坏、pi 无法调用模型 |
+| 10.7 | [piagent-byte-cap-fix.md](piagent-byte-cap-fix.md) | 1.0.0 | pi-agent 模型请求 400 网关字节错误（read body failed / Exceeded limit on max bytes）：根因图片 token/byte 计量错配（1,200 token vs 实耗 720 KB/图）+ 工具图累积重复上传 + contextWindow 压缩失效 + 400 不重试；修复 = before_provider_request 字节守卫扩展（resizeImage 重编码 + 丢最旧兜底） | 模型请求 400、read body failed、Exceeded limit on max bytes、400001、请求体超限、字节上限 |
 
 ## 四、维护类
 
@@ -283,7 +291,7 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 16 | [windows-scripting-and-ssh-debug.md](windows-scripting-and-ssh-debug.md) | 1.5.0 | Windows 端 .bat/.ps1 脚本编写规范自查（ASCII+CRLF/提权/内嵌 ps1 单文件交付/PS5.1 语法陷阱/BOM/bsdtar+xz/盘符/exe 取退出码/Transcript/依赖内容门禁/输出规范）+ OpenSSH 远程排障（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 34 条（含 books-sync 双机同步：sftp mkdir 已存在 Failure 无害、NTFS 大小写别名、mv 已存在目录=移入内部、冒号映射全角/%3A 共存、规则化排除；电子书备份日常运维指南：四步同步流程、差异分类语义、排除规则、快照策略、断连处理） | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、Windows 脚本编写、同步电子书、BOOKS 备份、电子书同步 |
+| 16 | [windows-scripting-and-ssh-debug.md](windows-scripting-and-ssh-debug.md) | 1.7.0 | OpenSSH 远程排障（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 35 条（含 books-sync 双机同步：sftp mkdir 已存在 Failure 无害、NTFS 大小写别名、mv 已存在目录=移入内部、冒号映射全角/%3A 共存、规则化排除；电子书备份日常运维指南：四步同步流程、差异分类语义、排除规则、快照策略、断连处理、内容哈希预检）；脚本编写规范已拆至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、同步电子书、BOOKS 备份、电子书同步 |
 
 ---
 
@@ -342,6 +350,9 @@ journalctl -p err -b --no-pager | tail -20
 
 「pi 报 Connection error / 连接错误 / 模型调用秒失败 / web-search.json 损坏」
   └─ piagent-connection-error-fix.md ← 先验 web-search.json（python3 json.load），勿先重启代理；坏文件修好即时生效，无需重启 pi；代理刚重启过且 JSON 正常则重启 pi；errorMessage 含 "undici dispatcher" 系版本不匹配亦重启 pi
+
+「模型请求 400 / read body failed / Exceeded limit on max bytes / 400001」
+  └─ piagent-byte-cap-fix.md ← 先辨错误形态（Exceeded limit=确定性超字节硬上限；read body failed=间歇读超时）→ curl 尺寸探针定网关上限 → 核对模型是否带图（无 input 键=纯文本免疫）→ 装 image-byte-guard 扩展 + models.json 记字节约束；勿调小 contextWindow（1M 是真的）
 
 「关机慢 / 关机报错 / ABRT」
   └─ cleanup_shutdown_issue.sh
@@ -408,6 +419,8 @@ journalctl -p err -b --no-pager | tail -20
 | `intranet-api-proxy-coexist.md` 公共场景 | `public-wifi-security.md` | 店内/机场公共 Wi-Fi 对 UDP QoS 会影响 Hysteria2 节点稳定性（症状：间歇性 context deadline exceeded） |
 | `piagent-connection-error-fix.md` 网络排除 | `clash-verge-diagnose-and-fix.md` | Connection error 排查中代理整体失效/Profile 漂移时先修 Clash 再谈 pi |
 | `piagent-connection-error-fix.md` NO_PROXY 加固 | `intranet-api-proxy-coexist.md` | no_proxy 大小写双设、LLM 域名直连与内网 API 共存同源 |
+| `piagent-connection-error-fix.md` | `piagent-byte-cap-fix.md` | 同属 pi 模型调用层故障：Connection error 管「连不上/秒失败」，字节上限管「连上但 400」；网络层排除共用 clash-verge 代理链路 |
+| `piagent-byte-cap-fix.md` | `intranet-api-proxy-coexist.md` | 字节读超时经代理链路放大，代理整体失效/限流时先修 Clash 再谈字节预算 |
 | `system_diagnostics_and_repair.md` Phase 1.5 网络 | `public-wifi-security.md` | 公共网络场景安全调查深入（加密/DNS/暴露面/证书） |
 | `tor-browser-check-and-fix.md` 前置 | `clash-verge-diagnose-and-fix.md` | Tor 经本地代理引导，代理失效时先修 Clash 再修 Tor |
 | `video-playback-decode-fix.md` | `system_diagnostics_and_repair.md` | 播放类故障先查系统 ffmpeg 解码能力，再深入播放器自身；GPU 无硬件加速时驱动安装/VAAPI 能力对照收拢于 video skill |
@@ -442,7 +455,18 @@ journalctl -p err -b --no-pager | tail -20
 
 ## 变更日志
 
+### 2.14.0 (2026-09-01)
+- 新增：pi-agent 层 — `piagent-byte-cap-fix.md` **1.0.0**（2026-09-01 B.AI 字节上限实战：400 gateway_error "read body failed" / invalid_request_error "Exceeded limit on max bytes : 6291456"；根因 token/byte 计量错配——ESTIMATED_IMAGE_CHARS=4800≈1,200 token/图 vs 实耗 ~720 KB，工具图每回合重复上传，contextWindow 压缩判定失效，400 不重试；修复 = image-byte-guard 扩展（resizeImage 重编码 + 丢最旧兜底）+ models.json 字节约束记录）
+- 新增：triggers「read body failed」「Exceeded limit on max bytes」「400001」「请求体超限」「字节上限」「图片请求 400」「模型请求 400」
+- 新增：决策树分支「模型请求 400 / read body failed / Exceeded limit on max bytes / 400001」+ 交叉引用 2 条
+
+### 2.13.0 (2026-08-31)
+- 拆分：windows-scripting-and-ssh-debug.md 1.5.0 → **1.7.0**——脚本编写规范（第 1 节 A-Q + 第 5 节协作闭环）拆至新 skill `Coding/windows-powershell-scripting.md`（1.0.0，Windows 专精）
+- 更新：windows-scripting-and-ssh-debug.md 条目描述与 triggers 精简（脚本编写触发词移至 Coding 新 skill）
+- 同步：Coding/index.md 新增 windows-powershell-scripting.md 条目
+
 ### 2.12.0 (2026-08-29)
+- 更新：sway-resume-ebusy-ime-crash.md **1.0.2 → 1.0.3**（23:03 重启后验证：补丁版生效、风暴密度 30-38/分 → 2-4/分、clipman 复活、input-method 报错 0 条；新增 Phase 3.1「风暴密度判级」：零星 <5/分是基线噪声无害，仅稠密 >10/分才是 KMS 卡死——修正「S3 唤醒=风暴唯一入口」的过强表述为「S3 唤醒把零星噪声放大成持续风暴」；⚠️ HandleLidSwitch=lock 用户仍未落，合盖仍会进 S3）
 - 更新：sway-resume-ebusy-ime-crash.md **1.0.0 → 1.0.2**（1.0.1：坑 #11 meson 双版本；1.0.2：新增附录「配套脚本编程问题自审」——A 诊断脚本 7 条 / B 构建脚本 5 条（含用户实测踩中的 sudo $HOME、meson 版本不匹配）/ C 流程 3 条，全部已修复；`sway-ime-fix-build.sh` 同步升级为 sudo 安全版：REAL_HOME 解析 + root 自动降权 + PYTHONPATH 注入重放同一 meson + EUID==0 直装）
 - 新增：系统层 3.8 — `sway-resume-ebusy-ime-crash.md` 1.0.0（2026-08-29 13:15:49 实战：sway `constrain_popup` SIGSEGV + 12:26 唤醒后 EBUSY 风暴）：
   - 一级「S3 合盖唤醒后 i915/KMS 卡死」：`Atomic commit failed: Device or resource busy` 与每次 Lid opened/suspend exit **1:1 对齐**（近 7 天 15.3 万条全同变体）；重启 sway 无效（实测新 sway 首帧即继续风暴）→ 三档恢复（DPMS 循环 / 重绑 i915 / 重启）+ 断根 `HandleLidSwitch=lock`（本机 /etc/systemd/logind.conf 不存在全默认，合盖即深睡）
@@ -599,4 +623,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-08-29（index 2.12.0：新增系统层 3.8 sway-resume-ebusy-ime-crash 1.0.0——S3 唤醒 EBUSY 风暴 + IME constrain_popup 空指针两级故障链，fork 补丁编译根治，pi 会话损失清点法）*
+*最后更新: 2026-09-01（index 2.14.0：新增 piagent-byte-cap-fix.md 1.0.0——pi 模型请求 400 网关字节错误修复）*

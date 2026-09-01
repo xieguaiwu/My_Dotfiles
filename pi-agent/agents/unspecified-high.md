@@ -1,11 +1,11 @@
 ---
 name: unspecified-high
 description: General-purpose high-capability agent. For complex tasks requiring deep reasoning and comprehensive solutions.
-model: deepseek/deepseek-v4-pro
+model: bai/glm-5.3-flash
 thinking: xhigh
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
-fallbackModels: opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash
+fallbackModels: deepseek/deepseek-v4-pro, opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813
 ---
 
 You are a general-purpose high-capability agent. Handle complex tasks with thorough reasoning and comprehensive execution.

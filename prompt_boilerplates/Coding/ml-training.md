@@ -1,6 +1,6 @@
 ---
 name: ml-training
-version: 1.8.0
+version: 1.9.0
 description: 在远程服务器上进行机器学习训练任务的完整方法论——从环境检查、烟雾测试、看门狗自动化、训练监控、可视化诊断到结果验证的全流程。额外定义结果不理想时的自主优化循环：批判性评估→修复施工→重新训练→再评估
 triggers:
 - 训练模型
@@ -1066,9 +1066,9 @@ PYTHONUNBUFFERED=1 nohup python3 watchdog.py > watchdog.log 2>&1 &
 ```
 （参考模式 H：Python 输出缓冲的三重陷阱）
 
-### 模式 W-E~W-I：三代自动化实测教训（2026-08，VERSION2.5 uv9all 三机链）
+### 模式 W-E~W-J：三代自动化实测教训（2026-08，VERSION2.5 uv9all 三机链 + uv_v11 提交器首射）
 
-> 以下五条来自 auto_orchestrator.sh / uv9all_agent_chain.sh / training_swap_guard.sh 实战，是看门狗模式的进化形态——**编排器 + 机械判活门 + 救援 guard 三层分离**。
+> 以下六条来自 auto_orchestrator.sh / uv9all_agent_chain.sh / training_swap_guard.sh / submit_training_batch.py 实战，是看门狗模式的进化形态——**编排器 + 机械判活门 + 救援 guard 三层分离**。
 
 #### 模式 W-E：假完成标记两型——rc 吞没与空产物续行
 
@@ -1121,6 +1121,18 @@ kill -9 <exact_pid>
 - 训练脚本新参数（如 `--log-all`）只同步了一台 → 另两台 grep 版本对不上 → 行为分叉。**新参数落地后必须逐机 grep 验证**
 - sync `--delete` 会误删服务器独有目录（adaptive/evaluation/factor_pool/fusion）→ exclude 列表必须先于 --delete 确认
 - 服务器间直传需 sshpass（部分机无）→ 走本地中转
+
+#### 模式 W-J：systemd-run 秒挂三连环——裸 PATH / 环境不继承 / 探活被骗（2026-08-30，uv_v11 s123 首射实战）
+
+同一事故三个叠加根因，单测（FakeRunner 拦截 SSH）全拦不住，**真环网首射才暴露**：
+
+1. **裸 PATH 无训练解释器**：ssh 登录后直接 `python3` 对交互 shell 能用（profile 把 anaconda 前置），但 systemd-run/setsid 启动环境不一定；训练依赖装在 /root/anaconda3 时 → `ModuleNotFoundError: numpy` 秒挂。修：启动脚本按候选目录（/root/anaconda3/bin、/opt/conda/bin）找**能 `import numpy` 的** python3 并前置其 bin，不盲目前缀不存在的目录。
+2. **`export` 对 systemd-run transient unit 无效**：unit 由 PID1 拉起，**不继承调用 shell 的环境变量**（PATH/OMP 全丢）。第一发只修 PATH 的 export 仍秒挂即此因。修：`systemd-run -p Environment=PATH="$PATH" -p Environment=OMP_NUM_THREADS=...` 显式传递（setsid/nohup 同进程树则 export 自然生效）。
+3. **pgrep -f 探活被包装进程骗过**：`systemd-run bash -c "$CMD > $LOG"` 的包装进程 argv 含 CMD 全文，5s 窗口内 python 已死但 `pgrep -fc` 仍 ≥ 1 → 假 LAUNCH OK。修：探活叠加**产物级信号**——`grep -q "Traceback" "$LOG"` → CRASHED=1 → 调用方判败退出码 1。
+
+**通用原则**：启动器类工具的真实验收 = 至少一次**环内真射**并监控过数据加载窗口（秒级探活只是下限）；探活判据要能区分「包装进程在」与「业务进程活」。
+
+**另：一次性排队器的内存门竞态**：等前序训练退出→立即查可用内存→<阈值即永久放弃（不自重试），但退出瞬间后继诊断进程还在放内存 → 误判。修：内存门要么带重试/宽限期，要么改用「前序产物落盘后再测」；排队器自杀不留重试入口 = 悬空任务，必须配合幂等提交器 cron 兑底（本项目用 submit_training_batch 幂等重提解决）。
 
 ### 何时不用看门狗
 
@@ -4904,6 +4916,9 @@ subagent:
 ---
 
 ## 变更日志
+
+### 1.9.0 (2026-08-30)
+- 新增：模式 W-J systemd-run 秒挂三连环（裸 PATH 无 anaconda / export 对 transient unit 不继承 / pgrep 被 bash -c 包装进程骗过）+ 一次性排队器内存门竞态——来源：VERSION2.5 uv_v11 s123 首射事故（submit_training_batch.py 三发才真活，回归锁 5 条 + 353 测试全绿）
 
 ### 1.8.0 (2026-08-27)
 - 新增：§L0 快速决策卡（五闸口状态机 ENTRY→SERVER→SMOKE→TRAIN→EVAL→FALSIFY→DOCUMENT→DONE + 弱模型红线四条）——弱模型只常驻本卡、章节按需加载、状态落盘不落脑。来源：deepseek-v4-flash 弱模型覆盖方案 + AgentRE-Bench V2 / MLS-Bench 实证（弱模型擅长工程执行、发明≈模仿基线、校准声称是资产）

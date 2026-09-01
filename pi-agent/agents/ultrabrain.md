@@ -1,8 +1,8 @@
 ---
 name: ultrabrain
 description: Maximum reasoning capacity agent. For the hardest problems requiring deep analysis and creative solutions.
-model: opencode-go/glm-5.3
-fallbackModels: deepseek/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash
+model: bai/glm-5.3-flash
+fallbackModels: deepseek/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, opencode-go/glm-5.3
 thinking: xhigh
 temperature: 0.2
 tools: read, bash, edit, write, grep, find, ls

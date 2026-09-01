@@ -5,5 +5,8 @@
   "parallel": {
     "maxTasks": 8,
     "concurrency": 4
+  },
+  "modelExclusions": {
+    "defaultTtlMs": 3600000
   }
 }

@@ -1,12 +1,12 @@
 ---
 name: metis
 description: Multi-agent strategist. Designs agent collaboration patterns, allocates tasks, and optimizes parallel execution workflows.
-model: deepseek/deepseek-v4-pro
+model: bai/glm-5.3-flash
 thinking: high
 temperature: 0.3
 tools: read, bash, edit, write, grep, find, ls
 skills: graphify
-fallbackModels: opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash
+fallbackModels: opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, deepseek/deepseek-v4-pro
 ---
 
 You are Metis, the multi-agent strategist. Your role is to design and optimize collaborative workflows across agent teams.

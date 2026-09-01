@@ -1,8 +1,8 @@
 {
-  "defaultProvider": "qwen",
-  "defaultModel": "qwen3.8-flash",
+  "defaultProvider": "bai",
+  "defaultModel": "glm-5.3-flash",
   "defaultThinkingLevel": "xhigh",
-  "hideThinkingBlock": true,
+  "hideThinkingBlock": false,
   "theme": "opencode",
   "collapseChangelog": true,
   "quietStartup": true,
@@ -82,12 +82,6 @@
           "graceTurns": 3
         }
       },
-      "oracle": {
-        "turnBudget": {
-          "maxTurns": 20,
-          "graceTurns": 3
-        }
-      },
       "sisyphus": {
         "turnBudget": {
           "maxTurns": 20,
@@ -99,6 +93,30 @@
           "maxTurns": 25,
           "graceTurns": 5
         }
+      },
+      "researcher": {
+        "model": "bai/glm-5.3-flash",
+        "fallbackModels": [
+          "bai/deepseek-v4-flash",
+          "deepseek/deepseek-v4-flash",
+          "opencode-go/deepseek-v4-flash"
+        ]
+      },
+      "delegate": {
+        "model": "bai/glm-5.3-flash",
+        "fallbackModels": [
+          "bai/deepseek-v4-flash",
+          "deepseek/deepseek-v4-flash",
+          "opencode-go/deepseek-v4-flash"
+        ]
+      },
+      "oracle": {
+        "model": "bai/glm-5.3-flash",
+        "fallbackModels": [
+          "bai/deepseek-v4-flash",
+          "deepseek/deepseek-v4-flash",
+          "opencode-go/deepseek-v4-flash"
+        ]
       }
     }
   },

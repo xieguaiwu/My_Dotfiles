@@ -1,63 +1,63 @@
 {
-  "_comment": "pi-agent 峰谷模型路由表。offpeak = 当前 agents/*.md frontmatter 基准（勿手工改，除非同步改此表；peak-switch.py 切换前会校验文件 == 另一模式，防止覆盖手工改动）。峰段口径（2026-08-30 起）：主模型两模式都是 DeepSeek 官方 deepseek-v4-pro，峰段**只调兜底链顺序**——把已付费订阅路由（百炼 Token Plan 的 qwen/deepseek-v4-pro-0813、OpenCode Go 的 opencode-go/deepseek-v4-pro）提到 glm 等异家族模型之前，使官方限流/报错时先落到同家族、已计费的通道。注意：这不消除峰时官方计价翻倍，只改变失败降级去向。subagent 不再使用 qwen 自有模型（qwen3.8-max/flash）。峰谷时段与 belater DefaultSchedule 同源：工作日 9:00-12:00 / 14:00-18:00（CN）。  【2026-08-30 B.AI 免费通道】pro 主模型与付费兜底顺序不动，两模式兜底链尾统一追加 bai/glm-5.3-flash, bai/qwen3.8-flash（B.AI 0-Credits，末位免费兜底）；10 个轻量 agent 主模型改 bai/deepseek-v4-flash、4 个视觉 agent 主模型改 bai/deepseek-v4-flash-vision-exp——这 14 个不在本表管辖内，peak-switch 不校验。",
+  "_comment": "pi-agent 峰谷模型路由表。offpeak = 当前 agents/*.md frontmatter 基准（勿手工改，除非同步改此表；peak-switch.py 切换前会校验文件 == 另一模式，防止覆盖手工改动）。峰谷时段与 belater DefaultSchedule 同源：工作日 9:00-12:00 / 14:00-18:00（CN）。【2026-08-30 晚 · glm-5.3-flash 晋升】7 个路由内重量级 agent 主模型两模式统一为 bai/glm-5.3-flash（B.AI 0-Credits 免费通道），峰段仍只调兜底链顺序——已付费同家族路由（百炼 Token Plan qwen/deepseek-v4-pro-0813 → OpenCode Go opencode-go/deepseek-v4-pro → 官方按量 deepseek/deepseek-v4-pro）排在异家族（opencode-go/glm-5.3）与免费兜底（bai/*）之前，主模型失败时先落已计费通道。免费主模型不受峰时官方计价翻倍影响，付费代价只发生在降级链上。10 个轻量 agent 主模型同步改 bai/glm-5.3-flash、兜底 1 = bai/deepseek-v4-flash（不入本路由表，峰谷不切换）。subagent 不再使用 qwen 自有模型（qwen3.8-max/flash）。",
   "offpeak": {
     "hephaestus": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, deepseek/deepseek-v4-pro"
     },
     "metis": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, deepseek/deepseek-v4-pro"
     },
     "prometheus": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "deepseek/deepseek-v4-pro, opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, bai/qwen3.8-flash"
     },
     "deep": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "deepseek/deepseek-v4-pro, opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813"
     },
     "unspecified-high": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "deepseek/deepseek-v4-pro, opencode-go/deepseek-v4-pro, qwen/deepseek-v4-pro-0813"
     },
     "momus": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "opencode-go/glm-5.3, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "opencode-go/glm-5.3, qwen/deepseek-v4-pro-0813, deepseek/deepseek-v4-pro"
     },
     "oracle": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "opencode-go/glm-5.3, qwen/deepseek-v4-pro-0813, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "deepseek/deepseek-v4-pro, opencode-go/glm-5.3, qwen/deepseek-v4-pro-0813, bai/qwen3.8-flash"
     }
   },
   "peak": {
     "hephaestus": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro, deepseek/deepseek-v4-pro"
     },
     "metis": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro, deepseek/deepseek-v4-pro"
     },
     "prometheus": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro, deepseek/deepseek-v4-pro, bai/qwen3.8-flash"
     },
     "deep": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro, deepseek/deepseek-v4-pro"
     },
     "unspecified-high": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/deepseek-v4-pro, deepseek/deepseek-v4-pro"
     },
     "momus": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/glm-5.3, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, deepseek/deepseek-v4-pro, opencode-go/glm-5.3"
     },
     "oracle": {
-      "model": "deepseek/deepseek-v4-pro",
-      "fallbackModels": "qwen/deepseek-v4-pro-0813, opencode-go/glm-5.3, bai/glm-5.3-flash, bai/qwen3.8-flash"
+      "model": "bai/glm-5.3-flash",
+      "fallbackModels": "qwen/deepseek-v4-pro-0813, deepseek/deepseek-v4-pro, opencode-go/glm-5.3, bai/qwen3.8-flash"
     }
   }
 }
