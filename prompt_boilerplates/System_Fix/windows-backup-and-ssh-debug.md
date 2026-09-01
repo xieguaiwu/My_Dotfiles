@@ -1,7 +1,7 @@
 ---
-name: windows-scripting-and-ssh-debug
-version: 1.7.0
-description: OpenSSH 远程排障（KEXINIT reset 排除链、黑盒三测试、前台 vs 服务模式差异定位、ACL 拒绝访问判别、TEMP 隔离判别器、身份鉴定三件套、自愈看门狗、脚本化协作闭环）；含 BOOKS 电子书双机备份日常运维指南（books-sync.py 四步同步/差异语义/排除规则/快照策略/内容哈希预检）；Windows 脚本编写规范已拆至 Coding/windows-powershell-scripting.md
+name: windows-backup-and-ssh-debug
+version: 1.8.0
+description: Windows ⇄ Linux 双机备份与 OpenSSH 远程排障——BOOKS 电子书双机同步日常运维（books-sync.py 四步流程/差异语义/排除规则/快照策略/内容哈希预检/快照清理/远端体积审计/输出编码坑）为第一要务；SSH 链路故障（KEXINIT reset 排除链、黑盒三测试、前台 vs 服务差异、ACL/TEMP 判别器、看门狗自愈、脚本化协作闭环）为排障支撑；Windows 脚本编写规范已拆至 Coding/windows-powershell-scripting.md
 triggers:
   - "SSH 连不上 Windows"
   - "KEXINIT"
@@ -14,6 +14,11 @@ triggers:
   - "同步电子书"
   - "BOOKS 备份"
   - "电子书同步"
+  - "备份windows"
+  - "双机备份"
+  - "快照清理"
+  - "备份体积"
+  - "backup 清理"
 inputs:
   - name: target_host
     description: 目标 Windows 主机 IP
@@ -410,7 +415,59 @@ mtime 三分类取代旧 size-only：大小不同 + Windows 更新时，旧版 s
 
 **实现**：本地直接流式 SHA256；远端复用 snapshot 模式（ps1 带 BOM 上传 → `powershell -File` 跑 `Get-FileHash` → 结果写 %TEMP% → sftp get 解析）。测试：`echo` 会带尾随换行、`printf '%s'` 不带——测试数据必须字节级一致，否则预检不命中是测试自己的坑。
 
+## 实战补充 6（2026-09-02：自动备份运维 + 快照清理 + 体积审计）
+
+### 36. 快照策略运维：旧快照必须定期清理（备份瘦身第一刀）
+
+**问题**：backup/linux-YYYYMMDD 快照只增不减——每次 `all` 都会把被覆盖的 Windows 旧版复制进快照目录，长期积累体积可观（本次清理前 5 个快照共 313.8MB，其中 linux-20260817 一个就 298.9MB/198 文件，占绝对大头）。
+
+**清理命令**（保留 backup/ 目录本身，只删旧快照子目录）：
+
+```powershell
+$d=Get-ChildItem -LiteralPath D:\Epub\BOOKS\backup -Directory -Force; $d | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force }
+```
+
+**纪律**：
+- 快照只保存**被覆盖前**的旧文件，保留最新一次即可满足应急回滚——旧的直接删（本次用户裁定：旧快照全删，其他绝对不动）
+- 删除后验证：`Get-ChildItem backup -Force` 应为空（LEFT=0）
+- 保留 backup/ 目录本身（books-sync 快照逻辑依赖其存在）；删除只作用于子目录
+- 建议纳入日常运维：每次同步后顺手清掉非最新快照（瘦身成本最低、零风险）
+
+### 37. 远端 PowerShell 输出编码坑：CLIXML 噪音吞 grep + UTF-8 中文文件名解码失败
+
+**现象**：`ssh win 'powershell ...'` 列中文文件名/目录体积时：①输出含 CLIXML 进度噪音（UTF-16 编码），`grep -v` 把它当**二进制**吞掉（报 `binary file matches`），整条管道失效只剩 backup 一行；②去除噪音后中文文件名仍可能 GBK/CP936 编码，python `utf-8` 解码直接 `UnicodeDecodeError`（0xb6 等）。
+
+**修复（三件套）**：
+1. 脚本首行加 `[Console]::OutputEncoding=[Text.Encoding]::UTF8` + `$ProgressPreference="SilentlyContinue"`（CLIXML 噪音与编码一并解决）
+2. 输出解析**不要经 grep 过滤**（grep 遇 UTF-16 即二进制模式、行为不可预测）——直接 `2>/dev/null` 喂给 python3，用 `\t` 分隔解析
+3. python 侧以 `line.rstrip('\r\n')` + `rsplit('\t',1)` 解析，数字行才入表，噪音行自然丢弃
+
+**反模式**：①`grep -vE 'CLIXML|Objs Version|...'`（grep 报 binary file matches 后过滤器静默失效）②python 直接 utf-8 读远端输出（中文路径未设 UTF8 前缀时必炸）。
+
+### 38. 远端体积审计：BOOKS 双端体积对照 + 顶层目录排行
+
+**方法**（ssh win + PowerShell 递归求和）：
+
+```powershell
+Get-ChildItem -LiteralPath D:\Epub\BOOKS -Directory -Force | ForEach-Object { $s=(Get-ChildItem -LiteralPath $_.FullName -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum; Write-Output ($_.Name + [char]9 + [math]::Round($s/1MB,1)) }
+```
+
+**判读**：Windows 48.66GB/8479 文件 vs Linux 41GB/7655 文件——多出 ~7.7GB 的构成 = 排除项（漫画/ 4.5GB + 薇薇安·迈尔摄影集.zip 1.34GB，规则「大体积不拉」指不拉回 Linux，**不代表不占 Windows 磁盘**）+ 快照 0.31GB + 顶层散件差异 ~1.4GB。核心藏书（学术/ 34GB）是真实存量，不可缩。
+
+### 39. 排除项 ≠ 不占空间（思想型，可迁移）
+
+「排除规则」只控制**传输方向**（哪些不拉/不推），不控制**存量占用**。books-sync 的 EXCLUDE_PATHS 排除「大体积不拉」的 漫画/、摄影集.zip 仍完整躺在 Windows 磁盘上——体积审计时若只对比「双端同步清单」会得出「已排除所以不存在」的错误结论。**排除是同步语义，删除是磁盘语义，两者必须分开决策。**（迁移检验：任何同步/备份工具的 exclude 规则都只影响传输，不影响两端既有文件）
+
+### 40. 自动备份主链路与瘦身决策分工（思想型）
+
+本次自动备份的经验沉淀：日常备份主链路 = `win-check.sh` 体检 → `scan` 预估 → `all` 传输 → **复扫归零验证**（差异只剩已知重复对与已知排除）。瘦身是独立决策轴：快照清理（低成本安全）→ 排除项删除（需用户确认，涉及存量删除）→ 核心藏书（不可缩）。**先问「哪些能删」再删，快照以外的删除永远等用户明确指令。**
+
 ## 变更日志
+
+### 1.8.0 (2026-09-02)
+- 改名：`windows-scripting-and-ssh-debug.md` → `windows-backup-and-ssh-debug.md`（主职责为 Windows ⇄ Linux 双机备份；SSH 排障降为支撑）；front matter name/description 同步，triggers 新增 备份windows、双机备份、快照清理、备份体积、backup 清理
+- 新增：实战补充 6（36-40 条）——#36 快照清理命令与纪律、#37 远端 PowerShell 输出编码三件套（CLIXML 吞 grep + UTF-8 中文）、#38 远端体积审计方法、#39 排除项≠不占空间、#40 自动备份主链路与瘦身决策分工
+- 同步：System_Fix/index.md、Coding/index.md、Coding/windows-powershell-scripting.md 交叉引用改为新文件名
 
 ### 1.7.0 (2026-08-31)
 - 拆分：脚本编写规范（原第 1 节 A-Q 共 17 条 + 第 5 节协作闭环）移至新 skill `Coding/windows-powershell-scripting.md`（v1.0.0，Windows 端 .bat/.ps1 专精）

@@ -291,7 +291,7 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 16 | [windows-scripting-and-ssh-debug.md](windows-scripting-and-ssh-debug.md) | 1.7.0 | OpenSSH 远程排障（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 35 条（含 books-sync 双机同步：sftp mkdir 已存在 Failure 无害、NTFS 大小写别名、mv 已存在目录=移入内部、冒号映射全角/%3A 共存、规则化排除；电子书备份日常运维指南：四步同步流程、差异分类语义、排除规则、快照策略、断连处理、内容哈希预检）；脚本编写规范已拆至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、同步电子书、BOOKS 备份、电子书同步 |
+| 16 | [windows-backup-and-ssh-debug.md](windows-backup-and-ssh-debug.md) | 1.8.0 | Windows ⇄ Linux 双机备份与 OpenSSH 远程排障——BOOKS 电子书双机同步日常运维（四步同步流程/差异分类语义/排除规则/快照策略与清理/断连处理/内容哈希预检/远端体积审计/输出编码三件套）为第一要务；SSH 排障支撑（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 40 条（含 books-sync：sftp mkdir 已存在 Failure 无害、NTFS 大小写别名、mv 已存在目录=移入内部、冒号映射全角/%3A 共存、规则化排除、快照清理）；脚本编写规范已拆至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、同步电子书、BOOKS 备份、电子书同步、备份windows、双机备份、快照清理、备份体积、backup 清理 |
 
 ---
 
@@ -379,10 +379,10 @@ journalctl -p err -b --no-pager | tail -20
   └─ sparrow-wallet-backup-test.md ← 先解锁 rbw；bw 附件比对需解锁 bw 后重跑；哈希不一致=备份过期需重新上传
 
 「SSH 连不上 Windows / KEXINIT / Connection reset / Windows OpenSSH / 火绒拦截 SSH」
-  └─ windows-scripting-and-ssh-debug.md ← 黑盒三测试定位 → 排除链 0-10 步（存在性 1060→杀软→防火墙→密钥权限→密钥内容→重建→算法→前台 vs 服务→重启→重注册→内置）；拒绝访问用 TEMP 隔离判别器分路径拦截/内容拦截；/inheritance:r 只用于密钥类；身份鉴定用大小+SHA256+试运行三件套
+  └─ windows-backup-and-ssh-debug.md ← 黑盒三测试定位 → 排除链 0-10 步（存在性 1060→杀软→防火墙→密钥权限→密钥内容→重建→算法→前台 vs 服务→重启→重注册→内置）；拒绝访问用 TEMP 隔离判别器分路径拦截/内容拦截；/inheritance:r 只用于密钥类；身份鉴定用大小+SHA256+试运行三件套
 
 「同步电子书 / BOOKS 备份 / 电子书同步」
-  └─ windows-scripting-and-ssh-debug.md ← 先 win-check.sh 体检链路；断连等看门狗 5 分钟（-w 最长 6 分钟），不恢复则 Windows 侧双击 install-keepalive.bat；通后 books-sync.py scan → all → 复扫归零；快照语义=被推覆盖的 Windows 旧版在 backup/linux-YYYYMMDD；拉方向无自动快照
+  └─ windows-backup-and-ssh-debug.md ← 先 win-check.sh 体检链路；断连等看门狗 5 分钟（-w 最长 6 分钟），不恢复则 Windows 侧双击 install-keepalive.bat；通后 books-sync.py scan → all → 复扫归零；快照语义=被推覆盖的 Windows 旧版在 backup/linux-YYYYMMDD；拉方向无自动快照
 
 「想自动跑系统健康检查」
   └─ system_fix.fish ← 只读检查，先 --dry
@@ -430,7 +430,7 @@ journalctl -p err -b --no-pager | tail -20
 | `dotfiles-sync-and-audit.md` 附录 B.1 | `sparrow-wallet-backup-test.md` | 同为「备份不等于可恢复」主题：备份需验证、真值需另库 |
 | `bluetooth-pairing-troubleshoot.md` | `system_diagnostics_and_repair.md` 1.8 节 | 适配器判活失败时回到全面诊断的蓝牙节；HCI -16 修复命令两处一致 |
 | 任何 pi-agent 层文档修复后 | `memory-index-condense.md` | 修复后如记忆/索引涉及，需重新浓缩 |
-| `windows-scripting-and-ssh-debug.md` 排障产出 | `win-ssh-setup` 工具包（~/Downloads/win-ssh-setup） | Windows 端脚本均按该 skill 规范编写：fix-sshd-service.bat（阶梯修复）/ diag-sshd3.bat（前台调试）/ install-rsync.bat（MSYS2+rsync） |
+| `windows-backup-and-ssh-debug.md` 排障产出 | `win-ssh-setup` 工具包（~/Downloads/win-ssh-setup） | Windows 端脚本均按该 skill 规范编写：fix-sshd-service.bat（阶梯修复）/ diag-sshd3.bat（前台调试）/ install-rsync.bat（MSYS2+rsync） |
 
 ## 维护约定
 
@@ -455,14 +455,17 @@ journalctl -p err -b --no-pager | tail -20
 
 ## 变更日志
 
+### 2.15.0 (2026-09-02)
+- 更新：#16 `windows-scripting-and-ssh-debug.md` → **`windows-backup-and-ssh-debug.md`** 1.7.0 → **1.8.0**（主职责改为 Windows ⇄ Linux 双机备份，SSH 排障降为支撑；新增实战补充 36-40：快照清理/远端编码三件套/体积审计/排除项≠不占空间/备份链路分工；triggers 新增 备份windows、双机备份、快照清理、备份体积、backup 清理）；决策树/工具包/变更历史中旧文件名同步更新
+
 ### 2.14.0 (2026-09-01)
 - 新增：pi-agent 层 — `piagent-byte-cap-fix.md` **1.0.0**（2026-09-01 B.AI 字节上限实战：400 gateway_error "read body failed" / invalid_request_error "Exceeded limit on max bytes : 6291456"；根因 token/byte 计量错配——ESTIMATED_IMAGE_CHARS=4800≈1,200 token/图 vs 实耗 ~720 KB，工具图每回合重复上传，contextWindow 压缩判定失效，400 不重试；修复 = image-byte-guard 扩展（resizeImage 重编码 + 丢最旧兜底）+ models.json 字节约束记录）
 - 新增：triggers「read body failed」「Exceeded limit on max bytes」「400001」「请求体超限」「字节上限」「图片请求 400」「模型请求 400」
 - 新增：决策树分支「模型请求 400 / read body failed / Exceeded limit on max bytes / 400001」+ 交叉引用 2 条
 
 ### 2.13.0 (2026-08-31)
-- 拆分：windows-scripting-and-ssh-debug.md 1.5.0 → **1.7.0**——脚本编写规范（第 1 节 A-Q + 第 5 节协作闭环）拆至新 skill `Coding/windows-powershell-scripting.md`（1.0.0，Windows 专精）
-- 更新：windows-scripting-and-ssh-debug.md 条目描述与 triggers 精简（脚本编写触发词移至 Coding 新 skill）
+- 拆分：windows-backup-and-ssh-debug.md 1.5.0 → **1.7.0**——脚本编写规范（第 1 节 A-Q + 第 5 节协作闭环）拆至新 skill `Coding/windows-powershell-scripting.md`（1.0.0，Windows 专精）
+- 更新：windows-backup-and-ssh-debug.md 条目描述与 triggers 精简（脚本编写触发词移至 Coding 新 skill）
 - 同步：Coding/index.md 新增 windows-powershell-scripting.md 条目
 
 ### 2.12.0 (2026-08-29)
@@ -506,7 +509,7 @@ journalctl -p err -b --no-pager | tail -20
 - 新增：决策树分支「店内 API 连不上 / 内网 API 走代理 / UnsupportedParamsError」+ triggers 7 个
 - 新增：交叉引用 2 条（intranet-api-proxy-coexist ↔ clash-verge-diagnose-and-fix、public-wifi-security）
 
-- 更新：windows-scripting-and-ssh-debug.md 1.4.1 → 1.5.0（新增实战补充 5「BOOKS 电子书双机同步日常运维指南」：四步同步流程/差异分类语义/排除规则/快照策略/断连处理；triggers 新增 同步电子书、BOOKS 备份、电子书同步）
+- 更新：windows-backup-and-ssh-debug.md 1.4.1 → 1.5.0（新增实战补充 5「BOOKS 电子书双机同步日常运维指南」：四步同步流程/差异分类语义/排除规则/快照策略/断连处理；triggers 新增 同步电子书、BOOKS 备份、电子书同步）
 - 新增：决策树分支「同步电子书 / BOOKS 备份 / 电子书同步」+ triggers 3 个
 
 ### 2.8.0 (2026-08-24)
@@ -538,7 +541,7 @@ journalctl -p err -b --no-pager | tail -20
 - 新增：目录表 3.5 行用途更新（PSR 修复 + 显示管线触发场景）
 
 ### 2.4.0 (2026-08-17)
-- 更新：windows-scripting-and-ssh-debug.md 1.2.0 → 1.3.0（win-ssh-setup 第 11-13 轮：diag v2 定位服务未注册真相、v5 误诊复盘、v6 ACL 判别）
+- 更新：windows-backup-and-ssh-debug.md 1.2.0 → 1.3.0（win-ssh-setup 第 11-13 轮：diag v2 定位服务未注册真相、v5 误诊复盘、v6 ACL 判别）
 - 新增：编写规范 M/N/O（exe 试运行取退出码、修复脚本 Start-Transcript、依赖搜索路径∪用户指令路径+SHA256 内容门禁）；排除链 step 0 存在性 + TEMP 隔离试跑判别器；实战补充 2（9-16 条：吞错组合、空 FileVersion 误诊、A/B 试跑救援源、/inheritance:r 适用边界、Defender 归责证据化、版本门禁 fail-closed、自带 scp 通道、审计自己脚本 bug）
 
 ### 2.3.1 (2026-08-16)
@@ -546,10 +549,10 @@ journalctl -p err -b --no-pager | tail -20
 - 新增：维护检查清单「front matter 严格 YAML 解析」条目（防复发，规范见 skill_creator.md 检查清单 G 组）
 
 ### 2.3.0 (2026-08-16)
-- 新增：第七类「Windows 远程排障」— `windows-scripting-and-ssh-debug.md` 1.0.0（win-ssh-setup 实战沉淀：.bat/.ps1 编写规范 11 项、黑盒三测试、KEXINIT reset 排除链 10 步、前台 vs 服务差异定位、脚本化协作闭环）
+- 新增：第七类「Windows 远程排障」— `windows-backup-and-ssh-debug.md` 1.0.0（win-ssh-setup 实战沉淀：.bat/.ps1 编写规范 11 项、黑盒三测试、KEXINIT reset 排除链 10 步、前台 vs 服务差异定位、脚本化协作闭环）
 - 新增：决策树分支「SSH 连不上 Windows / KEXINIT / Connection reset」+ 交叉引用 1 条 + triggers 5 个
 - 新增：决策树注释——前台 -ddd 正常 + 服务 reset = 服务上下文问题，重启优先，勿反复重试触发火绒拉黑
-- 更新：windows-scripting-and-ssh-debug.md 1.1.0 → 1.2.0（新增输出消息规范，ASD-STE100 脚本输出文本，见根目录 technical-writing-standard.md 第 7 节）
+- 更新：windows-backup-and-ssh-debug.md 1.1.0 → 1.2.0（新增输出消息规范，ASD-STE100 脚本输出文本，见根目录 technical-writing-standard.md 第 7 节）
 - 更新：system_diagnostics_and_repair.md 1.0.0 → 1.1.0（新增脚本输出文本规范，ASD-STE100）
 - 修复：目录表 5 行版本漂移同步（chrome-leak-reaper 1.1.0、dotfiles-sync-and-audit 1.2.0、memory-index-condense 1.3.1、sparrow-wallet-backup-test 1.1.0、subagent-temperature-fix 2.15.0）
 

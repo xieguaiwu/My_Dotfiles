@@ -1,7 +1,7 @@
 ---
 name: windows-powershell-scripting
 version: 1.0.0
-description: Windows 端 .bat/.ps1 脚本编写规范自查——ASCII+CRLF 编码、提权三件套、PS 5.1 语法陷阱、单文件内嵌交付、外部 exe 退出码、Transcript 落盘、依赖内容门禁、测试函数与上下文切换、看门狗自愈、远端 PS 引号坑（自 windows-scripting-and-ssh-debug 拆分，Windows 专精）
+description: Windows 端 .bat/.ps1 脚本编写规范自查——ASCII+CRLF 编码、提权三件套、PS 5.1 语法陷阱、单文件内嵌交付、外部 exe 退出码、Transcript 落盘、依赖内容门禁、测试函数与上下文切换、看门狗自愈、远端 PS 引号坑（自 windows-backup-and-ssh-debug 拆分，Windows 专精）
 triggers:
   - "Windows 脚本"
   - "PowerShell 脚本"
@@ -28,7 +28,7 @@ tools:
 
 # Windows 脚本编写规范（.bat/.ps1）
 
-Windows 端工具（.bat/.ps1）之编写、审查与交付规范。Linux 主机不能直接执行 Windows 脚本——一切操作经「用户双击脚本 + 回传输出」闭环完成。经验源：2026-08-16 win-ssh-setup 实战（KEXINIT reset 五日排障、rsync 解压失败、语法检查器误报）与 books-sync 双机同步；OpenSSH 远程排障本体见 [windows-scripting-and-ssh-debug.md](../System_Fix/windows-scripting-and-ssh-debug.md)。
+Windows 端工具（.bat/.ps1）之编写、审查与交付规范。Linux 主机不能直接执行 Windows 脚本——一切操作经「用户双击脚本 + 回传输出」闭环完成。经验源：2026-08-16 win-ssh-setup 实战（KEXINIT reset 五日排障、rsync 解压失败、语法检查器误报）与 books-sync 双机同步；OpenSSH 远程排障本体见 [windows-backup-and-ssh-debug.md](../System_Fix/windows-backup-and-ssh-debug.md)。
 
 ## 任务目标
 
@@ -183,4 +183,4 @@ if %errorlevel% neq 0 (
 ## 变更日志
 
 ### 1.0.0 (2026-08-31)
-- 初始发布：自 windows-scripting-and-ssh-debug.md 1.6.0 拆分 PowerShell 脚本编写规范（原第 1 节 A-Q 全条 + 第 5 节协作闭环 + 实战补充脚本类条目 1/2/3/5/6/7/9/11/14/16/17/18/19/20），Windows 端 .bat/.ps1 专精
+- 初始发布：自 windows-backup-and-ssh-debug.md 1.6.0 拆分 PowerShell 脚本编写规范（原第 1 节 A-Q 全条 + 第 5 节协作闭环 + 实战补充脚本类条目 1/2/3/5/6/7/9/11/14/16/17/18/19/20），Windows 端 .bat/.ps1 专精
