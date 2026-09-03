@@ -114,7 +114,7 @@ if %errorlevel% neq 0 (
 - **错误消息**：先说原因再说动作，附可执行建议
 - **中文脚本**：避免混用中英文标点，全角/半角统一
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md) 第 7 节。
+完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md) 第 7 节。
 
 ### 10. 测试函数规范
 

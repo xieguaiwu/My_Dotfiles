@@ -114,6 +114,7 @@ STE 为英文设计；中文产出套用其**精神**而非字面：
 ## 与其他规范的关系
 
 - 本文档是**通用写作规范**；各 skill 中嵌入的"文档写作规范（ASD-STE100）"小节是本文档按场景的裁剪版，冲突时以场景小节为准
+- Obsidian 笔记生成 skill（[obsidian_note_generation.md](../Note_Creating/obsidian_note_generation.md)）内嵌本规范的笔记裁剪版，笔记正文按该小节执行
 - 学术写作的轻微增强见 `paper_assist.md` / `latex-academic-writing-assist.md` 中的对应小节
 - 文学类 skill（web-novel-writing、style-imitate、literary-trans-assist 等）明确不引用本规范
 
@@ -168,7 +169,7 @@ STE 为英文设计；中文产出套用其**精神**而非字面：
 
 - **禁用场景**：面向一般大众的文本（CLI 交互、客服文案、试卷题面）不用符号，保持纯自然语言
 - **行内用 Unicode 符号**（→ ¬ ∧ ∨ ∀ ∃ ∈ ∉ □ ◇ = ≠）：Obsidian/网页/PDF 均正常渲染
-- **LaTeX 仅用于数学公式块**（按 `Note_Creating/obsidian_note_generation.md`）；技术写作正文不用 LaTeX
+- **LaTeX 仅用于数学公式块**（按 [obsidian_note_generation.md](../Note_Creating/obsidian_note_generation.md) 的数学公式规范）；技术写作正文不用 LaTeX
 - **纯文本环境**（终端、电报等）回退自然语言
 
 ## 变更日志

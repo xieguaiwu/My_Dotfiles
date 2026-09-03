@@ -1,7 +1,7 @@
 ---
 name: piagent-byte-cap-fix
-version: 1.0.0
-description: 诊断修复 pi-agent 模型请求 400 网关字节错误（read body failed / Exceeded limit on max bytes），根因图片 token/byte 计量错配，方案为 before_provider_request 字节守卫扩展
+version: 1.1.0
+description: 诊断修复 pi-agent 模型请求 400 网关字节错误（read body failed / Exceeded limit on max bytes），根因图片 token/byte 计量错配，方案为 before_provider_request 字节守卫扩展（含 per-provider 预算）
 triggers:
   - "read body failed"
   - "Exceeded limit on max bytes"
@@ -120,6 +120,7 @@ grep -o 'ESTIMATED_IMAGE_CHARS=[0-9]*' \
 | 变量 | 默认 | 作用 |
 |---|---|---|
 | `PI_MAX_REQUEST_BYTES` | 4194304 (4 MiB) | 请求体预算，超则触发压缩 |
+| `PI_MAX_REQUEST_BYTES_<PROVIDER>` | 无 | per-provider 覆盖（如 `PI_MAX_REQUEST_BYTES_BAI=1572864`）；另有内置表 `PROVIDER_BUDGETS { bai: 1.5 MB }`（2026-09-02 增，源码 `resolveBudget(provider)`，provider 取自 `ctx.model.provider`） |
 | `PI_MAX_REQUEST_HARD_BYTES` | 6291456 (6 MiB) | 纯文本超限告警阈值 |
 | `PI_IMAGE_BYTE_GUARD` | （开） | `off`/`0` 禁用 |
 | `PI_DEBUG_IMAGE_GUARD` | （关） | `1` 输出压缩日志 |
@@ -157,7 +158,8 @@ grep -o 'ESTIMATED_IMAGE_CHARS=[0-9]*' \
 - **勿调小 contextWindow**：1M 是真的（768k prompt tokens 实测可过）。为字节问题砍 token 额度是错误权衡——字节防线交给守卫扩展。
 - **纯文本超限守卫处理不了**（截断毁对话），已改为告警。当前不可达（1M token × 4 chars ≈ 3.9 MB < 6 MiB，压缩先触发）；**若把字节限流 provider 的 contextWindow 调 >1.5M，此不变量即破**。
 - **扩展整体加载失败 = 静默失效**（最薄一环）：`before_provider_request`/`resizeImage` 属 pi 内部接口，升级可能改名。只丢 `resizeImage` 会降级并弹警告；整个扩展加载失败则无告警无保护。
-- **其他 provider 字节上限未测**：4 MiB 预算按 BAI 6 MiB 调；本机 10 provider 全 `openai-completions`、17 个图片模型，上限更低者仍会撞，须按 provider 设 `PI_MAX_REQUEST_BYTES`。
+- **其他 provider 字节上限未测**：4 MiB 预算按 BAI 6 MiB 调；本机 10 provider 全 `openai-completions`、17 个图片模型，上限更低者仍会撞，须按 provider 设 `PI_MAX_REQUEST_BYTES`（2026-09-02 起 bai 已内置 1.5 MB 专项预算）。
+- **字节上限之外另有网关节点级不稳定**：健康 body 亦 400 `api_error Invalid request body` + 内部鉴权 401 混发，guard 救不了——判别与 lane 复活见 [piagent-vision-lane-reshoot.md](piagent-vision-lane-reshoot.md)。
 - **PNG→JPEG 重编码仅 BAI 验证**：其他模型对 JPEG 的接受度未验。
 - **compaction 不带图片字节**：`serializeConversation` 只取 text block，压缩请求本身无溢出风险，勿在此排查。
 - 扩展内 `import type { ExtensionAPI } from "@mariozechner/pi-coding-agent"` 可编译因 type-only 擦除——该包磁盘上不存在，运行时经 jiti `VIRTUAL_MODULES` 映射到 pi 自身 dist；运行时导入须走动态 `import()` + try/catch。
@@ -166,6 +168,10 @@ grep -o 'ESTIMATED_IMAGE_CHARS=[0-9]*' \
 - curl 大 body 用文件 `--data-binary @file`；命令行内联 >2 MB 即 `Argument list too long`。
 
 ## 变更日志
+
+### 1.1.0 (2026-09-02)
+- 新增：per-provider 预算——`PROVIDER_BUDGETS { bai: 1.5 MB }` + env 键 `PI_MAX_REQUEST_BYTES_<PROVIDER>` + `resolveBudget(provider)`（provider 取自 `ctx.model.provider`）；bun 转译 + 三态 smoke 验证（deepseek 2 MB 不动 / bai 2 MB→1.04 MB / bai 1.2 MB 不动）
+- 背景：2026-09-02 视觉 lane 实战发现 BAI 在远低于 6 MiB 处另节点级不稳定（健康 1-2.6 MB body 亦死），全局预算无法区分；完整判别与 lane 复活方法论独立成 [piagent-vision-lane-reshoot.md](piagent-vision-lane-reshoot.md) 1.0.0
 
 ### 1.0.0 (2026-09-01)
 - 初始发布：2026-08-31 深夜故障沉淀——B.AI 网关字节上限（6 MiB）撞穿：token/byte 计量错配（`ESTIMATED_IMAGE_CHARS=4800` ≈ 1,200 token vs 实耗 720 KB/图）、工具图片累积重复上传、contextWindow 压缩判定失效、400 不重试；修复 = `image-byte-guard` 扩展（resizeImage 重编码 + 丢最旧兜底）+ models.json 字节约束记录；含 curl 探针、缩放/降级/视觉保持验证闭环与六条残留风险边界

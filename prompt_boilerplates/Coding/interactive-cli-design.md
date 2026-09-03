@@ -877,7 +877,7 @@ if len([]rune(line)) > contentW {
 - **数字用数字**：写 5、25
 - **条件前置**：错误信息先说条件再说动作（If the file exists, ...）
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md)。
 
 ## 变更日志
 

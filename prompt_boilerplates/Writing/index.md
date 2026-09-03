@@ -1,6 +1,6 @@
 ---
 name: writing-index
-version: 1.0.0
+version: 1.1.0
 description: Writing 技能集入口——按写作任务类型路由到对应 skill，学术写作项目先过文档管理纪律
 triggers:
   - "学术写作"
@@ -98,9 +98,9 @@ AP 英语作文批改 / 修辞分析评分 → ap-lang-rhetorical-analysis-assis
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 7 | [web-novel-writing.md](web-novel-writing.md) | 1.2.0 | 网络小说创作全流程——定位、档案、爆点、分章、AI 痕迹清除 | 写网络小说、网文创作、小说大纲 |
+| 7 | [web-novel-writing.md](web-novel-writing.md) | 1.3.0 | 网络小说创作全流程——定位、档案、爆点、分章、AI 痕迹清除（含结构去模板化） | 写网络小说、网文创作、小说大纲 |
 | 8 | [novel-publish-promotion.md](novel-publish-promotion.md) | 2.2.0 | 网络小说平台发表与推广策略（引流+发表双线） | 发表策略、平台推广、晋江/豆瓣发表 |
-| 9 | [style-imitate.md](style-imitate.md) | 1.0.0 | 提取用户写作风格特征并模仿，清除 AI 痕迹 | 模仿风格、仿写、按我的风格 |
+| 9 | [style-imitate.md](style-imitate.md) | 2.0.0 | 提取用户写作风格特征并模仿，清除 AI 痕迹、注入人味、结构去模板化，含突发性量化自检与自我更新循环 | 模仿风格、仿写、按我的风格 |
 
 ### 四、写作规范类
 
@@ -134,6 +134,11 @@ AP 英语作文批改 / 修辞分析评分 → ap-lang-rhetorical-analysis-assis
 - 已知遗留：paper_assist.md 之 tools 字段仍用 OpenCode 工具名（websearch_web_search_exa/webfetch），待其升级时修正
 
 ## 变更日志
+
+### 1.1.0 (2026-09-02)
+- 升级：#9 `style-imitate.md` 2.0.0——注入灵魂（3.5）、结构性去模板化（3.6）、突发性量化（3.7）、中文专项（3.8）、事实核查（5.5）、自我更新回馈循环（7）、2026 模型方言附录、过度修正防护（注意事项 9-13）
+- 升级：#7 `web-novel-writing.md` 1.3.0——8.9 结构去模板化与叙述灵魂、8.6 双峰陷阱、终检清单 +2 项
+- 经验源：blader/humanizer、Aboudjem/humanizer-skill、Hermes creative-humanizer、anti-slop-writing、Humanizer-zh、rar.design 三层架构
 
 ### 1.0.0 (2026-08-26)
 - 初始发布：Writing 目录从被动文件集升级为可触发入口技能

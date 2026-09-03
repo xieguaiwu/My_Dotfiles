@@ -458,7 +458,7 @@ VPS 端:
 - **状态消息**：固定前缀模板（[OK] / [FAIL] / [WARN]）
 - **错误消息**：先说原因再说动作，附可执行建议
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md) 第 7 节。
+完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md) 第 7 节。
 
 ## 变更日志
 

@@ -262,7 +262,7 @@ Task 3 里叫 `clearLayers()`、Task 7 里叫 `clearFullLayers()`——这是 bu
 - **条件前置**：依赖条件放句首（If X exists, then ...）
 - **主动语态**：描述用 A does B
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md)。
 
 ## 变更日志
 

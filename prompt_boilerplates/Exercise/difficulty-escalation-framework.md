@@ -203,4 +203,4 @@ tools: []
 
 ## 13. 文档写作规范（ASD-STE100 轻量适配）
 
-难度档案、解析与说明文字遵守 STE 原则——短句（≤ 20 词）、术语一致、主动语态、指令祈使；数学公式不受约束；完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+难度档案、解析与说明文字遵守 STE 原则——短句（≤ 20 词）、术语一致、主动语态、指令祈使；数学公式不受约束；完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md)。

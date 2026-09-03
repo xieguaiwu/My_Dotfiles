@@ -1,6 +1,6 @@
 ---
 name: system-fix-index
-version: 2.14.0
+version: 2.18.0
 description: System_Fix 技能集入口——系统故障响应时先诊断再按症状加载对应修复文档，保证各检查 skill 之间的内联引用与加载顺序
 triggers:
   - "系统故障"
@@ -135,6 +135,14 @@ triggers:
   - "字节上限"
   - "图片请求 400"
   - "模型请求 400"
+  - "视觉 agent 挂了"
+  - "vision lane 失败"
+  - "subagent 中途失败"
+  - "Invalid request body"
+  - "鉴权服务请求失败"
+  - "multimodal-looker 失败"
+  - "补射"
+  - "lane 复活"
 inputs:
   - name: symptom
     description: 用户描述的症状/报错信息
@@ -249,7 +257,7 @@ journalctl -p err -b --no-pager | tail -20
 | 3.6 | [chrome-leak-reaper.md](chrome-leak-reaper.md) | 1.1.0 | Chrome 内存泄漏排查与 chrome-reaper 维护：chromedp/桥实例/zygote 误杀（PPID 链）/restart 残留/profile 锁冲突 | chrome 吃内存、chrome 进程多、DidStartWorkerFail、bridge 反复重启 |
 | 3.7 | [bluetooth-pairing-troubleshoot.md](bluetooth-pairing-troubleshoot.md) | 1.2.0 | 蓝牙设备连接排查：适配器判活、USB autosuspend（-16）修复、长扫描捕获配对窗口、非 tty 配对坑、默认输出切换、日常使用维护 | 蓝牙耳机连不上、扫描不到、配对失败、连上无声音 |
 | 3.8 | [sway-resume-ebusy-ime-crash.md](sway-resume-ebusy-ime-crash.md) | 1.0.3 | sway 桌面两级故障链：①S3（合盖深睡）唤醒后 i915/KMS 卡死 → `Atomic commit failed: Device or resource busy` + Page-flip 风暴（重启 sway 无效，卡内核态；断根=改 HandleLidSwitch）②sway 1.10 IME 候选窗空指针 SIGSEGV（`constrain_popup`，上游 #8541 至今未修）→ 整会话连坐拆除；用本地 fork `~/sway` 补丁分支编译根治（PR #9206 仍 OPEN）；附桌面崩溃后的 pi 会话损失清点法。脚本 [sway-crash-diag.sh](sway-crash-diag.sh)（只读诊断）+ [sway-ime-fix-build.sh](sway-ime-fix-build.sh)（编译安装） | sway 崩溃、桌面回登录界面、终端全没了、合盖唤醒后屏幕不刷新、Device or resource busy、输入法候选窗崩溃 |
-| 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.2.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅） | 代理失效、无法上网、订阅失败 |
+| 4 | [clash-verge-diagnose-and-fix.md](clash-verge-diagnose-and-fix.md) | 2.5.0 | Clash Verge Rev 代理不工作（模式/Profile/Hysteria2 DNS/订阅/节点 IP 被墙） | 代理失效、无法上网、订阅失败、节点被墙 |
 | 4.5 | [public-wifi-security.md](public-wifi-security.md) | 1.0.0 | 公共 WiFi 三合一：验证页弹不出（Clash 代理劫持根因）、网络安全调查（加密/DNS/暴露面/证书/evil twin）、加固/恢复双脚本 [airport-harden.sh](airport-harden.sh) + [airport-restore.sh](airport-restore.sh)（入站 SSH/Samba/LLMNR） | 机场wifi、公共wifi、验证页弹不出、captive portal、公共网络加固 |
 | 4.6 | [intranet-api-proxy-coexist.md](intranet-api-proxy-coexist.md) | 1.0.0 | 店内/局域网 API 与本地代理共存：内网域名被代理劫持、no_proxy 小写坑、clash Merge dns.hosts+prepend-rules 成对修复、LiteLLM 400 UnsupportedParamsError 参数剥离网关（含 Python 网关脚本） | 店内 API 连不上、内网 API 走代理、token.agi.bar、reasoning_effort 不支持、UnsupportedParamsError、LiteLLM 400 |
 | 5 | [fcitx5_punctuation_fix.md](fcitx5_punctuation_fix.md) | 1.0.0 | fcitx5 中文标点问题（半角标点、顿号书名号打不出） | 输入法标点异常 |
@@ -259,13 +267,14 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 7 | [subagent-temperature-fix.md](subagent-temperature-fix.md) | 2.15.0 | subagent temperature 配置链验证与重打补丁（21 检查点，双保险：传递链 + YAML 兜底） | subagent 输出温度异常 |
+| 7 | [subagent-temperature-fix.md](subagent-temperature-fix.md) | 2.19.0 | subagent temperature 配置链验证与重打补丁（21 检查点，双保险：传递链 + YAML 兜底；v2.19.0 适配 pi-subagents v0.64.0 第 20 次删除、零锚点适配） | subagent 输出温度异常 |
 | 8 | [piagent-search-pipeline-fix.md](piagent-search-pipeline-fix.md) | 1.0.0 | web_search 配置/编码崩溃/provider 不可用/内容检索失败 | 搜索报错、provider 502 |
 | 9 | [piagent-cmap-fix.md](piagent-cmap-fix.md) | 1.0.0 | 处理 PDF 时 CMap 字体警告（unpdf file:// 路径问题） | PDF 解析报 CMap 警告 |
 | 10 | [memory-index-condense.md](memory-index-condense.md) | 1.3.1 | 记忆索引调查与浓缩（并行 reader 合成 MEMORY_INDEX.md） | 记忆膨胀、索引过时 |
 | 10.5 | [pi-subagents-ENAMETOOLONG-fix.md](pi-subagents-ENAMETOOLONG-fix.md) | 3.1.0 | pi-subagents 结果索引 ENAMETOOLONG 独立修复 skill：判别路由、四层补丁 verify/apply（含完整重打代码）、死索引与空目录清扫、验证闭环 | subagent 报 ENAMETOOLONG、subagent_wait 挂起、async 结果丢失、中文路径 session、pi-subagents 升级后补丁重打 |
 | 10.6 | [piagent-connection-error-fix.md](piagent-connection-error-fix.md) | 1.0.0 | pi-agent 模型调用 Connection error：首查 ~/.pi/web-search.json 完整性（fetch 包装器坏文件致全量抛错），次查代理重启后连接池失效，附快速网络排除与验证闭环 | pi 报 Connection error、连接错误、模型调用秒失败、web-search.json 损坏、pi 无法调用模型 |
-| 10.7 | [piagent-byte-cap-fix.md](piagent-byte-cap-fix.md) | 1.0.0 | pi-agent 模型请求 400 网关字节错误（read body failed / Exceeded limit on max bytes）：根因图片 token/byte 计量错配（1,200 token vs 实耗 720 KB/图）+ 工具图累积重复上传 + contextWindow 压缩失效 + 400 不重试；修复 = before_provider_request 字节守卫扩展（resizeImage 重编码 + 丢最旧兜底） | 模型请求 400、read body failed、Exceeded limit on max bytes、400001、请求体超限、字节上限 |
+| 10.7 | [piagent-byte-cap-fix.md](piagent-byte-cap-fix.md) | 1.1.0 | pi-agent 模型请求 400 网关字节错误（read body failed / Exceeded limit on max bytes）：根因图片 token/byte 计量错配（1,200 token vs 实耗 720 KB/图）+ 工具图累积重复上传 + contextWindow 压缩失效 + 400 不重试；修复 = before_provider_request 字节守卫扩展（resizeImage 重编码 + 丢最旧兜底 + per-provider 预算 bai:1.5MB） | 模型请求 400、read body failed、Exceeded limit on max bytes、400001、请求体超限、字节上限 |
+| 10.8 | [piagent-vision-lane-reshoot.md](piagent-vision-lane-reshoot.md) | 1.0.0 | 视觉/subagent lane 中途死于网关节点级不稳定（api_error Invalid request body / 鉴权服务 401 / 502 混发）：兜底链三层盲区（fallbackModels 只防 toolCount==0、400 不重试）、死亡确认、进度考古、通道探针、预压缩+per-run 换路补射、双源交叉验证；与 byte-cap-fix 分工：彼管确定性超限/读体超时，本篇管节点级不稳定与 lane 复活 | 视觉 agent 挂了、vision lane 失败、subagent 中途失败、Invalid request body、鉴权服务请求失败、multimodal-looker 失败、补射、lane 复活 |
 
 ## 四、维护类
 
@@ -291,7 +300,7 @@ journalctl -p err -b --no-pager | tail -20
 
 | # | Skill | 版本 | 用途 | 触发场景 |
 |:--|:---|:---:|---|---|
-| 16 | [windows-backup-and-ssh-debug.md](windows-backup-and-ssh-debug.md) | 1.8.0 | Windows ⇄ Linux 双机备份与 OpenSSH 远程排障——BOOKS 电子书双机同步日常运维（四步同步流程/差异分类语义/排除规则/快照策略与清理/断连处理/内容哈希预检/远端体积审计/输出编码三件套）为第一要务；SSH 排障支撑（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 40 条（含 books-sync：sftp mkdir 已存在 Failure 无害、NTFS 大小写别名、mv 已存在目录=移入内部、冒号映射全角/%3A 共存、规则化排除、快照清理）；脚本编写规范已拆至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、同步电子书、BOOKS 备份、电子书同步、备份windows、双机备份、快照清理、备份体积、backup 清理 |
+| 16 | [windows-backup-and-ssh-debug.md](windows-backup-and-ssh-debug.md) | 1.8.1 | Windows ⇄ Linux 双机备份与 OpenSSH 远程排障——BOOKS 电子书双机同步日常运维（四步同步流程/差异分类语义/排除规则/快照策略与清理/断连处理/内容哈希预检/远端体积审计/输出编码三件套）为第一要务；SSH 排障支撑（黑盒三测试、排除链 0-10 步、TEMP 隔离判别器、ACL 拒绝访问定性、Defender 归责证据化、身份鉴定三件套、SYSTEM 任务兑底、周期看门狗自愈）；实战补充 44 条（含 books-sync：sftp mkdir 已存在 Failure 无害、NTFS 大小写别名、mv 已存在目录=移入内部、冒号映射全角/%3A 共存、规则化排除、快照清理、sftp batch 首条失败即中止整批、同路径+同大小即判一致→重复对改名对齐、远端目录验证用 cmd dir+iconv 免 PS）；脚本编写规范已拆至 [Coding/windows-powershell-scripting.md](../Coding/windows-powershell-scripting.md) | SSH 连不上 Windows、KEXINIT、Connection reset、Windows OpenSSH、火绒拦截 SSH、OpenSSH 拒绝访问、sshd 无法运行、同步电子书、BOOKS 备份、电子书同步、备份windows、双机备份、快照清理、备份体积、backup 清理 |
 
 ---
 
@@ -352,7 +361,10 @@ journalctl -p err -b --no-pager | tail -20
   └─ piagent-connection-error-fix.md ← 先验 web-search.json（python3 json.load），勿先重启代理；坏文件修好即时生效，无需重启 pi；代理刚重启过且 JSON 正常则重启 pi；errorMessage 含 "undici dispatcher" 系版本不匹配亦重启 pi
 
 「模型请求 400 / read body failed / Exceeded limit on max bytes / 400001」
-  └─ piagent-byte-cap-fix.md ← 先辨错误形态（Exceeded limit=确定性超字节硬上限；read body failed=间歇读超时）→ curl 尺寸探针定网关上限 → 核对模型是否带图（无 input 键=纯文本免疫）→ 装 image-byte-guard 扩展 + models.json 记字节约束；勿调小 contextWindow（1M 是真的）
+  └─ piagent-byte-cap-fix.md ← 先辨错误形态（Exceeded limit=确定性超字节硬上限；read body failed=间歇读超时；**api_error Invalid request body=节点级不稳定，转 piagent-vision-lane-reshoot**）→ curl 尺寸探针定网关上限 → 核对模型是否带图（无 input 键=纯文本免疫）→ 装 image-byte-guard 扩展（含 per-provider 预算 bai:1.5MB）+ models.json 记字节约束；勿调小 contextWindow（1M 是真的）
+
+「视觉 agent 挂了 / vision lane 失败 / subagent 中途失败 / Invalid request body / 鉴权服务请求失败」
+  └─ piagent-vision-lane-reshoot.md ← 先按错误原文分流：`gateway_error`+400001=字节问题走 byte-cap-fix；`api_error Invalid request body`+内部鉴权 401/502 混发且同形状上一 turn 200=节点级不稳定，本篇五步复活（确认死亡→进度考古→探针→预压缩→per-run 换路补射→双源交叉验证）；补射主路官方 deepseek vision-exp；agent 侧手册 ~/.agents/skills/vision-lane-reshoot/SKILL.md
 
 「关机慢 / 关机报错 / ABRT」
   └─ cleanup_shutdown_issue.sh
@@ -421,6 +433,7 @@ journalctl -p err -b --no-pager | tail -20
 | `piagent-connection-error-fix.md` NO_PROXY 加固 | `intranet-api-proxy-coexist.md` | no_proxy 大小写双设、LLM 域名直连与内网 API 共存同源 |
 | `piagent-connection-error-fix.md` | `piagent-byte-cap-fix.md` | 同属 pi 模型调用层故障：Connection error 管「连不上/秒失败」，字节上限管「连上但 400」；网络层排除共用 clash-verge 代理链路 |
 | `piagent-byte-cap-fix.md` | `intranet-api-proxy-coexist.md` | 字节读超时经代理链路放大，代理整体失效/限流时先修 Clash 再谈字节预算 |
+| `piagent-byte-cap-fix.md` | `piagent-vision-lane-reshoot.md` | 同管 400 家族：byte-cap 管确定性超限与读体超时（gateway_error+400001），vision-lane-reshoot 管节点级不稳定（api_error Invalid request body，健康 body 亦死）与 lane 复活；按错误原文分流 |
 | `system_diagnostics_and_repair.md` Phase 1.5 网络 | `public-wifi-security.md` | 公共网络场景安全调查深入（加密/DNS/暴露面/证书） |
 | `tor-browser-check-and-fix.md` 前置 | `clash-verge-diagnose-and-fix.md` | Tor 经本地代理引导，代理失效时先修 Clash 再修 Tor |
 | `video-playback-decode-fix.md` | `system_diagnostics_and_repair.md` | 播放类故障先查系统 ffmpeg 解码能力，再深入播放器自身；GPU 无硬件加速时驱动安装/VAAPI 能力对照收拢于 video skill |
@@ -454,6 +467,18 @@ journalctl -p err -b --no-pager | tail -20
 ---
 
 ## 变更日志
+
+### 2.18.0 (2026-09-03)
+- 更新：windows-backup-and-ssh-debug.md 1.8.0 → **1.8.1**（新增实战补充 7、41-44：sftp batch 首条失败即中止整批（预检 ls 杀死 rename）、同路径+同大小即判一致（内容重复对最优解是改名对齐路径而非删除；sftp put 不保留 mtime）、远端目录/快照验证用 `cmd dir /s /a-d` + `iconv -f GBK` 免起 PowerShell、2026-09-03 四步同步实测与重复对消解记录）
+
+### 2.17.0 (2026-09-02)
+- 新增：pi-agent 层 — `piagent-vision-lane-reshoot.md` **1.0.0**（2026-09-02 比较政治 PE1 视觉核对三波补射实战：B.AI 网关节点级不稳定——api_error `Invalid request body` + 内部鉴权服务 401 + 502/429 混发，健康 1.07-2.62 MB body 亦死；兑底链三层盲区源码定位——pi-subagents fallbackModels 只防 toolCount==0、pi-ai 400 不重试、401 靠 `Client.Timeout` 误中 timeout 模式；复活五步法：死亡确认→进度考古→通道探针→预压缩→per-run 换路补射 + 双源交叉验证 55/55；永久层修复三项——主模型切官方 deepseek vision-exp、byte-guard per-provider 预算 bai:1.5MB、agent 侧 vision-lane-reshoot skill）
+- 更新：`piagent-byte-cap-fix.md` 1.0.0 → **1.1.0**（per-provider 预算：PROVIDER_BUDGETS { bai: 1.5MB } + env 键 PI_MAX_REQUEST_BYTES_<PROVIDER> + resolveBudget(provider)；三态 smoke 验证）
+- 新增：决策树分支「视觉 agent 挂了 / vision lane 失败 / subagent 中途失败 / Invalid request body / 鉴权服务请求失败」+ byte-cap-fix 分支补错误原文分流注释
+- 新增：交叉引用 1 条（byte-cap-fix ↔ vision-lane-reshoot 400 家族分流）；triggers 新增 8 个
+
+### 2.16.0 (2026-09-02)
+- 更新：clash-verge-diagnose-and-fix.md 2.4.0 → **2.5.0**（新增场景 K：单节点 IP 被墙/被干扰——判别特征五件套、修复=切换多节点机场订阅、profiles.yaml current 运行时改动不被 Verge 响应须 UI 切换）；triggers 新增 节点被墙、IP 被墙、banner exchange、单节点超时
 
 ### 2.15.0 (2026-09-02)
 - 更新：#16 `windows-scripting-and-ssh-debug.md` → **`windows-backup-and-ssh-debug.md`** 1.7.0 → **1.8.0**（主职责改为 Windows ⇄ Linux 双机备份，SSH 排障降为支撑；新增实战补充 36-40：快照清理/远端编码三件套/体积审计/排除项≠不占空间/备份链路分工；triggers 新增 备份windows、双机备份、快照清理、备份体积、backup 清理）；决策树/工具包/变更历史中旧文件名同步更新
@@ -626,4 +651,4 @@ journalctl -p err -b --no-pager | tail -20
 - 精进：triggers 扩充具体故障词（ENOSPC/代理/输入法/PDF/subagent 等），保证具体报错也能触发本入口
 - 精进：cleanup_shutdown_issue.sh 版本列标注「脚本」
 
-*最后更新: 2026-09-01（index 2.14.0：新增 piagent-byte-cap-fix.md 1.0.0——pi 模型请求 400 网关字节错误修复）*
+*最后更新: 2026-09-02（index 2.17.0：新增 piagent-vision-lane-reshoot.md 1.0.0——视觉 lane 网关节点级不稳定判别与补射；byte-cap-fix 升 1.1.0 per-provider 预算）*

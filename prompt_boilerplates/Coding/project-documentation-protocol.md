@@ -568,7 +568,7 @@ graphify query "社区划分" --graph graphify-out/graph.json
 - **条件前置**：关键条件放句首（If ..., then ...）
 - **列表平行**：编号步骤动词开头、结构平行
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md)。
 
 ## 注意事项
 

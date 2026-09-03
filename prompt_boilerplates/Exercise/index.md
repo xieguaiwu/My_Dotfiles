@@ -1,7 +1,7 @@
 ---
 name: exercise-index
-version: 1.0.0
-description: Exercise 技能集入口——先判素材、再定产物、后选 skill，统一路由出卷、错题重练、易错清单、拆题入库、证明写作训练、词汇例句与国际象棋对局分析；凡加难度必先过共享升级框架
+version: 1.2.0
+description: Exercise 技能集入口——先判素材、再定产物、后选 skill，统一路由出卷、错题重练、易错清单、拆题入库、证明写作训练、词汇例句、作业作答与国际象棋对局分析；凡加难度必先过共享升级框架
 triggers:
   - "练习技能集"
   - "出题流程"
@@ -47,8 +47,8 @@ tools:
 | C. AP CSA 专项 | 无（直接命题） | AP CSA 模拟卷（代码驱动型） | [ap_csa_generation.md](ap_csa_generation.md) |
 | D. 证明写作训练 | Rudin 章节号 | S0–S5 分层练习卷 + 答案卷 | [rudin-proof-writing.md](rudin-proof-writing.md) |
 | E. 易错点速查 | 学科 + 陷阱规律 | 超紧凑三轨 LaTeX 清单 | [error-checklist-creator.md](error-checklist-creator.md) |
-| F. 专题练习拆分 | 多份 SAT 专题 PDF（文本层） | 题目卷 + 答案卷两个 LaTeX | [sat-exercise-splitter.md](sat-exercise-splitter.md) |
-| G. 整卷扫描 OCR | 扫描版试卷（无文本层） | 同上（vision 转录流水线） | splitter §0.3a + [sat-ocr-pipeline/](sat-ocr-pipeline/README.md) |
+| F. 专题练习拆分 | 多份专题练习 PDF（文本层，任意科目） | 题目卷 + 答案卷两个 LaTeX | [exercise-splitter.md](exercise-splitter.md) |
+| G. 整卷扫描 OCR | 扫描版试卷（无文本层，任意科目） | 同上（vision 转录流水线） | splitter §0.3a + [ocr-pipeline/](ocr-pipeline/README.md) |
 | H. 错题笔记沉淀 | SAT 答题记录 + 试卷 PDF | Obsidian 错题分析笔记 | [sat-error-note-generator.md](sat-error-note-generator.md) |
 | I. 题目提取入库 | 题目图片 / 文档 | Obsidian Markdown 题库 | [problem_extraction.md](problem_extraction.md) |
 | J. 截图解题 | 一张题目截图 | 直接作答与讲解 | [screenshot_task_solver.md](screenshot_task_solver.md) |
@@ -83,26 +83,27 @@ tools:
 ```text
 要出题/出卷？
   ├─ 有旧卷当模板，或只给知识点 ──────────→ exam-paper-cloner.md
-  │     └─ 旧卷是扫描件 ─────────────────→ 转 splitter §0.3a + sat-ocr-pipeline/
+  │     └─ 旧卷是扫描件 ─────────────────→ 转 splitter §0.3a + ocr-pipeline/
   ├─ 有错题（诊断结论或错题文件）──────────→ mistake-practice-generation.md
   ├─ AP CSA 模拟卷 ─────────────────────→ ap_csa_generation.md
   ├─ 证明写作训练（Rudin/AP 桥梁）────────→ rudin-proof-writing.md
   └─ 觉得题太简单、要加难度 ─────────────→ difficulty-escalation-framework.md（先）→ 回上面对应 skill
 
 要整理已有题？
-  ├─ SAT 专题练习按难度分 section ────────→ sat-exercise-splitter.md（扫描整卷 → sat-ocr-pipeline/）
+  ├─ 专题练习按难度分 section ───────────→ exercise-splitter.md（扫描整卷 → ocr-pipeline/）
   ├─ 错题写进 Obsidian 笔记（SAT 专用）───→ sat-error-note-generator.md
   ├─ 题目图片/文档提取入库 ───────────────→ problem_extraction.md
   └─ 学科易错点做成速查清单 ─────────────→ error-checklist-creator.md
 
 只有零散需求？
   ├─ 截图里这题怎么做 ───────────────────→ screenshot_task_solver.md
+  ├─ 作业题图/文档解题，要学生作答记录 ───→ homework-answer-sheet.md
   ├─ 给单词造记忆例句（英/德）───────────→ vocab-example-generator.md
   ├─ 找 AP 真题资源下载 ─────────────────→ find_exam_assist.md
   └─ 复盘一盘国际象棋（PGN/SAN/FEN）─────→ chess-game-analysis.md
 
 链条走通（真题 → 练习 → 清单）：
-  find_exam_assist → sat-exercise-splitter →（做错）→ sat-error-note-generator
+  find_exam_assist → exercise-splitter →（做错）→ sat-error-note-generator
       → mistake-practice-generation → error-checklist-creator
 ```
 
@@ -130,24 +131,25 @@ tools:
 
 | # | Skill | 版本 | 用途 | 触发场景 | pi 安装态 |
 |:--|:---|:---:|---|---|:---:|
-| 7 | [sat-exercise-splitter.md](sat-exercise-splitter.md) | 1.4.0 | 识别多份 SAT 专题练习，按难度分 section 生成题目卷与答案卷两个 LaTeX（题号各自重排）；文本层几何提取；扫描整卷接 sat-ocr-pipeline | 拆分 SAT 专题、题目答案分离 | ✅ 已装 |
+| 7 | [exercise-splitter.md](exercise-splitter.md) | 2.0.0 | 识别多份任意科目专题练习，按难度分 section 生成题目卷与答案卷两个 LaTeX（题号各自重排）；文本层几何提取；扫描整卷接 ocr-pipeline | 拆分专题练习、题目答案分离 | ✅ 已装 |
 | 8 | [problem_extraction.md](problem_extraction.md) | 1.1.0 | 从图片/文档提取题目并整理为 Obsidian Markdown 笔记 | 整理题目、提取题目 | ❌ 未装 |
 | 9 | [find_exam_assist.md](find_exam_assist.md) | 1.0.0 | 查找 AP 考试真题资源（MCQ 与 FRQ） | 查找真题、AP 真题 | ❌ 未装 |
 | 10 | [screenshot_task_solver.md](screenshot_task_solver.md) | 1.0.0 | 识别并完成截图中的题目或任务，支持复杂图像分析 | 截图解题、分析截图 | ❌ 未装 |
 | 11 | [vocab-example-generator.md](vocab-example-generator.md) | 1.1.0 | 按输入单词生成画面感强、便于记忆的例句（英语/德语） | 单词例句、英语例句 | ❌ 未装 |
+| 12 | [homework-answer-sheet.md](homework-answer-sheet.md) | 1.0.0 | 从作业题图/文档逐题求解，输出学生作答记录风格 Markdown 答案文档（仅题号与答案）；科目不限（数学物理化学生物英语历史计算机） | 作业作答、作业答案、学生作答记录 | ✅ 已装 |
 
 ### 四、非学业练习类（棋局分析）
 
 | # | Skill | 版本 | 用途 | 触发场景 | pi 安装态 |
 |:--|:---|:---:|---|---|:---:|
-| 12 | [chess-game-analysis.md](chess-game-analysis.md) | 1.0.0 | 国际象棋对局/局面快照在远程服务器跑 Stockfish 18，产出 PGN + 引擎数据表 + 中文分析三件套；棋谱模式与照片模式双轨、静态攻守实测、PGN 往返校验、引擎部署踩坑库 | 棋局复盘、FEN 局面分析、部署 Stockfish | ✅ 已装（本次新增） |
+| 13 | [chess-game-analysis.md](chess-game-analysis.md) | 1.0.0 | 国际象棋对局/局面快照在远程服务器跑 Stockfish 18，产出 PGN + 引擎数据表 + 中文分析三件套；棋谱模式与照片模式双轨、静态攻守实测、PGN 往返校验、引擎部署踩坑库 | 棋局复盘、FEN 局面分析、部署 Stockfish | ✅ 已装（本次新增） |
 
 ### 五、共享规范与脚本资产
 
 | # | 资产 | 版本 | 用途 | 引用方 |
 |:--|:---|:---:|---|---|
-| 13 | [difficulty-escalation-framework.md](difficulty-escalation-framework.md) | 1.1.0 | 难度升级共享框架——铁律「难度 = 认知负荷的深度，不是任务量」；分轨维度矩阵、递进阶梯、反堆料清单、难度档案标注 | #1 #2 #3 #4 #5 |
-| 14 | [sat-ocr-pipeline/](sat-ocr-pipeline/README.md) | 脚本 | 扫描版整卷 OCR 流水线（多路 vision 转录 + 答案键条带裁剪 + LaTeX 生成），含 `probe_providers.py` / `build_latex.py` / `final_build.sh` 等 | #7 |
+| 14 | [difficulty-escalation-framework.md](difficulty-escalation-framework.md) | 1.1.0 | 难度升级共享框架——铁律「难度 = 认知负荷的深度，不是任务量」；分轨维度矩阵、递进阶梯、反堆料清单、难度档案标注 | #1 #2 #3 #4 #5 |
+| 15 | [ocr-pipeline/](ocr-pipeline/README.md) | 脚本 | 扫描版整卷 OCR 流水线（多路 vision 转录 + 答案键条带裁剪 + LaTeX 生成，科目参数化 books.json），含 `probe_providers.py` / `build_latex.py` / `final_build.sh` 等 | #7 |
 
 ---
 
@@ -155,7 +157,7 @@ tools:
 
 | 链 | 顺序 | 交接物 |
 |:---|:---|:---|
-| SAT 真题 → 练习闭环 | `find_exam_assist` → `sat-exercise-splitter`（扫描件走 `sat-ocr-pipeline/`）→ 学生作答 → `sat-error-note-generator` → `mistake-practice-generation` → `error-checklist-creator` | PDF 真题 → 题/答 LaTeX → Obsidian 错题笔记 → 新练习卷 → 速查清单 |
+| 真题/题库 → 练习闭环 | `find_exam_assist` → `exercise-splitter`（扫描件走 `ocr-pipeline/`）→ 学生作答 → `sat-error-note-generator` → `mistake-practice-generation` → `error-checklist-creator` | PDF 真题 → 题/答 LaTeX → Obsidian 错题笔记 → 新练习卷 → 速查清单 |
 | 加难度链 | 任一出卷 skill 成稿 → `difficulty-escalation-framework` 取维度 → 回原 skill 重出 | 难度档案标注 + 反堆料检查结果 |
 | 证明训练链 | `rudin-proof-writing` 出题 → 学生写 → 模型证明对照 → 错题规律回填 `error-checklist-creator` | 练习卷 + 答案卷 + 易错条目 |
 | 棋局链 | `chess-game-analysis`（远程 Stockfish）→ 三件套落 `~/works/记录/chess/<日期>game/` → 有完整棋谱时切 game 模式补逐着表 | PGN + 引擎数据 txt + 分析 md（+ 参考续着 pgn） |
@@ -168,8 +170,8 @@ tools:
 | `mistake-practice-generation.md` §难度递进 | `difficulty-escalation-framework.md` | 同上（升级 = 换更深维度，非加计算量） |
 | `ap_csa_generation.md` §CS 轨升级 | `difficulty-escalation-framework.md` | CS 轨禁代码堆料专项 |
 | `rudin-proof-writing.md` §评分/批判变体 | `difficulty-escalation-framework.md` | 认知负荷分档口径统一 |
-| `error-checklist-creator.md` §A.1 | `exam-paper-cloner.md` §0.3a.9 / `sat-exercise-splitter.md` 注意事项 #6 | CJK 排版铁律三处同源，改一处须同步 |
-| `sat-exercise-splitter.md` §0.3a | `sat-ocr-pipeline/README.md` | 扫描卷可执行脚本落点 |
+| `error-checklist-creator.md` §A.1 | `exam-paper-cloner.md` §0.3a.9 / `exercise-splitter.md` 注意事项 #6 | CJK 排版铁律三处同源，改一处须同步 |
+| `exercise-splitter.md` §0.3a | `ocr-pipeline/README.md` | 扫描卷可执行脚本落点 |
 | `sat-error-note-generator.md` | `mistake-practice-generation.md` | 错题笔记是后者的诊断输入 |
 | `chess-game-analysis.md` 步骤 6/8 | [../Coding/verification-before-completion.md](../Coding/verification-before-completion.md) | 「证据先于断言」同源；交付前必附校验输出 |
 | `chess-game-analysis.md` 步骤 2/5 | [../Coding/resource-aware-delegation.md](../Coding/resource-aware-delegation.md) | 远程选机与子代理资源感知 |
@@ -203,20 +205,31 @@ tools:
   ```
 
 - 已知遗留：
-  1. #3 #6 #8 #9 #10 #11 #13 共 7 项未安装到 `~/.agents/skills/`，pi 层不能凭触发词直达，须经本 index 路由。
+  1. #3 #6 #8 #9 #10 #11 #14 共 7 项未安装到 `~/.agents/skills/`，pi 层不能凭触发词直达，须经本 index 路由。
   2. `mistake-practice-generation.md` 1.4.0 的 `triggers` 有 9 个，超 skill_creator 上限 3-8（本文件自检脚本会报红）。修法：删一项并升版，须同步目录表版本号。
   3. `difficulty-escalation-framework.md` 1.1.0 的 `description` 以句号收尾，违反规则 1.4。修法：去句尾句号并升 patch 版。
   4. 以上两项为历史遗留，2026-08-29 建立本 index 时由自检脚本首次发现，未擅自修正（改动他 skill 的 front matter 涉及版本号连带）。
 
 ## 变更日志
 
+### 1.2.0 (2026-09-03)
+
+- 新增：`homework-answer-sheet.md` 1.0.0（科目通用作业作答文档——从题图/文档解题，输出学生作答记录风格答案：仅题号与答案，含 g 常数锁定与落盘覆写踩坑经验）；已安装至 `~/.agents/skills/homework-answer-sheet/SKILL.md`（source 行已加入 front matter）
+- 路由表三区新增 #12；决策树「只有零散需求」新增分支；目录表重排 #12→#13（chess）、#13→#14（difficulty）、#14→#15（ocr-pipeline）
+
 ### 1.0.0 (2026-08-29)
 
 - 初始发布：Exercise 目录从被动文件集升级为可触发入口技能
 - 收录 13 个 skill + 1 个脚本资产（sat-ocr-pipeline），分五类（出卷命题 / 错题清单 / 素材提取 / 非学业练习 / 共享规范）
-- 新增：素材→产物路由表（13 类）、症状→skill 决策树、四条链式工作流（SAT 真题闭环、加难度链、证明训练链、棋局链）、交叉引用 11 条
+- 新增：素材→产物路由表（13 类）、症状→skill 决策树、四条链式工作流（真题/题库→练习闭环、加难度链、证明训练链、棋局链）、交叉引用 11 条
 - 新增：pi 安装态列与维护约定（含 `source:` 须落在 front matter 内的规定——2026-08-29 实测 5 个历史安装件放错位置，已修正）
 - 新增：维护自检脚本（严格 YAML + 四字段 + triggers 3-8 + description 无句尾句号）与链接/版本一致性核对；据此发现并记录 4 项已知遗留（含 2 处他 skill 的 front matter 历史违规，未擅改）
 - 收录本次新建的 `chess-game-analysis.md` 1.0.0
 
-*最后更新: 2026-08-29（index 1.0.0：13 skill + sat-ocr-pipeline 入册，chess-game-analysis 新建即入册）*
+### 1.1.0 (2026-09-02)
+
+- 通用化重构：`sat-exercise-splitter.md` 改名 `exercise-splitter.md`（2.0.0）+ `sat-ocr-pipeline/` 改名 `ocr-pipeline/`——删除 SAT 专门制定，支持任意科目（新增 subject/difficulty_levels 输入项、多科目适配表、书目参数化 books.json）
+- 路由表 F/G、决策树、链条行、交叉引用同步更新；下游引用（sat-error-note-generator / mistake-practice-generation）已在两文件中改指 exercise-splitter
+- 注意：`sat-error-note-generator` 仍为 SAT 专属（不在本次通用化范围，后续可参照 exercise-splitter 模式）
+
+*最后更新: 2026-09-03（index 1.2.0：新增 homework-answer-sheet 1.0.0 科目通用作业作答文档）*

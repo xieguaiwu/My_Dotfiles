@@ -329,7 +329,7 @@ Let $R$ be the region bounded by the graphs of $y = \sqrt{x}$, $y = 2 - x$, and 
 - **条件前置**：关键条件放句首（If ..., then ...）
 - **列表平行**：编号步骤动词开头、结构平行
 
-数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+数学公式与题目本身不受本规范约束。完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md)。
 
 ---
 

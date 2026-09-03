@@ -591,7 +591,7 @@ if len(runes) > pw - margin {
 - 状态消息用固定前缀模板（[OK]/[FAIL]/[WARN]），机器可读且人可读
 - 错误消息先说条件/原因再说动作，不裸露裸异常堆栈
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md) 第 7 节。
+完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md) 第 7 节。
 
 ---
 

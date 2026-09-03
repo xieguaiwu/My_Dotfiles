@@ -153,7 +153,7 @@ flowchart LR
 - **编号步骤**：程序性内容用编号列表，结构平行
 - **数字用数字**：写 5、25，不写五、二十五
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md)。
 
 ## 输出格式
 

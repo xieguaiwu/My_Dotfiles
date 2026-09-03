@@ -198,7 +198,7 @@ tools:
 - **现在时为主**：避免 -ing 进行时堆叠
 - **主动语态优先**：描述用 "A does B"
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md)。
 
 ---
 

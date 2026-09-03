@@ -1,6 +1,6 @@
 ---
 name: windows-backup-and-ssh-debug
-version: 1.8.0
+version: 1.8.1
 description: Windows ⇄ Linux 双机备份与 OpenSSH 远程排障——BOOKS 电子书双机同步日常运维（books-sync.py 四步流程/差异语义/排除规则/快照策略/内容哈希预检/快照清理/远端体积审计/输出编码坑）为第一要务；SSH 链路故障（KEXINIT reset 排除链、黑盒三测试、前台 vs 服务差异、ACL/TEMP 判别器、看门狗自愈、脚本化协作闭环）为排障支撑；Windows 脚本编写规范已拆至 Coding/windows-powershell-scripting.md
 triggers:
   - "SSH 连不上 Windows"
@@ -462,7 +462,40 @@ Get-ChildItem -LiteralPath D:\Epub\BOOKS -Directory -Force | ForEach-Object { $s
 
 本次自动备份的经验沉淀：日常备份主链路 = `win-check.sh` 体检 → `scan` 预估 → `all` 传输 → **复扫归零验证**（差异只剩已知重复对与已知排除）。瘦身是独立决策轴：快照清理（低成本安全）→ 排除项删除（需用户确认，涉及存量删除）→ 核心藏书（不可缩）。**先问「哪些能删」再删，快照以外的删除永远等用户明确指令。**
 
+## 实战补充 7（2026-09-03：日常同步收官 + 内容重复对「对齐路径」消解）
+
+### 41. sftp batch 首条命令失败即中止整批——预检 ls 会杀死 rename
+
+`-b` 批处理里任何**不带 `-` 前缀**的命令返回失败 → sftp 立即退出，后续 rename/put 全部不执行。本次在 rename 前放 `ls -l 目标路径`（本意「确认目标不存在」）→ 目标不存在正是**预期结果**，却触发中止，rename 静默未跑。
+
+**修**：①批内「允许失败」的命令一律加 `-` 前缀（`-ls`、`-mkdir`、`-put`）②或干脆不预检，事后单独验证（本次靠 scan 复扫确认 rename 生效）。与 #23（`-mkdir` 已存在报 Failure 但 rc=0 继续）同源：**sftp batch 的错误处理由 `-` 前缀显式声明，不能指望 rc**。
+
+### 42. 同路径 + 同大小 = 判定「一致」；mtime 只在大小不同时决定方向
+
+books-sync 比对逻辑：路径双端都存在时，**只有 size 不同才进 mtime 三分类**（lnx-newer / win-newer / conflict）；size 相同直接视为一致、不传输。
+
+三条推论：
+- **内容重复对（同 hash 不同路径）的最优解是改名对齐路径，不是删除**——双端各留一份 → 对齐后 size 相同 → scan 立即归零、零传输、零快照、零数据风险。比 `--allow-dup-merge`（制造 4 份）和删文件都干净。
+- 反之「同路径不同内容」才会触发覆盖 + 快照。
+- **sftp put 不保留 mtime**（实测：推过去后 Windows mtime = 传输时刻，与 Linux 源差 20 小时）——刚同步完的文件 mtime 差异大不是故障，只要 size 相同就不会被反向覆盖。
+
+### 43. 远端目录/快照验证的免 PowerShell 通道：cmd dir + iconv GBK
+
+`ssh win 'cmd /c dir /s /a-d <path>'` 输出 GBK，直接 grep 报 `binary file matches`（#37 同坑）。管道接 `| iconv -f GBK -t UTF-8` 后即可 grep「个文件 / File(s)」与文件名，一次拿到「文件数 + 总字节」两级汇总，比起 PowerShell 轻得多。
+
+**反模式**：`ssh win "powershell -NoProfile -Command (Get-ChildItem ...)"` 经 bash 传参时引号极易被吞（本次 rc=255 + 空输出）。**能用 cmd dir 就别起 PS**；必须起 PS 时用 `-EncodedCommand`（UTF-16LE base64）+ 首行 `$ProgressPreference='SilentlyContinue'`（#20）。
+
+### 44. 2026-09-03 实测（四步全绿 + 重复对消解）
+
+win-check 全绿（ping / 22 / 445 / auth）→ scan：push-only 42、lnx-newer 3、pull-only 23、conflict 0（推 0.16GB / 拉 0.10GB）→ all：快照 `linux-20260903`（3 文件 67.0MB，cmd dir 复核）+ 预检排除 4 项 + push rc=0（10 条 mkdir 噪音）+ pull rc=0 → 复扫剩 2+2（已知重复对）→ 按 #42 对齐路径（Linux `mv` 1 个 + Windows `sftp rename` 1 个，零删除）→ 终扫**五类差异全 0，双端各 7369 文件**。
+
+体积：Windows 48.59GB/8326 ⇄ Linux 42GB/7790，差值全为排除项存量（#39）。快照目录仅最新一个（09-02 已清空），本轮无清理动作。
+
 ## 变更日志
+
+### 1.8.1 (2026-09-03)
+- 新增：实战补充 7（41-44 条）——#41 sftp batch 首条失败即中止整批（预检 ls 杀死 rename，`-` 前缀才是错误声明）、#42 同路径+同大小即判一致（mtime 仅在大小不同时决定方向；内容重复对最优解是改名对齐路径而非删除；sftp put 不保留 mtime）、#43 远端目录验证免 PS 通道（cmd dir /s /a-d + iconv GBK，PS 经 ssh 传参引号被吞 rc=255）、#44 09-03 四步实测与重复对消解记录
+- 同步：System_Fix/index.md 条目 16 版本号与描述、变更历史 2.18.0
 
 ### 1.8.0 (2026-09-02)
 - 改名：`windows-scripting-and-ssh-debug.md` → `windows-backup-and-ssh-debug.md`（主职责为 Windows ⇄ Linux 双机备份；SSH 排障降为支撑）；front matter name/description 同步，triggers 新增 备份windows、双机备份、快照清理、备份体积、backup 清理

@@ -70,7 +70,7 @@ tools:
 本 skill 位于 SAT 练习工作流的**最下游**——接收错题诊断后生成练习卷。完整工具链：
 
 ```
-sat-exercise-splitter（上游：拆分官方题库 PDF 为结构化 LaTeX）
+exercise-splitter（上游：拆分官方题库 PDF 为结构化 LaTeX，任意科目）
     │
     ▼
 sat-error-note-generator（中游：积累错题到 Obsidian，提炼陷阱分类诊断）

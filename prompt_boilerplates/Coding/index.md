@@ -228,7 +228,7 @@ tools:
 | `android-development.md` §12 | `verification-before-completion.md` | 后置下载链路上线前 grep 调用点（实现存在 ≠ 链路可用），验证声明须附 grep 证据 |
 | `verification-before-completion.md` | `improvement-loop.md` | §5.9 Chain 输出门控是平台层验证，本 skill 是方法论层验证——两层都要 |
 | `verification-before-completion.md` | `ml-training.md` | 训练验收前先用 Gate Function 验证产物（results JSON）真实存在 |
-| `project-documentation-protocol.md` + `writing-plans.md` | [technical-writing-standard.md](../technical-writing-standard.md) | 文档写作规范（ASD-STE100 国际标准）——文档与实施计划写作参照 |
+| `project-documentation-protocol.md` + `writing-plans.md` | [technical-writing-standard.md](../Writing/technical-writing-standard.md) | 文档写作规范（ASD-STE100 国际标准）——文档与实施计划写作参照 |
 | `long-horizon-planning.md` | `project-documentation-protocol.md` §A1/B4b | VISION.md 进入文档清单与更新规范——长期项目的状态定位 |
 | `long-horizon-planning.md` | `verification-before-completion.md` §长期项目补充 | 长期项目「完成」= 验证证据 + 长期阶段声明 |
 | `long-horizon-planning.md` | `writing-plans.md` Header Vision 字段 | 实施计划声明所属长期阶段（阶段 X/N + 目标编号） |

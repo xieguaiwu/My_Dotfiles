@@ -228,7 +228,7 @@ if __name__ == '__main__':
 - **数字用数字**：写 5、25
 - **术语一致**：与来源笔记的术语保持一致
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md)。
 
 ## 五、检查清单
 

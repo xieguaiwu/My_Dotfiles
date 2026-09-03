@@ -52,7 +52,7 @@ tools:
 本 skill 位于 SAT 练习工作流的**中游**——从上游处理好的题目中提取错题，提炼陷阱分类诊断，供下游生成练习卷：
 
 ```
-sat-exercise-splitter（上游：拆分官方题库 PDF 为结构化 LaTeX / 错题源）
+exercise-splitter（上游：拆分官方题库 PDF 为结构化 LaTeX / 错题源，任意科目）
     │
     ▼
 sat-error-note-generator（本 skill — 中游：积累错题到 Obsidian，提炼陷阱分类诊断）
@@ -342,7 +342,7 @@ Command of Evidence / Scientific Reasoning 高频子类：题干给出**目标�
 - **条件前置**：如果...则...，关键条件放句首
 - **编号步骤**：分析/行动项用编号列表，结构平行
 
-题干/选项保留英文原文不受约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+题干/选项保留英文原文不受约束。完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md)。
 
 ## 注意事项
 

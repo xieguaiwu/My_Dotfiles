@@ -162,7 +162,7 @@ tools:
 - **数字用数字**：写 5、25，不用 five、twenty-five
 - **一词一义**：避免一词多义造成的歧义
 
-完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+完整规范见 [technical-writing-standard.md](technical-writing-standard.md)。
 
 ## 注意事项
 

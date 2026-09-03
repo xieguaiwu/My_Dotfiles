@@ -91,7 +91,7 @@ $$\int_1^{\infty} f(x) \, dx = ...$$
 - **条件前置**：如果...则...，关键条件放句首
 - **编号步骤**：分析/行动项用编号列表，结构平行
 
-题目内容与数学符号不受约束。完整规范见 [technical-writing-standard.md](../technical-writing-standard.md)。
+题目内容与数学符号不受约束。完整规范见 [technical-writing-standard.md](../Writing/technical-writing-standard.md)。
 
 ## 注意事项
 

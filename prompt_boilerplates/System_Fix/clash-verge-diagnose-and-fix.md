@@ -1,7 +1,7 @@
 ---
 name: clash-verge-diagnose-and-fix
-version: 2.4.0
-description: 诊断并修复 Clash Verge Rev 代理不工作问题（模式错误、Profile 增强格式错误、远程订阅失败、Hysteria2 DNS 死锁、导入 Profile 编辑不生效、AuthServer 拒绝连接、DoT fallback 被墙导致全代理 DNS 解析失败等）
+version: 2.5.0
+description: 诊断并修复 Clash Verge Rev 代理不工作问题（模式错误、Profile 增强格式错误、远程订阅失败、Hysteria2 DNS 死锁、导入 Profile 编辑不生效、AuthServer 拒绝连接、DoT fallback 被墙导致全代理 DNS 解析失败、单节点 IP 被墙/被干扰等）
 triggers:
   - "clash verge 不工作"
   - "代理用不了"
@@ -24,6 +24,10 @@ triggers:
   - "侧车日志解析失败"
   - "全代理超时"
   - "DoT fallback"
+  - "节点被墙"
+  - "IP 被墙"
+  - "banner exchange"
+  - "单节点超时"
 inputs:
   - name: data_dir
     description: Clash Verge 数据目录路径
@@ -461,6 +465,36 @@ PYEOF
 3. 如果某个付费机场服务可用，**优先用付费服务**——稳定性不在一个量级。
 4. `comprehensive-pool.yaml` 和 `l3Wief5Rt1cY.yaml` 实质上是同一个池的两个副本，修改时要同步更新。
 
+#### 场景 K：单节点 IP 被墙/被干扰 — 选择器正常但全连接超时（新增）
+
+**症状**：GLOBAL/PROXY 选择正确、DNS 无 deadlock（无 `dns resolve failed`），但所有走代理的连接 `context deadline exceeded`（Google/B.AI 等全超时）；直连国内正常。
+
+**根因**：代理节点服务器 IP 被 GFW 干扰/封锁（2026-09-02 HY2-LA-5TB/192.3.247.117 实战）。单节点（尤其 Hysteria2 UDP 单端口）抗封锁能力为零。
+
+**判别特征（多证据组合，缺一不可）**：
+```bash
+# 1. ICMP 通（GFW 对 ICMP 放行）——排除服务器宕机
+ping -c 3 -W 2 <VPS_IP>        # 通且 RTT 正常 = 服务器活着
+# 2. TCP 采样不稳定——多采样必有通有不通
+for i in 1 2 3; do timeout 4 bash -c "echo > /dev/tcp/<IP>/22" && echo 通 || echo 不通; done
+# 3. SSH banner exchange timeout = GFW 对 SSH 主动干扰的经典特征
+ssh -v root@<IP> 2>&1 | grep -E "banner|timed out"
+# 4. UDP 无响应（HY2 主协议）
+# 5. 对照测试：其他国外 IP（如 104.16.132.229:443 Cloudflare）能通 = 网络整体可用，单 IP 被墙
+```
+
+**注意**：TCP 443 `Connection refused` **不是**服务器挂掉的证据——HY2 只监听 UDP 443，TCP 无服务回 RST 是正常响应，恰好证明路径可达。
+
+**修复**：不要试图在服务器端折腾（SSH 都不稳）——**切换备用订阅/节点**：
+1. 盘点可用资源：其他 remote 订阅（`profiles.yaml` 里 type: remote）、免费池、本地 profile
+2. 优先选**多节点订阅**（如性价比机场 12 节点）——url-test 自动选择天然抗单 IP 被墙
+3. 按 Phase 3 直接构建 clash-verge.yaml（节点取订阅缓存 `profiles/{uid}.yaml`）+ API 强制重载，立即生效
+4. 验证：节点 delay 测速 + curl Google/B.AI（网络层恢复的判据：B.AI 从 timeout 变为 401/403 即时响应）
+
+**持久化**：改 `profiles.yaml` 的 `current` 字段运行时**不会被 Verge 响应**（实测 2.5.2 不 watch 文件，重启后从内部状态重写回旧值）→ 必须 UI 切换 profile 才能持久。
+
+**教训**：单节点单点依赖风险高——主代理应保持一个多节点机场订阅兜底，节点 IP 被墙时立即切换，比等解封/换 IP 快得多。
+
 #### 场景 J：DoT fallback 被墙 — 全代理 DNS 解析失败（新增）
 
 **症状**：所有走代理的站点全部超时（Google/YouTube/github.com/B.AI 等），但国内站点（dashscope、百度）直连正常。mihomo 侧显示 GLOBAL/PROXY 选择正确，节点测速却 Timeout。
@@ -595,6 +629,10 @@ curl -s --unix-socket /tmp/verge/verge-mihomo.sock -X PUT \
 12. **DNS fallback 不要用 DoT（`tls://8.8.8.8` / `tls://1.1.1.1`，853 端口）**——大陆被墙，会导致所有非 CN 域名解析失败、全代理瘫痪。改用 UDP 53（`8.8.8.8` / `1.1.1.1` 或 `223.5.5.5` / `119.29.29.29`）。
 
 ## 变更日志
+
+### 2.5.0 (2026-09-02)
+- 新增：场景 K — 单节点 IP 被墙/被干扰（HY2-LA-5TB/192.3.247.117 实战：所有走代理连接超时，bai provider 连带不可用）：判别特征五件套（ICMP 通 + TCP 间歇不通 + SSH banner timeout + UDP 无响应 + 对照国外 IP 通）、TCP 443 refused 是正常响应非服务器宕机、修复 = 切换多节点机场订阅（Phase 3 重建 + API 重载立即生效）、profiles.yaml current 运行时改动不被 Verge 响应须 UI 切换
+- 新增：triggers `节点被墙`、`IP 被墙`、`banner exchange`、`单节点超时`
 
 ### 2.4.0 (2026-09-01)
 - 新增：场景 J — DoT fallback 被墙导致全代理 DNS 解析失败（sidecar 日志 `dns resolve failed` 判别、DoT/UDP 53 测试、fallback 改 UDP 修复、持久化到 profile 源文件）

@@ -254,7 +254,7 @@ name: my-skill
 - **编号步骤**：流程用编号列表，结构平行
 - **条件前置**：关键条件放句首（如果...则...）
 
-完整规范见 [technical-writing-standard.md](technical-writing-standard.md)（与 skill_creator 同目录）。
+完整规范见 [technical-writing-standard.md](Writing/technical-writing-standard.md)（与 skill_creator 同目录）。
 
 ## 二、YAML Front Matter
 
