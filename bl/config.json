@@ -2,7 +2,7 @@
   "mode": "auto",
   "llm": {
     "enabled": true,
-    "provider": "deepseek-official",
+    "provider": "bai",
     "providers": [
       {
         "name": "openrouter",
@@ -21,6 +21,12 @@
         "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
         "model": "qwen3.8-flash",
         "api_key": "env:QWEN_PAYG_API_KEY"
+      },
+      {
+        "name": "bai",
+        "base_url": "https://api.b.ai/v1",
+        "model": "deepseek-v4-flash",
+        "api_key": "env:BAI_API_KEY"
       },
       {
         "name": "opencode-zen",
